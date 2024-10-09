@@ -536,7 +536,7 @@ if(is_admin()){
                     <button class="btn btn-simple btn-sm ttip" title="Full Screen"  onclick="openFullscreen('mainfmarea');"><i class="fa fa-expand-arrows-alt"></i></button>
                 </div>
                 <h3 style="display: inline-block;font-size: 14pt;letter-spacing: 0.5px;font-weight: 600;font-family: var(--wpdm-font)">
-                   <img src="<?php echo WPDM_BASE_URL ?>assets/images/asset-manager.svg" style="height: 20px;margin-right: 5px" /> <?php echo __( "Digital Asset Manager", "download-manager" ) ?> <sup style="color: var(--color-info) !important;font-size: 10px;font-family: 'Overpass Mono', sans-serif !important;">BETA</sup>
+                   <img src="<?php echo WPDM_BASE_URL ?>assets/images/asset-manager.svg" style="height: 20px;margin-right: 5px" /> <?php echo __( "Digital Asset Manager", "download-manager" ) ?>
                 </h3>
                 <?php /* if(!current_user_can('manage_options')){ ?>
                 <div class="media-body">

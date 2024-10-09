@@ -63,7 +63,7 @@ if(!defined('ABSPATH')) die();
             <div class="row">
                 <div class="col-md-12"><button type="submit" name="wp-submit" id="loginform-submit" class="btn btn-block btn-primary btn-lg"><i class="fas fa-user-shield"></i> &nbsp;<?php _e( "Login" , "download-manager" ); ?></button></div>
                 <?php if(isset($regurl) && $regurl != ''){ ?>
-                    <div class="col-md-12"><br/><a href="<?php echo $regurl; ?>" class="btn btn-block btn-link btn-xs wpdm-reg-link  color-primary"><?php _e( "Don't have an account yet?" , "download-manager" ); ?> <i class="fas fa-user-plus"></i> <?php _e( "Register Now" , "download-manager" ); ?></a></div>
+                    <div class="col-md-12"><br/><a href="<?php echo esc_attr($regurl); ?>" class="btn btn-block btn-link btn-xs wpdm-reg-link  color-primary"><?php _e( "Don't have an account yet?" , "download-manager" ); ?> <i class="fas fa-user-plus"></i> <?php _e( "Register Now" , "download-manager" ); ?></a></div>
                 <?php } ?>
             </div>
 
