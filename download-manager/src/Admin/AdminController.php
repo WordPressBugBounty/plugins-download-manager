@@ -134,8 +134,8 @@ class AdminController {
             printf('<div id="wpdmvnotice" class="notice notice-success  is-dismissible"><p>%1$s</p></div>', $message);
         }
 	    if (is_admin() && current_user_can('manage_options') && Installer::dbUpdateRequired()) {
-		    $message = sprintf(__('A database update is required for <strong>WordPress Download Manager Pro %s</strong>. Please click the button on the right to update your database now.', WPDM_TEXT_DOMAIN), WPDM_VERSION);
-		    printf('<div id="wpdmvnotice" class="notice notice-warning  is-dismissible w3eden"><div style="padding: 20px;line-height: 22px;display:flex"><div  style="width:9999px" >%1$s</div><div style="white-space: nowrap"><a class="btn btn-primary btn-sm" href="%2$s">Update Database</a></div></div></div>', $message, admin_url('edit.php?post_type=wpdmpro&page=settings'));
+		    $message = sprintf(__('A database update is required for <strong>WordPress Download Manager %s</strong>. Please click the button on the right to update your database now.', WPDM_TEXT_DOMAIN), WPDM_VERSION);
+		    printf('<div id="wpdmvnotice" class="notice notice-warning  is-dismissible w3eden"><div style="padding: 20px;line-height: 22px;display:flex"><div  style="width:9999px" >%1$s</div><div style="white-space: nowrap"><a class="btn btn-primary btn-sm" href="%2$s">Update Database</a></div></div></div>', $message, admin_url('edit.php?post_type=wpdmpro&page=wpdm-settings'));
 	    }
     }
 

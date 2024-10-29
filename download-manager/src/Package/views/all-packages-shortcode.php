@@ -254,6 +254,8 @@ if(isset($params['jstable']) && $params['jstable']==1):
                 //$author = get_user_by('id', $post->post_author);
                 $data['author'] = $data['author_name'];
 
+	            $data = apply_filters('wpdm_all_packages_tags', $data);
+
                 if(isset($data['files'])&&count($data['files'])){
                     if(count($data['files']) == 1) {
                         $tmpavar = $data['files'];
