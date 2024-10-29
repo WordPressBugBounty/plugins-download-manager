@@ -12,7 +12,7 @@ class Installer
         /**
          * @var float
          */
-        private $dbVersion = 534.0;
+        private $dbVersion = 535.0;
 
         function __construct()
         {
@@ -121,6 +121,22 @@ class Installer
               `download_count` int(11) NOT NULL,
               PRIMARY KEY (`ID`)                          
             )";
+
+	        $sqls[] = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}ahm_cron_jobs` (
+			  `ID` int(11) NOT NULL AUTO_INCREMENT,		
+    		  `code` varchar(255) NOT NULL,
+			  `type` varchar(250) NOT NULL,
+			  `data` json DEFAULT NULL,
+			  `execute_at` int(11) NOT NULL,
+			  `repeat_execution` int(11) NOT NULL DEFAULT '0',
+    		  `execution_count` int(11) NOT NULL DEFAULT '0',
+			  `interval` int(11) NOT NULL DEFAULT '0',			  
+			  `created_at` int(11) NOT NULL DEFAULT '0',			  
+			  `created_by` int(11) NOT NULL DEFAULT '0',			  
+			  PRIMARY KEY (`ID`)
+			) ENGINE=InnoDB";
+
+	        $sqls[] = "ALTER TABLE `{$wpdb->prefix}ahm_cron_jobs` ADD UNIQUE KEY `code` (`code`);";
 
             foreach ($sqls as $qry) {
                 $wpdb->query($qry);

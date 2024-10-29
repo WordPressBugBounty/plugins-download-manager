@@ -316,6 +316,9 @@ class __
 
                 default:
                     $value = esc_sql(esc_attr($value));
+	                if($sanitize !== '' && @preg_match($sanitize, '') !== false) {
+		                $value = preg_replace($sanitize, '', $value);
+	                }
                     break;
             }
             $value = __::escs($value);

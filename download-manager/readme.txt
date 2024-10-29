@@ -1,11 +1,11 @@
 === Download Manager ===
 Contributors: w3eden, codename065, shahriar0822, shimo16ab, shafayat-alam
 Donate link:
-Tags: download manager, document management, file manager, digital store, ecommerce, document management plugin,  download monitor, download counter, password protection, download protection
+Tags: download manager, document management, file manager, digital store, ecommerce, download monitor
 Requires at least: 5.3
 Tested up to: 6.6
 License: GPLv3
-Stable tag: 3.3.00
+Stable tag: 3.3.01
 
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
@@ -201,6 +201,10 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.01 - 2024.10.29 =
+* Fixed an issue with user interface ui settings
+* Added custom cron job manager to handle various wpdm cron job efficiently
 
 = 3.3.00 - 2024.10.09 =
 * Fixed a parameter sanitization issue with short-code `[wpdm_login_form]`

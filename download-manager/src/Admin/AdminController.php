@@ -4,6 +4,7 @@ namespace WPDM\Admin;
 
 use WPDM\__\__;
 use WPDM\__\Email;
+use WPDM\__\Installer;
 use WPDM\Admin\Menu\AddOns;
 use WPDM\Admin\Menu\Categories;
 use WPDM\Admin\Menu\Packages;
@@ -132,6 +133,10 @@ class AdminController {
             $message = '<b>Congratulation! You are using Download Manager ' . WPDM_VERSION . '</b><br/>This is a major update. You must update all Download Manager add-ons too, to keep them compatible with Download Manager ' . WPDM_VERSION;
             printf('<div id="wpdmvnotice" class="notice notice-success  is-dismissible"><p>%1$s</p></div>', $message);
         }
+	    if (is_admin() && current_user_can('manage_options') && Installer::dbUpdateRequired()) {
+		    $message = sprintf(__('A database update is required for <strong>WordPress Download Manager Pro %s</strong>. Please click the button on the right to update your database now.', WPDM_TEXT_DOMAIN), WPDM_VERSION);
+		    printf('<div id="wpdmvnotice" class="notice notice-warning  is-dismissible w3eden"><div style="padding: 20px;line-height: 22px;display:flex"><div  style="width:9999px" >%1$s</div><div style="white-space: nowrap"><a class="btn btn-primary btn-sm" href="%2$s">Update Database</a></div></div></div>', $message, admin_url('edit.php?post_type=wpdmpro&page=settings'));
+	    }
     }
 
     function removeNotices()

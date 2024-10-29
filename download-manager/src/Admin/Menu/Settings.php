@@ -3,6 +3,7 @@
 namespace WPDM\Admin\Menu;
 
 use WPDM\__\__;
+use WPDM\__\CronJob;
 use WPDM\__\Installer;
 use WPDM\__\Session;
 
@@ -17,6 +18,8 @@ class Settings
         add_action('admin_init', array($this, 'initiateSettings'));
         add_action('wp_ajax_wpdm_settings', array($this, 'loadSettingsPage'));
         add_action('admin_menu', array($this, 'Menu'), 999999);
+
+	    add_action('wp_ajax_wpdm_delete_cron', array($this, 'deleteCron'));
     }
 
     function Menu(){
@@ -90,7 +93,8 @@ class Settings
 
         $stabs = apply_filters("add_wpdm_settings_tab", $stabs);
 
-        $stabs['privacy'] = array('id' => 'privacy','icon'=>'fas fa-user-shield',  'link' => 'edit.php?post_type=wpdmpro&page=wpdm-settings&tab=privacy', 'title' => 'Privacy', 'callback' => array($this, 'privacy'));
+	    $stabs['wpdm-crons'] = array('id' => 'wpdm-crons','icon'=>'fa fa-clock-rotate-left',  'link' => 'edit.php?post_type=wpdmpro&page=settings&tab=wpdm-crons', 'title' => __('Cron Jobs', 'download-manager'), 'callback' => array($this, 'cronJobs'));
+	    $stabs['privacy'] = array('id' => 'privacy','icon'=>'fas fa-user-shield',  'link' => 'edit.php?post_type=wpdmpro&page=wpdm-settings&tab=privacy', 'title' => 'Privacy', 'callback' => array($this, 'privacy'));
 
     }
 
@@ -144,10 +148,11 @@ class Settings
             $wp_rewrite->flush_rules();
             die('Settings Saved Successfully');
         }
-
-        if(Installer::dbUpdateRequired()){
-            Installer::updateDB();
-        }
+	    $show_db_update_notice = 0;
+	    if(Installer::dbUpdateRequired()){
+		    $show_db_update_notice = 1;
+		    Installer::updateDB();
+	    }
 
         include wpdm_admin_tpl_path("settings/basic.php");
 
@@ -293,5 +298,18 @@ class Settings
         include wpdm_admin_tpl_path("settings/privacy.php");
     }
 
+	function cronJobs() {
+		if (wpdm_query_var('task') == 'wdm_save_settings' && wpdm_query_var('section') == 'wpdm-crons') {
+			_e("Nothing to update!", "download-manager");
+			die();
+		}
+		include wpdm_admin_tpl_path("settings/crons.php");
+	}
+
+	function deleteCron() {
+		__::isAuthentic('wpdmdcx', WPDM_PRI_NONCE, WPDM_ADMIN_CAP);
+		CronJob::delete(wpdm_query_var('cronid', 'int'));
+		wp_send_json(['success' => true]);
+	}
 
 }
