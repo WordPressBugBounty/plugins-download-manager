@@ -98,21 +98,21 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
             </tr>
             <tr>
                 <td><?php echo __("Success:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-success" class="color-control" name="__wpdm_ui_colors[success]" value="<?php echo isset($uicolors['success'])?$uicolors['success']:'#18ce0f'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-success-hover" class="color-control" name="__wpdm_ui_colors[success_hover]" value="<?php echo isset($uicolors['success_hover'])?$uicolors['success_hover']:'#18ce0f'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-success-acitve" class="color-control" name="__wpdm_ui_colors[success_active]" value="<?php echo isset($uicolors['success_active'])?$uicolors['success_active']:'#18ce0f'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-success" class="color-control" name="__wpdm_ui_colors[success]" value="<?php echo isset($uicolors['success'])?esc_attr($uicolors['success']):'#18ce0f'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-success-hover" class="color-control" name="__wpdm_ui_colors[success_hover]" value="<?php echo isset($uicolors['success_hover'])?esc_attr($uicolors['success_hover']):'#18ce0f'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-success-acitve" class="color-control" name="__wpdm_ui_colors[success_active]" value="<?php echo isset($uicolors['success_active'])?esc_attr($uicolors['success_active']):'#18ce0f'; ?>" /></td>
             </tr>
             <tr>
                 <td><?php echo __("Warning:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-warning" class="color-control" name="__wpdm_ui_colors[warning]" value="<?php echo isset($uicolors['warning'])?$uicolors['warning']:'#FFB236'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-warning-hover" class="color-control" name="__wpdm_ui_colors[warning_hover]" value="<?php echo isset($uicolors['warning_hover'])?$uicolors['warning_hover']:'#FFB236'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-warning-acitve" class="color-control" name="__wpdm_ui_colors[warning_active]" value="<?php echo isset($uicolors['warning_active'])?$uicolors['warning_active']:'#FFB236'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-warning" class="color-control" name="__wpdm_ui_colors[warning]" value="<?php echo isset($uicolors['warning'])?esc_attr($uicolors['warning']):'#FFB236'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-warning-hover" class="color-control" name="__wpdm_ui_colors[warning_hover]" value="<?php echo isset($uicolors['warning_hover'])?esc_attr($uicolors['warning_hover']):'#FFB236'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-warning-acitve" class="color-control" name="__wpdm_ui_colors[warning_active]" value="<?php echo isset($uicolors['warning_active'])?esc_attr($uicolors['warning_active']):'#FFB236'; ?>" /></td>
             </tr>
             <tr>
                 <td><?php echo __("Danger:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-danger" class="color-control" name="__wpdm_ui_colors[danger]" value="<?php echo isset($uicolors['danger'])?$uicolors['danger']:'#ff5062'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-danger-hover" class="color-control" name="__wpdm_ui_colors[danger_hover]" value="<?php echo isset($uicolors['danger_hover'])?$uicolors['danger_hover']:'#ff5062'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-danger-active" class="color-control" name="__wpdm_ui_colors[danger_active]" value="<?php echo isset($uicolors['danger_active'])?$uicolors['danger_active']:'#ff5062'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-danger" class="color-control" name="__wpdm_ui_colors[danger]" value="<?php echo isset($uicolors['danger'])?esc_attr($uicolors['danger']):'#ff5062'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-danger-hover" class="color-control" name="__wpdm_ui_colors[danger_hover]" value="<?php echo isset($uicolors['danger_hover'])?esc_attr($uicolors['danger_hover']):'#ff5062'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-danger-active" class="color-control" name="__wpdm_ui_colors[danger_active]" value="<?php echo isset($uicolors['danger_active'])?esc_attr($uicolors['danger_active']):'#ff5062'; ?>" /></td>
             </tr>
             </tbody>
         </table>
