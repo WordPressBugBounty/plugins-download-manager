@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) die();
  */
 
 
-$pid = wpdm_query_var('__wpdmxp');
+$pid = wpdm_query_var('__wpdmxp', 'int');
 //setup_postdata($post);
 //$pack = new \WPDM\Package();
 //$pack->Prepare(get_the_ID());

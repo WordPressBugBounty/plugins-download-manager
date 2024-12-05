@@ -3,9 +3,9 @@ Contributors: w3eden, codename065, shahriar0822, shimo16ab, shafayat-alam
 Donate link:
 Tags: download manager, document management, file manager, digital store, ecommerce, download monitor
 Requires at least: 5.3
-Tested up to: 6.6
+Tested up to: 6.7
 License: GPLv3
-Stable tag: 3.3.03
+Stable tag: 3.3.04
 
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
@@ -202,6 +202,11 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 
 == Changelog ==
 
+= 3.3.04 - 2024.12.05 =
+* Fixed an issue with the media access control function  ( reported by Rafie Muhammad from Patchstack )
+* Fixed an issue with the shortcode-iframe page ( reported by mikemyers to Wordfence )
+* Fixed an issue with the password lock ( reported by mikemyers to Wordfence )
+
 = 3.3.03 - 2024.11.27 =
 * Fixed an issue with the input sanitization in ui settings
 
@@ -220,7 +225,7 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 * Fixed an input sanitization issue ( Reported by Animesh from WPScan )
 
 = 3.2.98 - 2024.07.28 =
-* Fixed a shortcode parameter sanitzation issue with the all downloads shortcode ( reported by Jack Taylor from Wordfence )
+* Fixed a shortcode parameter sanitization issue with the all downloads shortcode ( reported by Jack Taylor from Wordfence )
 
 = 3.2.97 - 2024.07.08 =
 * Compatibility update for WorPress 6.6

@@ -385,7 +385,7 @@ class Apply
             $packagemeta = wpdm_custom_data($fileid);
             $password = isset($data[$fileid]['password']) && $data[$fileid]['password'] != "" ? $data[$fileid]['password'] : $packagemeta['password'];
             $pu = isset($packagemeta['password_usage']) && is_array($packagemeta['password_usage']) ? $packagemeta['password_usage'] : array();
-            if ($password == $filepass || substr_count($password, "[" . $filepass . "]") > 0) {
+            if ($filepass !== '' && $password == $filepass || substr_count($password, "[{$filepass}]") > 0) {
                 $pul = $packagemeta['password_usage_limit'];
                 if (is_array($pu) && isset($pu[$password]) && $pu[$password] >= $pul && $pul > 0) {
                     $data['error'] = __("Password usages limit exceeded", "download-manager");
