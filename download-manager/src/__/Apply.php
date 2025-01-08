@@ -564,14 +564,17 @@ class Apply
         $uicolors = maybe_unserialize(get_option('__wpdm_ui_colors', array()));
         //$ltemplates = maybe_unserialize(get_option("_fm_link_templates", true));
         //$ptemplates = maybe_unserialize(get_option("_fm_page_templates", true));
-        $font = get_option('__wpdm_google_font', 'Rubik');
-        $font = $font ? $font . ',' : '';
+	    $font      = get_option( '__wpdm_google_font', 'Sen' );
+	    $font      = explode( ":", $font );
+	    $font      = $font[0];
+	    $font      = $font ? "{$font}" : '';
+	    $font = $font ? "{$font}" : '-apple-system';
 
         $css = WPDM()->packageTemplate->getStyles('link');
 
         ?>
         <?php if ((int)get_option('__wpdm_enable_gf', 0) === 1 && get_option('__wpdm_google_font') !== '') { ?>
-        <link href="https://fonts.googleapis.com/css?family=<?php echo get_option('__wpdm_google_font', 'Rubik'); ?>"
+        <link href="https://fonts.googleapis.com/css2?family=<?php echo get_option('__wpdm_google_font', 'Sen'); ?>"
               rel="stylesheet">
         <style>
             .w3eden .fetfont,
@@ -590,7 +593,7 @@ class Apply
             .w3eden .wpdm_cart thead th,
             .w3eden #csp .list-group-item,
             .w3eden .modal-title {
-                font-family: <?php echo __::sanitize_var($font); ?> -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+                font-family: "<?php echo __::sanitize_var($font); ?>", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
                 text-transform: uppercase;
                 font-weight: 700;
             }
@@ -625,7 +628,10 @@ class Apply
         $info = isset($uicolors['info']) ? $uicolors['info'] : '#2CA8FF';
         $warning = isset($uicolors['warning']) ? $uicolors['warning'] : '#f29e0f';
         $danger = isset($uicolors['danger']) ? $uicolors['danger'] : '#ff5062';
-        $font = get_option('__wpdm_google_font', 'Rubik');
+        $font      = get_option( '__wpdm_google_font', 'Sen' );
+	    $font      = explode( ":", $font );
+	    $font      = $font[0];
+	    $font      = $font ? "{$font}" : '';
         $font = $font ? "{$font}" : '-apple-system';
         if (is_singular('wpdmpro'))
             $ui_button = get_option('__wpdm_ui_download_button');

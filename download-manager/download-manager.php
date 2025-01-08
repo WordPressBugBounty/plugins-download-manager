@@ -5,7 +5,7 @@ Plugin URI: https://www.wpdownloadmanager.com/purchases/
 Description: Manage, Protect and Track file downloads, and sell digital products from your WordPress site. A complete digital asset management solution.
 Author: W3 Eden, Inc.
 Author URI: https://www.wpdownloadmanager.com/
-Version: 3.3.04
+Version: 3.3.05
 Text Domain: download-manager
 Domain Path: /languages
 */
@@ -39,7 +39,7 @@ use WPDM\Widgets\WidgetController;
 
 global $WPDM;
 
-define('WPDM_VERSION','3.3.04');
+define('WPDM_VERSION','3.3.05');
 
 define('WPDM_TEXT_DOMAIN','download-manager');
 
@@ -255,7 +255,7 @@ final class WordPressDownloadManager{
      * @usage Load Plugin Text Domain
      */
     function loadTextdomain(){
-        load_plugin_textdomain('download-manager', WP_PLUGIN_URL . "/download-manager/languages/", 'download-manager/languages/');
+        load_plugin_textdomain('download-manager', false, 'download-manager/languages/');
     }
 
     /**
@@ -416,14 +416,10 @@ final class WordPressDownloadManager{
 
         if(is_admin()) return;
 
-        wp_register_style('wpdm-frontend-css', plugins_url('/download-manager/assets/bootstrap/css/bootstrap.min.css'));
         wp_register_style('wpdm-font-awesome', WPDM_FONTAWESOME_URL);
-        wp_register_style('wpdm-front3', plugins_url('/assets/css/front3.css', __FILE__));
-        wp_register_style('wpdm-front', plugins_url('/assets/css/front.css', __FILE__) , 99999999);
-
-        wp_register_script('wpdm-poper', plugins_url('/assets/bootstrap/js/popper.min.js', __FILE__), array('jquery'));
-        wp_register_script('wpdm-frontend-js', plugins_url('/assets/bootstrap/js/bootstrap.min.js', __FILE__), array('jquery'));
+        wp_register_style('wpdm-front', plugins_url('/assets/css/front.min.css', __FILE__) , 99999999);
         wp_register_script('jquery-validate', plugins_url('/assets/js/jquery.validate.min.js', __FILE__), array('jquery'));
+	    wp_register_script('wpdm-frontend-js', plugins_url('/assets/js/wpdm.js', __FILE__), array('jquery'));
 
     }
 
@@ -442,31 +438,12 @@ final class WordPressDownloadManager{
 
         //wp_register_style('font-awesome', WPDM_BASE_URL . 'assets/font-awesome/css/font-awesome.min.css');
 
-        $wpdmss = maybe_unserialize(get_option('__wpdm_disable_scripts', array()));
-        if(!is_array($wpdmss)) $wpdmss = array();
 
-	    $wpdmss = apply_filters("wpdm_disable_scripts", $wpdmss);
+	    wp_enqueue_style('wpdm-font-awesome');
 
-        if (is_array($wpdmss) && !in_array('wpdm-font-awesome', $wpdmss)) {
-            wp_enqueue_style('wpdm-font-awesome');
-        }
+	    wp_enqueue_style('wpdm-front' );
 
-
-        if (is_array($wpdmss) && !in_array('wpdm-frontend-css', $wpdmss)) {
-            wp_enqueue_style('wpdm-frontend-css' );
-        }
-
-        if (is_array($wpdmss) && !in_array('wpdm-front', $wpdmss)) {
-            wp_enqueue_style('wpdm-front' );
-        }
-
-
-        if (is_array($wpdmss) && !in_array('wpdm-frontend-js', $wpdmss)) {
-            wp_enqueue_script('wpdm-poper');
-            wp_enqueue_script('wpdm-frontend-js' );
-        }
-
-        wp_register_script('wpdm-frontjs', plugins_url('/assets/js/front.js', __FILE__), array('jquery'), WPDM_VERSION);
+        wp_register_script('wpdm-frontjs', plugins_url('/assets/js/front.min.js', __FILE__), array('jquery'), WPDM_VERSION);
 
         $wpdm_js = array(
             'spinner' => '<i class="fas fa-sun fa-spin"></i>',
@@ -485,11 +462,11 @@ final class WordPressDownloadManager{
 		    'start_dl' => __("Start Download", "download-manager")
 	    ]);
 
+        wp_enqueue_script('wpdm-frontend-js');
         wp_enqueue_script('wpdm-frontjs');
 
         if(is_object($post) && substr_count($post->post_content, "wpdm_all_packages")){
             wp_enqueue_script("datatable", plugins_url('/assets/js/jquery.dataTables.min.js', __FILE__));
-            wp_enqueue_script("datatable-bs4", plugins_url('/assets/js/dataTables.bootstrap4.min.js', __FILE__));
             wp_enqueue_style("datatable-css", plugins_url('/assets/css/jquery.dataTables.min.css', __FILE__));
         }
 

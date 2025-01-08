@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) die();
  * Time: 12:33 AM
  */
 
+error_reporting(0);
 //global $post;
 $ID = wpdm_query_var('__wpdmlo');
 //$post = get_post(wpdm_query_var('__wpdmlo'));
@@ -20,16 +21,121 @@ $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
 <head>
     <title>Download <?php get_the_title($ID); ?></title>
     <?php if($form_lock === 1  || $base_price > 0) wp_head(); else { ?>
-        <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/front.css" />
-        <link rel="stylesheet" href="<?php echo  WPDM_FONTAWESOME_URL ?>" />
+        <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>css/front.css" />
+        <link rel="stylesheet" href="<?= WPDM_FONTAWESOME_URL ?>" />
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.min.js"></script>
-        <script src="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/js/bootstrap.min.js"></script>
-        <script src="<?php echo WPDM_BASE_URL; ?>assets/js/front.js"></script>
+        <script src="<?php echo WPDM_ASSET_URL; ?>js/wpdm.js"></script>
+        <script src="<?php echo WPDM_ASSET_URL; ?>js/front.js"></script>
+        <?php
+        $_font = get_option('__wpdm_google_font', 'Sen');
+        $font = explode(":", $_font);
+        $font = $font[0];
+        $font = $font ? $font . ',' : '';
+        if($_font) {
+        ?>
+        <link href="https://fonts.googleapis.com/css2?family=<?php echo str_replace("regular", 400, $_font); ?>" rel="stylesheet">
+        <style>
+            .w3eden .fetfont,
+            .w3eden .btn,
+            .w3eden .btn.wpdm-front h3.title,
+            .w3eden .wpdm-social-lock-box .IN-widget a span:last-child,
+            .w3eden .card-header,
+            .w3eden .card-footer,
+            .w3eden .badge,
+            .w3eden .label,
+            .w3eden .table,
+            .w3eden .card-body,
+            .w3eden .wpdm-frontend-tabs a,
+            .w3eden .alert:before,
+            .w3eden .discount-msg,
+            .w3eden .panel.dashboard-panel h3,
+            .w3eden #wdmds .list-group-item,
+            .w3eden #package-description .wp-switch-editor,
+            .w3eden .w3eden.author-dashbboard .nav.nav-tabs li a,
+            .w3eden .wpdm_cart thead th,
+            .w3eden #csp .list-group-item,
+            .w3eden .modal-title {
+                font-family: <?php echo $font; ?> -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            }
+            .w3eden .btn
+            {
+                font-weight: 800 !important;
+            }
+            .w3eden .btn {
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
+            .w3eden #csp .list-group-item {
+                text-transform: unset;
+            }
 
+
+        </style>
     <?php
-        \WPDM\__\Apply::googleFont();
+    }
+    $wpdmss = maybe_unserialize(get_option('__wpdm_disable_scripts', array()));
+    $uicolors = maybe_unserialize(get_option('__wpdm_ui_colors', array()));
+    $primary = isset($uicolors['primary']) ? $uicolors['primary'] : '#4a8eff';
+    $secondary = isset($uicolors['secondary']) ? $uicolors['secondary'] : '#4a8eff';
+    $success = isset($uicolors['success']) ? $uicolors['success'] : '#18ce0f';
+    $info = isset($uicolors['info']) ? $uicolors['info'] : '#2CA8FF';
+    $warning = isset($uicolors['warning']) ? $uicolors['warning'] : '#f29e0f';
+    $danger = isset($uicolors['danger']) ? $uicolors['danger'] : '#ff5062';
+    $font = get_option('__wpdm_google_font', 'Sen');
+    $font = explode(":", $font);
+    $font = $font[0];
+    $font = $font ? "\"{$font}\"," : '';
+    if (is_singular('wpdmpro'))
+	    $ui_button = get_option('__wpdm_ui_download_button');
+    else
+	    $ui_button = get_option('__wpdm_ui_download_button_sc');
+    $class = ".btn." . (isset($ui_button['color']) ? $ui_button['color'] : 'btn-primary') . (isset($ui_button['size']) && $ui_button['size'] != '' ? "." . $ui_button['size'] : '');
+
+    ?>
+        <style>
+
+            :root {
+                --color-primary: <?php echo $primary; ?>;
+                --color-primary-rgb: <?php echo wpdm_hex2rgb($primary); ?>;
+                --color-primary-hover: <?php echo isset($uicolors['primary'])?$uicolors['primary_hover']:'#4a8eff'; ?>;
+                --color-primary-active: <?php echo isset($uicolors['primary'])?$uicolors['primary_active']:'#4a8eff'; ?>;
+                --clr-sec: <?php echo $secondary; ?>;
+                --clr-sec-rgb: <?php echo wpdm_hex2rgb($secondary); ?>;
+                --clr-sec-hover: <?php echo isset($uicolors['secondary'])?$uicolors['secondary_hover']:'#4a8eff'; ?>;
+                --clr-sec-active: <?php echo isset($uicolors['secondary'])?$uicolors['secondary_active']:'#4a8eff'; ?>;
+                --color-success: <?php echo $success; ?>;
+                --color-success-rgb: <?php echo wpdm_hex2rgb($success); ?>;
+                --color-success-hover: <?php echo isset($uicolors['success_hover'])?$uicolors['success_hover']:'#4a8eff'; ?>;
+                --color-success-active: <?php echo isset($uicolors['success_active'])?$uicolors['success_active']:'#4a8eff'; ?>;
+                --color-info: <?php echo $info; ?>;
+                --color-info-rgb: <?php echo wpdm_hex2rgb($info); ?>;
+                --color-info-hover: <?php echo isset($uicolors['info_hover'])?$uicolors['info_hover']:'#2CA8FF'; ?>;
+                --color-info-active: <?php echo isset($uicolors['info_active'])?$uicolors['info_active']:'#2CA8FF'; ?>;
+                --color-warning: <?php echo $warning; ?>;
+                --color-warning-rgb: <?php echo wpdm_hex2rgb($warning); ?>;
+                --color-warning-hover: <?php echo isset($uicolors['warning_hover'])?$uicolors['warning_hover']:'orange'; ?>;
+                --color-warning-active: <?php echo isset($uicolors['warning_active'])?$uicolors['warning_active']:'orange'; ?>;
+                --color-danger: <?php echo $danger; ?>;
+                --color-danger-rgb: <?php echo wpdm_hex2rgb($danger); ?>;
+                --color-danger-hover: <?php echo isset($uicolors['danger_hover'])?$uicolors['danger_hover']:'#ff5062'; ?>;
+                --color-danger-active: <?php echo isset($uicolors['danger_active'])?$uicolors['danger_active']:'#ff5062'; ?>;
+                --color-green: <?php echo isset($uicolors['green'])?$uicolors['green']:'#30b570'; ?>;
+                --color-blue: <?php echo isset($uicolors['blue'])?$uicolors['blue']:'#0073ff'; ?>;
+                --color-purple: <?php echo isset($uicolors['purple'])?$uicolors['purple']:'#8557D3'; ?>;
+                --color-red: <?php echo isset($uicolors['red'])?$uicolors['red']:'#ff5062'; ?>;
+                --color-muted: rgba(69, 89, 122, 0.6);
+                --wpdm-font: <?php echo $font; ?> -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            }
+
+            .wpdm-download-link<?php echo $class; ?> {
+                border-radius: <?php echo (isset($ui_button['borderradius'])?$ui_button['borderradius']:4); ?>px;
+            }
+
+
+        </style>
+	    <?php
     }
     ?>
     <style>
@@ -216,6 +322,16 @@ $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
         form *{
             max-width: 100% !important;
         }
+        .card-body {
+            line-height: 1.5;
+            letter-spacing: 0.5px;
+            font-size: 11pt;
+        }
+
+        .w3eden .input-group-lg .form-control{
+            font-size: 15pt !important;
+        }
+
     </style>
 
 
@@ -226,7 +342,7 @@ $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
 <body class="w3eden" style="background: transparent">
 
 <div class="modal fade" id="wpdm-locks" tabindex="-1" role="dialog" aria-labelledby="wpdm-optinmagicLabel">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="width: <?php echo $terms_lock === 1?395:365; ?>px;max-width: calc(100% - 20px);">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="width: <?php echo $terms_lock === 1?395:365; ?>px;max-width: calc(100% - 20px);margin: 0 auto;">
         <div class="modal-content">
             <div class="modal-icon">
                 <?php if(has_post_thumbnail($ID)) echo get_the_post_thumbnail($ID, 'thumbnail'); else echo WPDM()->package::icon($ID, true, 'p-2'); ?>
@@ -240,7 +356,8 @@ $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
             </div>
             <div class="modal-body" id="wpdm-lock-options">
                 <?php
-                echo WPDM()->package->downloadLink(wpdm_query_var('__wpdmlo', 'int'), 1);
+                $extras = isset($_REQUEST['__wpdmfl']) ? ['ind' => wpdm_query_var('__wpdmfl', 'txt')] : [];
+                echo WPDM()->package->downloadLink(wpdm_query_var('__wpdmlo', 'int'), 1, $extras);
                 ?>
             </div>
 
@@ -261,10 +378,10 @@ $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
                 $(this).attr('target', '_blank');
         });
 
-        $('body').on('click','a', function () {
+        /*$('body').on('click','a', function () {
             if($(this).attr('href') !== '#')
                 $(this).attr('target', '_parent');
-        });
+        });*/
 
         /*$('body').on('click','a[data-downloadurl]', function () {
             window.parent.location.href = $(this).data('downloadurl');

@@ -687,6 +687,7 @@ class FileSystem
      */
     public static function fileExt($file)
     {
+        if(!$file) return '';
         $ext = pathinfo($file, PATHINFO_EXTENSION);
         $ext  = strtolower($ext);
         if($ext === '') $ext = "|=|";

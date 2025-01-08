@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) die();
  * Date: 1/16/18
  * Time: 12:33 AM
  */
-
+error_reporting(0);
 
 $pid = wpdm_query_var('__wpdmxp', 'int');
 //setup_postdata($post);
@@ -18,11 +18,11 @@ $pid = wpdm_query_var('__wpdmxp', 'int');
 <head>
     <title>Download <?php the_title(); ?></title>
     <script>
-        var wpdm_url = <?php echo  json_encode(WPDM()->wpdm_urls) ?>;
+        var wpdm_url = <?= json_encode(WPDM()->wpdm_urls) ?>;
     </script>
     <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/css/bootstrap.css" />
     <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/front.css" />
-    <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>fontawesome/css/fontawesome.min.css" />
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.min.js"></script>
     <script src="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/js/bootstrap.min.js"></script>
@@ -214,6 +214,9 @@ echo do_shortcode("[wpdm_package id='{$pid}']");
         $('body').on('click','a', function () {
             $(this).attr('target', '_blank');
         });
+
+
+
 
     });
 

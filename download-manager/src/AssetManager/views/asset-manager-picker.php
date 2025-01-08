@@ -24,7 +24,7 @@ global $wp_scripts;
         \WPDM\__\Apply::googleFont();
         ?>
         <style>
-            @import url("https://fonts.googleapis.com/css?family=Overpass+Mono&subset=latin");
+            @import url("https://fonts.googleapis.com/css2?family=Overpass+Mono&subset=latin");
             html, body{
                 overflow: visible;
                 height: 100%;

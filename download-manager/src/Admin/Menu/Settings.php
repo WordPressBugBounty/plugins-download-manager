@@ -167,7 +167,7 @@ class Settings
             foreach ($_POST as $optn => $optv) {
                 if(strpos("__".$optn, '_wpdm_')) {
                     //$optv = wpdm_sanitize_array($optv);
-	                $optv = wpdm_sanitize_array($optv, "/([^\#a-zA-Z0-9_\-\s])/");
+	                $optv = wpdm_sanitize_array($optv, "/([^\#a-zA-Z0-9_\-\s:\.\;\@])/");
                     //echo $optn."=".$optv."<br/>";
                     update_option($optn, $optv, false);
                 }

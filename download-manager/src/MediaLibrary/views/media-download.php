@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) die();
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.js"></script>
     <script src="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/js/bootstrap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css?family=Merriweather+Sans:300,400,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:300,400,700" rel="stylesheet">
     <?php
     WPDM()->apply::uiColors();
     ?>

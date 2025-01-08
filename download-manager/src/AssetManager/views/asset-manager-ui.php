@@ -15,7 +15,7 @@ if(is_admin()){
 }
 ?>
     <style>
-        @import url("https://fonts.googleapis.com/css?family=Overpass+Mono&subset=latin");
+        @import url("https://fonts.googleapis.com/css2?family=Overpass+Mono&subset=latin");
         #wpcontent{
             padding-left: 0 !important;
         }

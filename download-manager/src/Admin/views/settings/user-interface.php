@@ -11,31 +11,7 @@ $ui_button_sc = get_option('__wpdm_ui_download_button_sc');
 $gappsk = get_option('_wpdm_google_app_secret', 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E');
 $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
 ?>
-<!-- div class="panel panel-default">
-    <div class="panel-heading"><?php _e("Frontend UI Library",'download-manager'); ?></div>
-    <div class="panel-body">
-        <label style="margin-right: 20px"><input  <?php checked('', get_option('__wpdm_bsversion','')); ?>  type="radio" value="" name="__wpdm_bsversion"> <?php _e( "Bootstrap 4" , "download-manager" ); ?></label> <label><input <?php checked('3', get_option('__wpdm_bsversion','')); ?> type="radio" value="3" name="__wpdm_bsversion"> <?php _e( "Bootstrap 3" , "download-manager" ); ?></label>
-    </div>
-</div -->
-<div class="panel panel-default">
-    <div class="panel-heading"><?php _e("Disable Style & Script",'download-manager'); ?></div>
-    <div class="panel-body">
 
-        <?php
-            $wpdmss = maybe_unserialize(get_option('__wpdm_disable_scripts', array()));
-            if(!is_array($wpdmss)) $wpdmss = array();
-        ?>
-        <input type="hidden" name="__wpdm_disable_scripts[]" value="" >
-        <ul>
-            <li><label><input <?php if(in_array('wpdm-frontend-js', $wpdmss)) echo 'checked=checked'; ?> type="checkbox" value="wpdm-frontend-js" name="__wpdm_disable_scripts[]"> <?php _e( "Disable Frontend JS" , "download-manager" ); ?></label></li>
-            <li><label><input <?php if(in_array('wpdm-frontend-css', $wpdmss)) echo 'checked=checked'; ?> type="checkbox" value="wpdm-frontend-css" name="__wpdm_disable_scripts[]"> <?php _e( "Disable Frontend CSS" , "download-manager" ); ?></label></li>
-            <li><label><input <?php if(in_array('wpdm-font-awesome', $wpdmss)) echo 'checked=checked'; ?> type="checkbox" value="wpdm-font-awesome" name="__wpdm_disable_scripts[]"> <?php _e( "Disable Font Awesome" , "download-manager" ); ?></label></li>
-            <li><label><input <?php if(in_array('wpdm-front', $wpdmss)) echo 'checked=checked'; ?> type="checkbox" value="wpdm-front" name="__wpdm_disable_scripts[]"> <?php _e( "Disable Front CSS" , "download-manager" ); ?></label></li>
-            <!-- li><label><input <?php if(in_array('google-font', $wpdmss)) echo 'checked=checked'; ?> type="checkbox" value="google-font" name="__wpdm_disable_scripts[]"> <?php _e("Google Font","download-manager"); ?></label></li -->
-        </ul>
-        <em><?php _e( "Because, sometimes your theme may have those scripts/styles enqueued already" , "download-manager" ); ?></em>
-    </div>
-</div>
 
 <div class="row">
     <div class="col-md-6">
@@ -52,10 +28,10 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
     <div class="col-md-6">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <?= __('Font Preview', WPDM_TEXT_DOMAIN); ?>
+				<?= __('Font Preview', WPDM_TEXT_DOMAIN); ?>
                 <button type="button" id="pig" class="btn btn-xs btn-info pull-right">Preview in Google</button>
             </div>
-            <div class="panel-body ttip" id="fontpreview" style="font-size: 16pt;line-height: 34px;text-align: center;" contentEditable="true" title="<?= esc_attr__('You can change the preview text') ?>">
+            <div class="panel-body ttip" id="fontpreview" style="font-size: 16pt;line-height: 34px;text-align: center;font-family: '<?php echo preg_replace("/:.+/", "", get_option('__wpdm_google_font', 'Sen')); ?>'" contentEditable="true" title="<?= esc_attr__('You can change the preview text') ?>">
                 Hello World
             </div>
         </div>
@@ -311,24 +287,40 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
             $($(this).data('target')).css('border-radius', $(this).val()+'px');
         });
 
-        $.getJSON("https://www.googleapis.com/webfonts/v1/webfonts?key=<?php echo $gappsk; ?>", function(fonts){
+        function generateGoogleFontUrl(fontJson) {
+            const family = fontJson.family.replace(/ /g, '+'); // Replace spaces with '+'
+            let url = `${family}`;
+            if(fontJson.axes) {
+                const weightAxis = fontJson.axes.find(axis => axis.tag === 'wght');
+                let wghtRange = '';
+                if (weightAxis) {
+                    wghtRange = `${weightAxis.start}..${weightAxis.end}`;
+                    url += `:wght@${wghtRange}`;
+                }
+            }
+            return url;
+        }
+
+        $.getJSON("https://www.googleapis.com/webfonts/v1/webfonts?capability=VF&key=<?php echo $gappsk; ?>", function(fonts){
             $('#__wpdm_google_font')
                 .append($("<option></option>")
                     .attr("value", '')
                     .text('-- NONE SELECTED --'));
             $('#__wpdm_google_font').each(function () {
                 for (var i = 0; i < fonts.items.length; i++) {
-                    if(fonts.items[i].family+':wght@'+fonts.items[i].variants.join(';') === $(this).data('selected'))
+                    let value = generateGoogleFontUrl(fonts.items[i]);
+                    if(value === $(this).data('selected'))
                         $(this)
                             .append($("<option></option>")
-                                .attr("value", fonts.items[i].family+':wght@'+fonts.items[i].variants.join(';'))
+                                .attr("value", value)
                                 .attr("selected", "selected")
                                 .text(fonts.items[i].family));
                     else
                         $(this)
                             .append($("<option></option>")
-                                .attr("value", fonts.items[i].family+':wght@'+fonts.items[i].variants.join(';'))
+                                .attr("value", value)
                                 .text(fonts.items[i].family));
+
                 }
                 $(this).select2({minimumResultsForSearch: 6});
             });
