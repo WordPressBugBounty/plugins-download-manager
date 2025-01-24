@@ -356,7 +356,7 @@ class Packages {
                                             <div class="col-md-3">
                                                 <button onclick="location.href='post.php?action=edit&post='+jQuery('#gotopg').val()"
                                                         type="button"
-                                                        class="btn btn-secondary btn-block"><?php echo esc_attr__( 'Go', 'download-manager' ); ?></button>
+                                                        class="btn btn-info btn-block"><?php echo esc_attr__( 'Go', 'download-manager' ); ?></button>
                                             </div>
                                         </div>
 
@@ -449,7 +449,7 @@ class Packages {
 
                                             <div class="col-md-4">
                                                 <label>&nbsp;</label><br/>
-                                                <button disabled="disabled" class="btn btn-secondary btn-block"
+                                                <button disabled="disabled" class="btn btn-info btn-block"
                                                         style="height: 34px" type="button">Generate
                                                 </button>
                                             </div>

@@ -5,10 +5,10 @@ global $current_user;
 $store = get_user_meta(get_current_user_id(), '__wpdm_public_profile', true);
 
 ?>
-
+<style>.mr-1{margin-right: 5px; }</style>
 <div class="w3eden user-dashboard">
     <div class="row">
-        <div id="wpdm-dashboard-sidebar" class="col-md-3">
+        <div id="wdmds" class="col-md-3">
 
             <div id="logo-block">
                 <img class="shop-logo" id="shop-logo" src="<?php echo isset($store['logo']) && $store['logo'] != '' ? $store['logo'] : get_avatar_url( $current_user->user_email, array('size' => 512) ); ?>"/>
@@ -26,21 +26,21 @@ $store = get_user_meta(get_current_user_id(), '__wpdm_public_profile', true);
                             ?>
                             <a class="udb-item <?php echo $udb_page == $page_id ? 'selected' : ''; ?>"
                                href="<?php echo $menu_url; ?>"><i
-                                        class="<?php echo isset($menu_item['icon']) ? $menu_item['icon'] : (isset($default_icons[$page_id]) ? $default_icons[$page_id] : 'fab fa-buffer'); ?> mr-3"></i><?php echo $menu_item['name']; ?>
+                                        class="<?php echo isset($menu_item['icon']) ? $menu_item['icon'] : (isset($default_icons[$page_id]) ? $default_icons[$page_id] : 'wpdm-layer-group'); ?> mr-1"></i><?php echo $menu_item['name']; ?>
                             </a>
                         <?php }
                         echo "</div>";
                     }
                 }
                 ?>
-                <a class="udb-item" href="<?php echo wpdm_logout_url(); ?>"><i class="fas fa-sign-out-alt color-danger mr-3"></i><span class="color-red"><?php _e('Logout', 'wmdpro'); ?></span></a>
+                <a class="udb-item" href="<?php echo wpdm_logout_url(); ?>"><i class="wpdm-logout color-danger mr-1"></i><span class="color-red"><?php _e('Logout', 'wmdpro'); ?></span></a>
 
             </div>
 
             <?php do_action("wpdm_user_dashboard_sidebar") ?>
 
         </div>
-        <div class="col-md-9" id="wpdm-dashboard-contents">
+        <div class="col-md-9" id="wdmdc">
 
 
             <?php echo isset($dashboard_contents) ? $dashboard_contents : ''; ?>

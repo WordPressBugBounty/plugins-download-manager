@@ -560,7 +560,6 @@
   border-radius: var(--border-radius-regular);
   transition: all ease-in-out 300ms;
   border: none;
-  text-decoration: none !important;
 }
 .w3eden .card.text-white,
 .w3eden .card.text-white *,

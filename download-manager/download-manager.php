@@ -5,7 +5,7 @@ Plugin URI: https://www.wpdownloadmanager.com/purchases/
 Description: Manage, Protect and Track file downloads, and sell digital products from your WordPress site. A complete digital asset management solution.
 Author: W3 Eden, Inc.
 Author URI: https://www.wpdownloadmanager.com/
-Version: 3.3.06
+Version: 3.3.07
 Text Domain: download-manager
 Domain Path: /languages
 */
@@ -39,7 +39,7 @@ use WPDM\Widgets\WidgetController;
 
 global $WPDM;
 
-define('WPDM_VERSION','3.3.06');
+define('WPDM_VERSION','3.3.07');
 
 define('WPDM_TEXT_DOMAIN','download-manager');
 
@@ -359,9 +359,11 @@ final class WordPressDownloadManager{
                 'rewrite' => array('slug' => sanitize_title(get_option('__wpdm_turl_base', 'document-tag'))),
             );
 
-            register_taxonomy(WPDM_TAG, array('wpdmpro'), $args);
+            register_taxonomy('wpdmtag', array('wpdmpro'), $args);
 
             //unregister_taxonomy_for_object_type('post_tag', 'wpdmpro');
+        } else {
+            register_taxonomy_for_object_type('post_tag', 'wpdmpro');
         }
 
     }
@@ -435,7 +437,7 @@ final class WordPressDownloadManager{
         wp_enqueue_script('jquery');
         wp_enqueue_script('jquery-form');
 
-	    wp_enqueue_style('wpdm-fonticon', WPDM_BASE_URL . 'assets/wpdm-iconfont/css/wpdm-icons.min.css');
+	    wp_enqueue_style('wpdm-fonticon', WPDM_BASE_URL . 'assets/wpdm-iconfont/css/wpdm-icons.css');
 
 	    wp_enqueue_style('wpdm-front' );
 

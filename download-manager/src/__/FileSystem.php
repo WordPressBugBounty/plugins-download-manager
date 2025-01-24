@@ -637,6 +637,7 @@ class FileSystem
     {
         $cont = "RewriteEngine On\r\n<Files {$fileType}>\r\nDeny from all\r\n</Files>\r\n";
         @file_put_contents($dir . '/.htaccess', $cont);
+	    file_put_contents($dir . '/index.php', '<?php // ?>');
         //@file_put_contents($dir . '/web.config', $_cont);
     }
 

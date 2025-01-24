@@ -2424,9 +2424,9 @@ class PackageController extends PackageTemplate {
 			wp_set_post_terms( $new_ID, (int)$term->term_id, 'wpdmcategory', true );
 		}
 
-		$terms = get_the_terms( $ID, 'wpdmtag' );
+		$terms = get_the_terms( $ID, WPDM_TAG );
 		foreach ( $terms as $term ) {
-			wp_set_post_terms( $new_ID, $term->name, 'wpdmtag', true );
+			wp_set_post_terms( $new_ID, $term->name, WPDM_TAG, true );
 		}
 
 		return $new_ID;

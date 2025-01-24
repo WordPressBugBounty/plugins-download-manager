@@ -493,9 +493,9 @@ jQuery(function ($) {
 
     });
 
-    $body.on('click', '#wpdm-dashboard-sidebar a.list-group-item', function (e) {
+    /*$body.on('click', '#wpdm-dashboard-sidebar a.list-group-item', function (e) {
         location.href = this.href;
-    });
+    });*/
 
     var $input_group_input = $('.input-group input');
     $input_group_input.on('focus', function () {

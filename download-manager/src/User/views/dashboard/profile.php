@@ -39,7 +39,7 @@ foreach ($current_user->roles as $role) {
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card bg-secondary text-white">
+        <div class="card bg-info text-white">
             <div class="card-header"><?php _e( "Today's Download" , "download-manager" ); ?></div>
             <div class="card-body">
                 <h3><?php echo number_format($wpdb->get_var("select count(*) from {$wpdb->prefix}ahm_download_stats where uid = '{$current_user->ID}' and `year` = YEAR(CURDATE()) and `month` = MONTH(CURDATE()) and `day` = DAY(CURDATE())"),0,'.',','); ?></h3>

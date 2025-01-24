@@ -22,15 +22,15 @@
 
 jQuery(function($) {
     $body = $('body');
-    $body.on('click', '[data-toggle="collapse"]', function(e) {
+    $body.on('click', '.w3eden [data-toggle="collapse"]', function(e) {
         e.preventDefault();
         $($(this).attr('href')).slideToggle();
     });
-    $body.on('click', '[data-toggle="modal"]', function(e) {
+    $body.on('click', '.w3eden [data-toggle="modal"]', function(e) {
         e.preventDefault();
         $($(this).data('target')).modal('show');
     });
-    $body.on('click', '[data-toggle="tab"]', function(e) {
+    $body.on('click', '.w3eden [data-toggle="tab"]', function(e) {
         e.preventDefault();
         const $tabs = $(this).parents('.nav-tabs');
         $tabs.find('a').each(function() {

@@ -70,7 +70,7 @@ if(isset($params['jstable']) && $params['jstable']==1):
 <?php endif; ?>
 <style>
     .wpdmdt-toolbar {
-        padding: 10px 10px 0 10px;
+        padding: 10px;
     }
     .wpdmdt-toolbarb {
         padding: 5px 10px 10px;

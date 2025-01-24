@@ -76,7 +76,7 @@ if ($toolbar) {
                             </select>
                         </div>
                         <div class="col-lg-<?php echo $bt; ?> col-md-4">
-                            <button type="submit" class="btn btn-secondary btn-block"><?php echo __( "Apply Filter", "download-manager" ) ?></button>
+                            <button type="submit" class="btn btn-info btn-block"><?php echo __( "Apply Filter", "download-manager" ) ?></button>
                         </div>
                     </div>
 
@@ -110,7 +110,7 @@ if ($toolbar) {
                             </select>
                         </div>
                         <div class="col-lg-<?php echo $bt; ?> col-md-4">
-                            <button type="submit" class="btn btn-secondary btn-block"><?php echo __( "Apply Filter", "download-manager" ) ?></button>
+                            <button type="submit" class="btn btn-info btn-block"><?php echo __( "Apply Filter", "download-manager" ) ?></button>
                         </div>
                     </div>
                 </div>

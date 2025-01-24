@@ -223,7 +223,7 @@ class __
     {
         if (!is_array($array)) return __::sanitize_var($array, $sanitize);
         foreach ($array as $key => &$value) {
-            $validate = is_array($sanitize) && isset($sanitize[$key]) ? $sanitize[$key] : $sanitize;
+            $validate = is_array($sanitize)  ? __::valueof($sanitize, $key) : $sanitize;
             if (is_array($value))
                 __::sanitize_array($value, $validate);
             else {
@@ -316,7 +316,7 @@ class __
 
                 default:
                     $value = esc_sql(esc_attr($value));
-	                if($sanitize !== '' && @preg_match($sanitize, '') !== false) {
+	                if($sanitize !== '' && $value !== '' && @preg_match($sanitize, '') !== false) {
 		                $value = preg_replace($sanitize, '', $value);
 	                }
                     break;
