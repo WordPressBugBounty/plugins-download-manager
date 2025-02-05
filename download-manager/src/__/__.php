@@ -197,8 +197,10 @@ class __
         $validate = is_string($params) ? $params : '';
         $validate = is_array($params) && isset($params['validate']) ? $params['validate'] : $validate;
 
-        if (!is_array($val))
-            $val = __::sanitize_var($val, $validate);
+        if (!is_array($val)) {
+            if(is_array($validate)) $validate = 'kses';
+	        $val = __::sanitize_var( $val, $validate );
+        }
         else
             $val = __::sanitize_array($val, $validate);
 
