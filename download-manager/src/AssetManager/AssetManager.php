@@ -236,7 +236,7 @@ class AssetManager
         $path = AssetManager::root($relpath);
         if (!$path) wp_send_json(array('success' => false, 'message' => __("Error! Unauthorized Path.", "download-manager")));
 
-        $name = wpdm_query_var('name');
+        $name = wpdm_query_var('name', 'filename');
         //Check file is in allowed types
         if (WPDM()->fileSystem->isBlocked($name)) wp_send_json(array('success' => false, 'message' => __("Error! FileType is not allowed.", "download-manager")));
 

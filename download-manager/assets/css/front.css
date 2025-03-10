@@ -1660,14 +1660,14 @@
 .w3eden .mb-2 {
   margin-bottom: 15px !important;
 }
-.mr-2{ margin-right: 10px !important; }
-.p-0 {
+.w3eden .mr-2{ margin-right: 10px !important; }
+.w3eden  .p-0 {
   padding: 0 !important;
 }
-.p-3 {
+.w3eden .p-3 {
   padding: 15px !important;
 }
-.pt-0 {
+.w3eden .pt-0 {
   padding-top: 0 !important;
 }
 .w3eden .m-auto {
