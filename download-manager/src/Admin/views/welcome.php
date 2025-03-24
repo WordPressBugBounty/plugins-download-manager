@@ -1,7 +1,7 @@
 <link rel="stylesheet" type="text/css" href="<?php echo plugins_url('/download-manager/assets/adminui/css/base.css');?>" />
-<link rel="stylesheet" href="<?php echo plugins_url('/download-manager/assets/css/front3.css'); ?>" />
+<link rel="stylesheet" href="<?php echo plugins_url('/download-manager/assets/css/front.css'); ?>" />
 <link href='//fonts.googleapis.com/css?family=Overpass:300,400,700' rel='stylesheet' type='text/css'>
-<link href="<?php echo WPDM_BASE_URL; ?>assets/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+<link href="<?php echo WPDM_BASE_URL; ?>assets/fontawesome/css/all.min.css" rel="stylesheet">
 <style>
     .w3eden .lead,
     .w3eden p{
@@ -336,25 +336,27 @@
             <div class="col-md-6">
                 <div class="well">
                     <div class="media">
-                        <div class="pull-right">
-                            <a href="https://www.wpdownloadmanager.com/downloads/free-add-ons/" class="btn btn-success btn-lg">Explore Free Add-ons <i class="fa fa-angle-double-right"></i></a>
-                        </div>
                         <div class="media-body">
                             <b>Free Add-ons</b>
                             There are more free add-ons
-                        </div> </div>
+                        </div>
+                        <div class="float-right">
+                            <a href="https://www.wpdownloadmanager.com/downloads/free-add-ons/" class="btn btn-success btn-lg">Explore Free Add-ons <i class="fa fa-angle-double-right"></i></a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="well">
                     <div class="media">
-                        <div class="pull-right">
-                            <a href="https://www.wpdownloadmanager.com/download/attire-allinone-wordpress-theme/" class="btn btn-info btn-lg">Download Now! <i class="fa fa-angle-double-right"></i></a>
-                        </div>
                         <div class="media-body">
                             <b>Need a better theme?</b>
                             Free WordPress Theme for Digital Shops.
-                        </div> </div>
+                        </div>
+                        <div class="float-right">
+                            <a href="https://www.wpdownloadmanager.com/download/attire-allinone-wordpress-theme/" class="btn btn-info btn-lg">Download Now! <i class="fa fa-angle-double-right"></i></a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -384,7 +386,7 @@
             <div class="col-md-12 lead">
                 <hr/>
                 <h3>What's New?</h3>
-                What new with WordPress Download Manager v3.2.x:
+                What new with WordPress Download Manager v3.3.x:
                 <hr/>
             </div>
 

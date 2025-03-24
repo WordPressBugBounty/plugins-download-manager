@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) die();
  * Time: 12:33 AM
  */
 
-
+$picon = "<img width='48px' src='".WPDM_ASSET_URL."images/locked.png' />";
 ?>
 <!DOCTYPE html>
 <html style="background: transparent">
@@ -15,11 +15,10 @@ if (!defined('ABSPATH')) die();
     <script>
         var wpdm_url = <?= json_encode(WPDM()->wpdm_urls); ?>;
     </script>
-    <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/css/bootstrap.css" />
-    <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/front.css" />
+    <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/front.min.css" />
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.js"></script>
-    <script src="<?php echo WPDM_BASE_URL; ?>assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="<?php echo WPDM_BASE_URL; ?>assets/js/wpdm.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:300,400,700" rel="stylesheet">
     <?php
     WPDM()->apply::uiColors();
@@ -160,7 +159,7 @@ if (!defined('ABSPATH')) die();
                         <input type="hidden" name="__meida" value="<?php echo $__hash; ?>">
                         <input type="hidden" name="action" value="wpdm_media_pass">
                         <div  class="input-group">
-                            <input name="__pswd" autofocus="autofocus" autocomplete="new-password" required="required" id="__pwd" placeholder="<?php echo __( "Media Password", "download-manager" ); ?>" class="form-control" type="password">
+                            <input name="__pswd" required="required" id="__pwd" autocomplete="off" placeholder="<?php echo __( "Media Password", "download-manager" ); ?>" class="form-control" type="password">
                             <div class="input-group-append">
                                 <button class="btn btn-primary" type="submit"><?php echo __( "Download", "download-manager" ); ?></button>
                             </div>
