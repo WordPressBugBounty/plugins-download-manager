@@ -358,10 +358,37 @@ class __
      * @param $url
      * @return mixed|void
      */
-    static function is_url( $url ) {
-        $result = (bool) wp_http_validate_url( $url );
-        return apply_filters( '__is_url', $result, $url );
-    }
+	static function is_url( $url ) {
+		$result = ( substr_count( $url, 'magnet:' ) > 0 );
+		if ( ! $result ) {
+			if (!filter_var($url, FILTER_VALIDATE_URL)) {
+				$result = false;
+			} else {
+				$parsed_url = parse_url( $url );
+				if ( ! $parsed_url || ! isset( $parsed_url['scheme'], $parsed_url['host'] ) ) {
+					$result = false;
+				}
+				else if ( ! in_array( strtolower( $parsed_url['scheme'] ), ['http', 'https'], true ) ) {
+					$result = false;
+				}
+				else if ( ! preg_match( '/^([a-z0-9.-]+\.[a-z]{2,}|localhost|(\d{1,3}\.){3}\d{1,3}|\[[a-f0-9:]+\])$/i', $parsed_url['host'] ) ) {
+					$result = false;
+				}
+				else if ( isset( $parsed_url['port'] ) && ( $parsed_url['port'] < 1 || $parsed_url['port'] > 65535 ) ) {
+					$result = false;
+				}
+				else if ( isset( $parsed_url['path'] ) && ! preg_match( '/^[\/\w\-%.~!$&\'()*+,;=:@]*$/', $parsed_url['path'] ) ) {
+					$result = false;
+				}
+				else if ( isset( $parsed_url['query'] ) && ! preg_match( '/^[\w\-%.~!$&\'()*+,;=:@/?]*$/', $parsed_url['query'] ) ) {
+					$result = false;
+				}
+				else
+					$result = true;
+			}
+		}
+		return apply_filters( '__is_url', $result, $url );
+	}
 
     /**
      * @usage Post with cURL
