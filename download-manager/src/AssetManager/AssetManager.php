@@ -176,7 +176,6 @@ class AssetManager
             die();
         }
         if (isset($_REQUEST['wpdmfmdl']) && is_user_logged_in()) {
-            global $current_user;
             $file = AssetManager::root(Crypt::decrypt(wpdm_query_var('wpdmfmdl')));
             if (!$file) \WPDM\__\Messages::error("File Not Found!", 1);
             FileSystem::downloadFile($file, wp_basename($file), 10240, false, [ 'play' => wpdm_query_var('play')]);

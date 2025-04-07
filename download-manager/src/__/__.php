@@ -358,36 +358,138 @@ class __
      * @param $url
      * @return mixed|void
      */
-	static function is_url( $url ) {
-		$result = ( substr_count( $url, 'magnet:' ) > 0 );
-		if ( ! $result ) {
-			if (!filter_var($url, FILTER_VALIDATE_URL)) {
-				$result = false;
-			} else {
-				$parsed_url = parse_url( $url );
-				if ( ! $parsed_url || ! isset( $parsed_url['scheme'], $parsed_url['host'] ) ) {
-					$result = false;
+
+	static function is_url1($url) {
+
+		$url = trim($url);
+		if (empty($url)) {
+			return false;
+		}
+
+        $filtered_url = filter_var($url, FILTER_VALIDATE_URL);
+
+		if ($filtered_url !== false) {
+			return true;
+		}
+
+		if (preg_match('/^(https?:\/\/)([\w-]+\.)*[\w-]+(\.[a-z]{2,6})(\/[\w\-.~!$&\'\(\)*+,;=:@\/%]*)*$/', $url)) {
+			return true;
+		}
+
+		if (preg_match('/^\/\/([\w-]+\.)*[\w-]+(\.[a-z]{2,6})(\/[\w\-.~!$&\'\(\)*+,;=:@\/%]*)*$/', $url)) {
+			return true;
+		}
+
+		if (preg_match('/^urn:[a-z0-9][a-z0-9-]{0,31}:[a-z0-9()+,\-.:=@;$_!*\'%\/?#]+$/i', $url)) {
+			return true;
+		}
+
+		if (function_exists('idn_to_ascii')) {
+			// Extract domain from URL
+			$parsed_url = parse_url($url);
+			if (isset($parsed_url['host'])) {
+				$ascii_domain = idn_to_ascii($parsed_url['host'], 0, INTL_IDNA_VARIANT_UTS46);
+				if ($ascii_domain !== false) {
+					// Reconstruct URL with ASCII domain
+					$scheme = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : 'http://';
+					$port = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+					$path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+					$query = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+					$fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+
+					$ascii_url = $scheme . $ascii_domain . $port . $path . $query . $fragment;
+
+					// Try filter_var again with the ASCII URL
+					if (filter_var($ascii_url, FILTER_VALIDATE_URL) !== false) {
+						return true;
+					}
 				}
-				else if ( ! in_array( strtolower( $parsed_url['scheme'] ), ['http', 'https'], true ) ) {
-					$result = false;
-				}
-				else if ( ! preg_match( '/^([a-z0-9.-]+\.[a-z]{2,}|localhost|(\d{1,3}\.){3}\d{1,3}|\[[a-f0-9:]+\])$/i', $parsed_url['host'] ) ) {
-					$result = false;
-				}
-				else if ( isset( $parsed_url['port'] ) && ( $parsed_url['port'] < 1 || $parsed_url['port'] > 65535 ) ) {
-					$result = false;
-				}
-				else if ( isset( $parsed_url['path'] ) && ! preg_match( '/^[\/\w\-%.~!$&\'()*+,;=:@]*$/', $parsed_url['path'] ) ) {
-					$result = false;
-				}
-				else if ( isset( $parsed_url['query'] ) && ! preg_match( '/^[\w\-%.~!$&\'()*+,;=:@/?]*$/', $parsed_url['query'] ) ) {
-					$result = false;
-				}
-				else
-					$result = true;
 			}
 		}
-		return apply_filters( '__is_url', $result, $url );
+
+		return false;
+	}
+	static function rebuildUrl(array $parts): string
+	{
+		$url = '';
+
+		if (isset($parts['scheme'])) {
+			$url .= $parts['scheme'] . '://';
+		}
+
+		if (isset($parts['user'])) {
+			$url .= $parts['user'];
+			if (isset($parts['pass'])) {
+				$url .= ':' . $parts['pass'];
+			}
+			$url .= '@';
+		}
+
+		if (isset($parts['host'])) {
+			$url .= $parts['host'];
+		}
+
+		if (isset($parts['port'])) {
+			$url .= ':' . $parts['port'];
+		}
+
+		if (isset($parts['path'])) {
+			$url .= $parts['path'];
+		}
+
+		if (isset($parts['query'])) {
+			$url .= '?' . $parts['query'];
+		}
+
+		if (isset($parts['fragment'])) {
+			$url .= '#' . $parts['fragment'];
+		}
+
+		return $url;
+	}
+
+	static function is_url( $url ) {
+		$isValid = false;
+
+		// Define supported schemes as a constant for reusability and clarity
+		$allowedSchemes = [
+			'http', 'https', 'ftp', 'ftps',
+			'magnet', 'tor', 'bitcoin', 'ipfs',
+			'mailto', 'tel', 'file', 'data',
+			'custom'
+		];
+
+		// Parse and normalize the URL
+		$parsedUrl = parse_url($url);
+		if (!isset($parsedUrl['scheme'])) {
+			return false;
+		}
+
+		$scheme = strtolower($parsedUrl['scheme']);
+
+		// Normalize fragment by encoding it (to pass filter_var and comply with RFCs)
+		if (isset($parsedUrl['fragment'])) {
+			$parsedUrl['fragment'] = rawurlencode($parsedUrl['fragment']);
+			$url = self::rebuildUrl($parsedUrl);
+		}
+
+		// Scheme-specific validation
+		if (!in_array($scheme, $allowedSchemes, true)) {
+			$isValid = false;
+		} elseif (in_array($scheme, ['http', 'https', 'ftp', 'ftps'], true)) {
+			$isValid = filter_var($url, FILTER_VALIDATE_URL) !== false;
+		} elseif ($scheme === 'magnet') {
+			$isValid = preg_match('/^magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32,}/i', $url) === 1;
+		} elseif ($scheme === 'tor') {
+			$isValid = preg_match('/^tor:\/\/[a-z2-7]{16,56}\.onion/i', $url) === 1;
+		} elseif (preg_match('/\.onion(:[0-9]+)?(\/.*)?$/i', $url)) {
+			$isValid = true;
+		} else {
+			// Fallback: generic URI format validation for other schemes
+			$isValid = preg_match('/^[a-z][a-z0-9+\-.]*:[^\s]+$/i', $url) === 1;
+		}
+        //wpdmdd( (int)$isValid, $url);
+		return apply_filters( '__is_url', $isValid, $url );
 	}
 
     /**
