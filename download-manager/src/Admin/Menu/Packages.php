@@ -50,12 +50,6 @@ class Packages {
 			return;
 		}
 
-		// Deleted old zipped file
-		$zipped = get_post_meta( $post, "__wpdm_zipped_file", true );
-		if ( $zipped != '' && file_exists( $zipped ) ) {
-			@unlink( $zipped );
-		}
-
 		$cdata             = get_post_custom( $post );
 		$donot_delete_meta = array( '__wpdm_favs', '__wpdm_masterkey' );
 		foreach ( $cdata as $k => $v ) {
@@ -65,6 +59,9 @@ class Packages {
 			}
 
 		}
+
+        if(isset($_POST['file']['zipped_file'])) { unset($_POST['file']['zipped_file']); }
+        if(isset($_POST['file']['masterkey'])) { unset($_POST['file']['masterkey']); }
 
 		foreach ( $_POST['file'] as $meta_key => $meta_value ) {
 			$key_name = "__wpdm_" . $meta_key;
@@ -161,6 +158,13 @@ class Packages {
 		if ( isset( $_REQUEST["chunks"] ) ) {
 			$this->chunkUploadFile( UPLOAD_DIR . $filename );
 		} else {
+
+			$isValidMimeType = FileSystem::validateUploadMimeType($_FILES['package_file']['tmp_name'], $name);
+
+			if(!$isValidMimeType) {
+				die("|||<div class='alert alert-danger'>".sprintf(__('Upload blocked. The file type is invalid—the file extension does not match the actual content type.', 'download-manager'), '<strong>".UPLOAD_DIR."</strong>')."</div>|||");
+			}
+
 			$moved = move_uploaded_file( $_FILES['package_file']['tmp_name'], UPLOAD_DIR . $filename );
             if(!$moved) wpdmdd($_FILES);
                 //die("|||<div class='alert alert-danger'>Failed to move file in upload dir <strong>".UPLOAD_DIR."</strong>. Please check dir permission or contact server support.|||</div>");
@@ -204,6 +208,13 @@ class Packages {
 		}
 
 		if ( ! $chunks || $chunk == $chunks - 1 ) {
+
+			$isValidMimeType = FileSystem::validateUploadMimeType("{$destFilePath}.part", basename($destFilePath));
+			if(!$isValidMimeType) {
+				@unlink( $destFilePath . ".part" );
+				die("|||<div class='alert alert-danger'>".sprintf(__('Upload blocked. The file type is invalid—the file extension does not match the actual content type.', 'download-manager'), '<strong>".UPLOAD_DIR."</strong>')."</div>|||");
+			}
+
 			// Strip the temp .part suffix off
 			rename( "{$destFilePath}.part", $destFilePath );
 			do_action( "wpdm_after_upload_file", $destFilePath );
