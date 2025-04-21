@@ -976,9 +976,13 @@ class FileSystem {
 		    'dll' => ['application/x-msdownload'],
 		    'bin' => ['application/octet-stream'],
 		    'iso' => ['application/x-iso9660-image'],
+            'dmg' => ['application/x-apple-diskimage'],
+            'torrent' => ['application/x-bittorrent'],
+            'srt' => ['application/x-subrip'],
 	    ];
-
-        return $ext === false ? $mimeTypes : wpdm_valueof($mimeTypes, $ext, ['application/octet-stream']);
+	    $mimeTypes = apply_filters( 'wpdm_mime_types', $mimeTypes );
+        $foundMimeTypes = $ext === false ? $mimeTypes : wpdm_valueof($mimeTypes, $ext);
+        return is_array($foundMimeTypes) ? $foundMimeTypes : ['application/octet-stream'];
     }
 
     public static function getMimeType($file) {
@@ -1376,6 +1380,10 @@ class FileSystem {
 		}
 
 		return false;
+	}
+
+	function fileHash( $filePath ) {
+		return hash_file('sha256', $filePath);
 	}
 }
 
