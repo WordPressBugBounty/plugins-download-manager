@@ -1,4 +1,5 @@
-<?php use WPDM\__\Session;
+<?php use WPDM\__\__;
+use WPDM\__\Session;
 
 if(!defined('ABSPATH')) die(); ?>
 <div class="w3eden">
@@ -7,14 +8,10 @@ if(!defined('ABSPATH')) die(); ?>
 <div class="modal fade" id="wpdmloginmodal" tabindex="-1" role="dialog" aria-labelledby="wpdmloginmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-
+<button type="button" class="close" id="clmb" data-dismiss="modal" aria-label="Close">
+    ❌
+</button>
             <div class="modal-body">
-
-                <button type="button" class="close btn btn-link p-0" data-dismiss="modal" aria-label="Close" style="position: absolute;right: 5px;top: 5px;">
-                        <span aria-hidden="true">
-                            <svg style="width: 24px;fill: #b3a8a8" id="Outlined" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><title/><g id="Fill"><path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2Zm0,26A12,12,0,1,1,28,16,12,12,0,0,1,16,28Z"/><polygon points="19.54 11.05 16 14.59 12.46 11.05 11.05 12.46 14.59 16 11.05 19.54 12.46 20.95 16 17.41 19.54 20.95 20.95 19.54 17.41 16 20.95 12.46 19.54 11.05"/></g></svg>
-                        </span>
-                </button>
 
                         <div class="text-center wpdmlogin-logo">
                             <a href="<?php echo home_url('/'); ?>" id="wpdm_modal_login_logo"></a>
@@ -31,7 +28,7 @@ if(!defined('ABSPATH')) die(); ?>
 
                         <?php  if(isset($params['note_after'])) {  ?>
                             <div class="alert alert-info alter-note-after mb-3" >
-                                <?php echo wp_kses($params['note_after']); ?>
+                                <?php echo $params['note_after']; ?>
                             </div>
                         <?php } ?>
 
@@ -45,7 +42,7 @@ if(!defined('ABSPATH')) die(); ?>
 
 
 
-                        <input type="hidden" name="redirect_to" id="wpdm_modal_login_redirect_to" value="<?php the_permalink(); ?>" />
+                        <input type="hidden" name="redirect_to" id="wpdm_modal_login_redirect_to" value="<?php echo __::valueof($_SERVER, 'REQUEST_URI', ['validate' => 'escs']); ?>" />
 
                         <div class="row">
                             <div class="col-lg-12">
@@ -66,18 +63,20 @@ if(!defined('ABSPATH')) die(); ?>
             if(is_array($__wpdm_social_login) && count($__wpdm_social_login) > 1) { ?>
 
             <div class="modal-footer text-center bg-light p-4">
-                <div class="pb-2 text-center d-block" style="width: 100%"><?php _e("Or connect using your social account", "download-manager") ?></div>
-                <div class="text-center d-block" style="width: 100%">
-                    <?php if(isset($__wpdm_social_login['facebook'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=facebook'); ?>', 'Facebook', 400,400);" class="btn btn-social wpdm-facebook wpdm-facebook-connect"><i class="fab fa-facebook-f"></i></button><?php } ?>
-                    <?php if(isset($__wpdm_social_login['twitter'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=twitter'); ?>', 'Twitter', 400,400);" class="btn btn-social wpdm-twitter wpdm-linkedin-connect"><i class="fab fa-twitter"></i></button><?php } ?>
-                    <?php if(isset($__wpdm_social_login['linkedin'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=linkedin'); ?>', 'LinkedIn', 400,400);" class="btn btn-social wpdm-linkedin wpdm-twitter-connect"><i class="fab fa-linkedin-in"></i></button><?php } ?>
-                    <?php if(isset($__wpdm_social_login['google'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=google'); ?>', 'Google', 400,400);" class="btn btn-social wpdm-google-plus wpdm-google-connect"><i class="fab fa-google"></i></button><?php } ?>
+                <div style="display: block;width: 100%;">
+                    <div class="pb-2 text-center d-block" style="width: 100%"><?php _e("Or connect using your social account", "download-manager") ?></div>
+                    <div class="text-center d-block" style="width: 100%;padding-top: 10px">
+		                <?php if(isset($__wpdm_social_login['facebook'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=facebook'); ?>', 'Facebook', 400,400);" title="Facebook" class="btn btn-secondary wpdm-facebook wpdm-facebook-connect">F</button><?php } ?>
+		                <?php if(isset($__wpdm_social_login['twitter'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=twitter'); ?>', 'Twitter', 400,400);" title="X" class="btn btn-secondary wpdm-twitter wpdm-linkedin-connect">X</button><?php } ?>
+		                <?php if(isset($__wpdm_social_login['linkedin'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=linkedin'); ?>', 'LinkedIn', 400,400);" title="LinkedIn" class="btn btn-secondary wpdm-linkedin wpdm-twitter-connect">In</button><?php } ?>
+		                <?php if(isset($__wpdm_social_login['google'])){ ?><button type="button" onclick="return _PopupCenter('<?php echo home_url('/?sociallogin=google'); ?>', 'Google', 400,400);" title="Google" class="btn btn-secondary wpdm-google-plus wpdm-google-connect">G</button><?php } ?>
+                    </div>
                 </div>
             </div>
 
             <?php } ?>
             <?php if(isset($regurl) && $regurl != ''){ ?>
-                <div class="modal-footer text-center"><a href="<?php echo esc_attr($regurl); ?>" class="btn btn-block btn-link btn-xs wpdm-reg-link  color-primary"><?php _e( "Don't have an account yet?" , "download-manager" ); ?> <i class="fas fa-user-plus"></i> <?php _e( "Register Now" , "download-manager" ); ?></a></div>
+                <div class="modal-footer text-center"><a href="<?php echo $regurl; ?>" class="btn btn-block btn-link btn-xs wpdm-reg-link  color-primary"><?php _e( "Don't have an account yet?" , "download-manager" ); ?> <i class="fas fa-user-plus"></i> <?php _e( "Register Now" , "download-manager" ); ?></a></div>
             <?php } ?>
         </div>
     </div>
@@ -92,10 +91,10 @@ if(!defined('ABSPATH')) die(); ?>
         var __lm_logo = "<?php echo get_site_icon_url(); ?>";
         var $body = $('body');
         $('#modalloginform').submit(function () {
-            $('#wpdmloginmodal-submit').html("<i class='fa fa-spin fa-sync'></i> <?php _e( "Logging In..." , "download-manager" ); ?>");
+            $('#wpdmloginmodal-submit').html(WPDM.html("i", "", "fa fa-spin fa-sync") + " <?php _e( "Logging In..." , "download-manager" ); ?>");
             $(this).ajaxSubmit({
                 error: function(error) {
-                    $('#modalloginform').prepend("<div class='alert alert-danger' data-title='<?php _e( "LOGIN FAILED!" , "download-manager" ); ?>'>"+error.responseJSON.message+"</div>");
+                    $('#modalloginform').prepend(WPDM.html("div", error.responseJSON.messages, "alert alert-danger"));
                     $('#wpdmloginmodal-submit').html(llbl);
                     <?php if((int)get_option('__wpdm_recaptcha_loginform', 0) === 1 && get_option('_wpdm_recaptcha_site_key') != ''){ ?>
                     try {
@@ -108,7 +107,7 @@ if(!defined('ABSPATH')) die(); ?>
                 success: function (res) {
                     if (!res.success) {
                         $('form .alert-danger').hide();
-                        $('#modalloginform').prepend("<div class='alert alert-danger' data-title='<?php _e( "LOGIN FAILED!" , "download-manager" ); ?>'>"+res.message+"</div>");
+                        $('#modalloginform').prepend(WPDM.html("div", res.message, "alert alert-danger"));
                         $('#wpdmloginmodal-submit').html(llbl);
                         <?php if((int)get_option('__wpdm_recaptcha_loginform', 0) === 1 && get_option('_wpdm_recaptcha_site_key') != ''){ ?>
                         try {
@@ -130,7 +129,7 @@ if(!defined('ABSPATH')) die(); ?>
             $(this).slideUp();
         });
 
-        $body.on('click', '.wpdmloginmodal-trigger', function (e) {
+        $body.on('click', 'a[data-target="#wpdmloginmodal"], .wpdmloginmodal-trigger', function (e) {
             e.preventDefault();
             if($(this).data('redirect') !== undefined) {
                 __lm_redirect_to = $(this).data('redirect');
@@ -139,7 +138,8 @@ if(!defined('ABSPATH')) die(); ?>
             if($(this).data('logo') !== undefined) {
                 __lm_logo = $(this).data('logo');
             }
-            $('#wpdm_modal_login_logo').html("<img src='"+__lm_logo+"' alt='logo' />");
+
+            $('#wpdm_modal_login_logo').html(WPDM.el('img', {src: __lm_logo, alt: "Logo"}));
             $('#wpdmloginmodal').modal('show');
         });
         $('#wpdmloginmodal').on('shown.bs.modal', function (event) {
@@ -152,7 +152,9 @@ if(!defined('ABSPATH')) die(); ?>
             if($(this).data('logo') !== undefined) {
                 __lm_logo = $(this).data('logo');
             }
-            $('#wpdm_modal_login_logo').html("<img src='"+__lm_logo+"' alt='logo' />");
+            if(__lm_logo !== "")
+                $('#wpdm_modal_login_logo').html(WPDM.el('img', {src: __lm_logo, alt: "Logo"}));
+
             $('#user_login').trigger('focus')
         });
         $(window).keydown(function(event) {
@@ -167,6 +169,16 @@ if(!defined('ABSPATH')) die(); ?>
     });
 </script>
 <style>
+    #clmb{
+        z-index: 999999;position: absolute;right: 10px;top:10px;font-size: 10px;border-radius: 500px;background: #eee;width: 28px;height: 28px;line-height: 28px;text-align: center;opacity:0.4;
+        transition: all 0.3s ease-in-out;
+        filter: grayscale(100%);
+    }
+    #clmb:hover{
+        opacity: 1;
+        filter: grayscale(0%);
+    }
+
     #wpdmloginmodal .modal-content{
         border: 0;
         box-shadow: 0 0 20px rgba(0,0,0,0.2);

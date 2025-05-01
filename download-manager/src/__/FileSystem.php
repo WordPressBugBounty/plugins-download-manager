@@ -985,12 +985,16 @@ class FileSystem {
         return is_array($foundMimeTypes) ? $foundMimeTypes : ['application/octet-stream'];
     }
 
-    public static function getMimeType($file) {
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->file($file);
-	    finfo_close($finfo);
-        return $mimeType;
-    }
+	public static function getMimeType($file) {
+		$finfo = new \finfo(FILEINFO_MIME_TYPE);
+		if($finfo) {
+			$mimeType = $finfo->file( $file );
+			@finfo_close( $finfo );
+			return $mimeType;
+		} else {
+			return false;
+		}
+	}
 
 	/**
 	 * Validates if a file's actual type matches its extension
