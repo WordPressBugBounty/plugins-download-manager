@@ -462,7 +462,7 @@ class __
 		// Parse and normalize the URL
 		$parsedUrl = parse_url($url);
 		if (!isset($parsedUrl['scheme'])) {
-			return false;
+			return apply_filters( '__is_url', false, $url );
 		}
 
 		$scheme = strtolower($parsedUrl['scheme']);
