@@ -989,7 +989,6 @@ class FileSystem {
 		$finfo = new \finfo(FILEINFO_MIME_TYPE);
 		if($finfo) {
 			$mimeType = $finfo->file( $file );
-			@finfo_close( $finfo );
 			return $mimeType;
 		} else {
 			return false;
