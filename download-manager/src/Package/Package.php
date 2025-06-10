@@ -44,10 +44,10 @@ class Package extends PackageController
             if ($pack && $pack->post_type === 'wpdmpro') {
                 $this->ID = $pack->ID;
                 $this->title = $pack->post_title;
-                $this->description = wpautop($pack->post_content);
+                $this->description = wpautop(wp_kses_post($pack->post_content));
                 $this->description = str_replace("[wpdm", "[__wpdm", $this->description);
                 $this->description = do_shortcode($this->description);
-                $this->excerpt = wpautop($pack->post_excerpt);
+                $this->excerpt = wpautop(wp_kses_post($pack->post_excerpt));
                 $this->post_status = $pack->post_status;
                 $this->publish_date_timestamp = strtotime($pack->post_date);
                 $this->publish_date = wp_date(get_option('date_format'), $this->publish_date_timestamp);

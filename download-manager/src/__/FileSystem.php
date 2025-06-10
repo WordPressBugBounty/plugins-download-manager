@@ -986,6 +986,12 @@ class FileSystem {
     }
 
 	public static function getMimeType($file) {
+		if(!class_exists( '\finfo' )) {
+            if(function_exists('mime_content_type'))
+                return mime_content_type( $file );
+            error_log("WPDM: Enable file info extension to use mime type detection. See: https://www.php.net/manual/en/book.finfo.php");
+			return false;
+		}
 		$finfo = new \finfo(FILEINFO_MIME_TYPE);
 		if($finfo) {
 			$mimeType = $finfo->file( $file );
@@ -1077,6 +1083,10 @@ class FileSystem {
     }
 
 	public static function validateUploadMimeType($tmp_file, $file_name) {
+		if (function_exists('extension_loaded') && !extension_loaded('fileinfo')) {
+			error_log("WPDM: Enable file info extension to use mime type detection. See: https://www.php.net/manual/en/book.finfo.php");
+			return true;
+		}
 		$ext = self::fileExt( $file_name );
 		$actualMimeType = self::getMimeType( $tmp_file );
 		$extMimeType = self::mimeTypes( $ext );

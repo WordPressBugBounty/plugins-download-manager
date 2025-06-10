@@ -118,7 +118,7 @@ class PackageController extends PackageTemplate {
 		$ID = $post_vars['ID'];
 
 		$post_vars['title']       = stripcslashes( $post_vars['post_title'] );
-		$post_vars['description'] = stripcslashes( $post_vars['post_content'] );
+		$post_vars['description'] = stripcslashes( wp_kses_post( $post_vars['post_content'] ) );
 		$post_vars['description'] = wpautop( stripslashes( $post_vars['description'] ) );
 
 		if ( ! has_shortcode( $post_vars['description'], 'wpdm_package' ) ) {
