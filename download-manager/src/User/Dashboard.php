@@ -2,6 +2,7 @@
 
 namespace WPDM\User;
 
+use WPDM\__\__;
 use WPDM\__\Template;
 
 class Dashboard
@@ -51,6 +52,8 @@ class Dashboard
     function dashboard($params = array())
     {
         global $wp_query, $WPDM;
+
+	    $params = __::sanitize_array($params, 'safetxt');
 
         ob_start();
         if (!is_user_logged_in()) {

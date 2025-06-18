@@ -213,7 +213,7 @@ function wpdm_post_thumb($size = '', $echo = true, $extra = null)
             $thumb = wpdm_dynamic_thumb($path, $size, $crop);
             $thumb = str_replace(ABSPATH, site_url('/'), $thumb);
             $alt = get_post_meta(get_post_thumbnail_id($post->ID), '_wp_attachment_image_alt', true);
-            $img = "<img src='" . $thumb . "' alt='{$alt}' class='{$class}' />";
+            $img = "<img src='" . $thumb . "' alt='".esc_attr($alt)."' class='".esc_attr($class)."' />";
             if ($echo) {
                 echo $img;
                 return true;
@@ -258,7 +258,7 @@ function wpdm_thumb($post, $size = '', $echo = true, $extra = null)
             $alt = get_post_meta(get_post_thumbnail_id($post->ID), '_wp_attachment_image_alt', true);
             if ($echo === 'url') return $thumb;
             if ($alt === '') $alt = esc_attr(strip_tags(get_the_title($post->ID)));
-            $img = "<img src='" . $thumb . "' alt='{$alt}' class='{$class}' />";
+            $img = "<img src='" . $thumb . "' alt='".esc_attr($alt)."' class='".esc_attr($class)."' />";
             if ($echo) {
                 echo $img;
                 return;
