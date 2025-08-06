@@ -12,7 +12,7 @@ class Installer
         /**
          * @var float
          */
-        private $dbVersion = 535.0;
+        private $dbVersion = 535.3;
 
         function __construct()
         {
@@ -53,7 +53,7 @@ class Installer
               `month` int(2) NOT NULL,
               `day` int(2) NOT NULL,
               `timestamp` int(11) NOT NULL,
-              `ip` varchar(20) NOT NULL,
+              `ip` varchar(255) NOT NULL,
               `filename` text,
               `agent` text,         
               PRIMARY KEY (`id`)
@@ -147,6 +147,7 @@ class Installer
             $installer->addColumn('ahm_download_stats', 'version', 'varchar(255) NOT NULL');
             $installer->addColumn('ahm_download_stats', 'agent', 'TEXT');
             $installer->addColumn('ahm_download_stats', 'filename', 'TEXT');
+            $installer->changeColumn('ahm_download_stats', 'ip', 'ip', 'varchar(255) NOT NULL');
             $installer->addColumn('ahm_emails', 'request_status', "INT(1) NOT NULL");
             $installer->uniqueKey('ahm_asset_links', "asset_key");
 

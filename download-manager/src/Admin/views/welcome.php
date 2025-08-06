@@ -254,7 +254,7 @@
                                 <img width="96px" src="<?php echo WPDM_BASE_URL ?>assets/images/liveforms-logo.png" />
                             </div>
                             <div class="media-body">
-                                <b><a target="_blank" href="<?php echo admin_url('/plugin-install.php?s=liveforms&tab=search&type=term') ?>">WordPress Contact Form Builder</a></b>
+                                <b><a target="_blank" href="https://wpliveforms.com/">WordPress Contact Form Builder</a></b>
                                 <p>Ultimate Solution For Building Any Form. Try this even if you are already using another plugin. I'm sure, you will thank me for this later!</p>
                             </div>
                         </div>
