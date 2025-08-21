@@ -133,10 +133,11 @@ class Installer
 			  `interval` int(11) NOT NULL DEFAULT '0',			  
 			  `created_at` int(11) NOT NULL DEFAULT '0',			  
 			  `created_by` int(11) NOT NULL DEFAULT '0',			  
-			  PRIMARY KEY (`ID`)
+			  PRIMARY KEY (`ID`),
+    		  UNIQUE KEY `code` (`code`)
 			) ENGINE=InnoDB";
 
-	        $sqls[] = "ALTER TABLE `{$wpdb->prefix}ahm_cron_jobs` ADD UNIQUE KEY `code` (`code`);";
+	        //$sqls[] = "ALTER TABLE `{$wpdb->prefix}ahm_cron_jobs` ADD UNIQUE KEY `code` (`code`);";
 
             foreach ($sqls as $qry) {
                 $wpdb->query($qry);
