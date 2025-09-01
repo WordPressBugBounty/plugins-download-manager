@@ -1,4 +1,7 @@
 <?php
+
+use WPDM\__\__;
+
 if (!defined('ABSPATH')) die();
 global $btnclass;
 
@@ -230,9 +233,9 @@ if(isset($params['jstable']) && $params['jstable']==1):
             if(is_array(wpdm_query_var('tax'))){
                 foreach (wpdm_query_var('tax') as $tax => $term) {
                     $query_params['tax_query'][] = [
-                            'taxonomy' => $tax,
+                            'taxonomy' => __::sanitize_var($tax, 'safetxt'),
                         'field' => 'slug',
-                        'terms' => [$term]
+                        'terms' => [__::sanitize_var($term, 'safetxt')]
                     ];
                     $query_params['tax_query']['relation'] = 'AND';
                 }
@@ -300,7 +303,7 @@ if(isset($params['jstable']) && $params['jstable']==1):
                         $tcols = $cols;
                         array_shift($tcols);
                         foreach ($cols as $colx => $cold){
-                            $dor = array('publish_date' => strtotime(get_the_date('Y-m-d')), 'create_date' => strtotime(get_the_date('Y-m-d')), 'update_date' => strtotime(get_the_modified_date('Y-m-d', get_the_ID())), 'package_size' => \WPDM\__\__::convertToBytes($data['package_size']));
+                            $dor = array('publish_date' => strtotime(get_the_date('Y-m-d')), 'create_date' => strtotime(get_the_date('Y-m-d')), 'update_date' => strtotime(get_the_modified_date('Y-m-d', get_the_ID())), 'package_size' => __::convertToBytes($data['package_size']));
                             ?>
                         <td <?php if(in_array($cold[0], array('publish_date', 'update_date','create_date', 'package_size'))) { ?> data-order="<?php echo esc_attr($dor[$cold[0]]); ?>" <?php } ?> class="__dt_col_<?php echo esc_attr($colx); ?> __dt_col __dt_col_<?php echo esc_attr($cold[0]); ?>" <?php if($colx == 0) { ?>style="background-image: url('<?php echo esc_attr($ext) ; ?>');background-size: 36px;background-position: 5px 8px;background-repeat:  no-repeat;padding-left: 52px;line-height: normal;"<?php } ?>>
                             <?php

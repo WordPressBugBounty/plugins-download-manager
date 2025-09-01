@@ -39,6 +39,7 @@ class CronJobs
 		if(wpdm_query_var('wpdm_cron', 'int')) {
 			$cronJob = new CronJob();
 			$cronJob->executeAll();
+			do_action('wpdm_cron_job');
 			die('Completed');
 		}
 	}
