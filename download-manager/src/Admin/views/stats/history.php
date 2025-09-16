@@ -3,7 +3,8 @@ global $wpdb;
 if ( ! defined( "ABSPATH" ) ) {
 	die( "Shit happens!" );
 }
-$get_params = $_GET;
+
+$get_params = wpdm_sanitize_array($_GET, 'safetxt');
 
 // Tables used
 $states_table = "{$wpdb->prefix}ahm_download_stats";
@@ -15,8 +16,8 @@ $users_table  = "{$wpdb->base_prefix}users";
  */
 $from_date_string = wpdm_query_var( 'from_date' );
 $to_date_string   = wpdm_query_var( 'to_date' );
-$user_ids         = wpdm_query_var( 'user_ids' ) ?: [];
-$package_ids      = wpdm_query_var( 'package_ids' ) ?: [];
+$user_ids         = wpdm_query_var( 'user_ids', 'int' ) ?: [];
+$package_ids      = wpdm_query_var( 'package_ids', 'int' ) ?: [];
 $page_no          = wpdm_query_var( 'page_no', 'int' ) ?: 1;
 
 /**
@@ -24,8 +25,8 @@ $page_no          = wpdm_query_var( 'page_no', 'int' ) ?: 1;
  */
 $from_date_string = sanitize_text_field( $from_date_string );
 $to_date_string   = sanitize_text_field( $to_date_string );
-$user_ids         = \WPDM\__\__::sanitize_array( $user_ids, 'int' );
-$package_ids      = \WPDM\__\__::sanitize_array( $package_ids, 'int' );
+//$user_ids         = \WPDM\__\__::sanitize_array( $user_ids, 'int' );
+//$package_ids      = \WPDM\__\__::sanitize_array( $package_ids, 'int' );
 
 /**
  * Selected/Initial Values for the fields
@@ -222,9 +223,11 @@ $pagination           = array(
 							<?php
 							$get_params_xu = $get_params;
 							unset($get_params_xu['user_ids']);
+                            $get_params_xu = \WPDM\__\__::sanitize_array($get_params_xu, 'safetxt');
+
 							$reset_url = add_query_arg($get_params_xu, 'edit.php');
 							?>
-							<a href="<?php echo $reset_url; ?>" class="clear-btn" title="<?php _e('Clear user filter', 'download-manager'); ?>">
+							<a href="<?php echo esc_url($reset_url); ?>" class="clear-btn" title="<?php _e('Clear user filter', 'download-manager'); ?>">
 								<i class="fas fa-times"></i>
 							</a>
 						</div>
@@ -266,7 +269,7 @@ $pagination           = array(
 							unset($get_params_xc['cats']);
 							$reset_url = add_query_arg($get_params_xc, 'edit.php');
 							?>
-							<a href="<?php echo $reset_url; ?>" class="clear-btn" title="<?php _e('Clear category filter', 'download-manager'); ?>">
+							<a href="<?php echo esc_url($reset_url); ?>" class="clear-btn" title="<?php _e('Clear category filter', 'download-manager'); ?>">
 								<i class="fas fa-times"></i>
 							</a>
 						</div>
@@ -294,7 +297,7 @@ $pagination           = array(
 							unset($get_params_xp['package_ids']);
 							$reset_url = add_query_arg($get_params_xp, 'edit.php');
 							?>
-							<a href="<?php echo $reset_url; ?>" class="clear-btn" title="<?php _e('Clear package filter', 'download-manager'); ?>">
+							<a href="<?php echo esc_url($reset_url); ?>" class="clear-btn" title="<?php _e('Clear package filter', 'download-manager'); ?>">
 								<i class="fas fa-times"></i>
 							</a>
 						</div>

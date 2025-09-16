@@ -1,14 +1,24 @@
 
 (function ( $ ) {
 
-    $.fn.modal = function() {
-        this.css({'z-index': 99999}).slideDown(function () {
-            $(this).addClass('show');
-        });
+    $.fn.modal = function(option) {
         let modal = this;
-        this.after('<div class="modal-backdrop fade show wpdm-mbd" style="z-index: 9999;transition: all ease-in-out 400ms"></div>');
+        console.log(modal, modal.attr('id'));
+
+        if (option === 'hide') {
+            modal.removeClass('show').slideUp(function () {
+                modal.trigger('hidden.bs.modal');
+            });
+            $('.wpdm-mbd').remove(); // remove the backdrop
+            return modal;            // keep jQuery chaining
+        }
+
+        modal.css({'z-index': 99999}).slideDown(function () {
+            modal.addClass('show');
+        });
+        modal.after('<div class="modal-backdrop fade show wpdm-mbd" style="z-index: 9999;transition: all ease-in-out 400ms"></div>');
         modal.trigger('shown.bs.modal');
-        this.find('[data-dismiss="modal"]').on('click', function(e) {
+        modal.find('[data-dismiss="modal"]').on('click', function(e) {
             modal.removeClass('show').slideUp(function () {
                 modal.trigger('hidden.bs.modal');
             });
