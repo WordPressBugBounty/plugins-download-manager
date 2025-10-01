@@ -243,6 +243,8 @@ if(isset($params['jstable']) && $params['jstable']==1):
 
             $taxonomies = get_object_taxonomies( 'wpdmpro' );
 
+            $query_params = apply_filters('wpdm_all_packages_query_params', $query_params);
+
             $q = new WP_Query($query_params);
             $total_files = $q->found_posts;
             while ($q->have_posts()): $q->the_post();

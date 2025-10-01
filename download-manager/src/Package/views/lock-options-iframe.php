@@ -16,12 +16,17 @@ $ID = wpdm_query_var('__wpdmlo');
 $form_lock = (int)get_post_meta($ID, '__wpdm_form_lock', true);
 $terms_lock = (int)get_post_meta($ID, '__wpdm_terms_lock', true);
 $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
+$post_type = get_post_type($ID);
+$post_status = get_post_status($ID);
+if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
+    \WPDM\__\Messages::fullPage("Error: Invalid request", \WPDM\__\UI::card("Error: Invalid request", ["Your request could not be processed."]));
+    die();
+}
 ?><!DOCTYPE html>
 <html style="background: transparent">
 <head>
     <title>Download <?php get_the_title($ID); ?></title>
     <?php if($form_lock === 1  || $base_price > 0) wp_head(); else { ?>
-        <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>bootstrap/css/bootstrap.min.css" />
         <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>css/front.css" />
         <link rel="stylesheet" href="<?= WPDM_FONTAWESOME_URL ?>" />
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>

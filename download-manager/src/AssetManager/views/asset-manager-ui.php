@@ -913,7 +913,79 @@ if(is_admin()){
 <script>
     var current_path = '', editor = '', opened = '', wpdmfm_active_asset = '', wpdmfm_active_asset_settings, $ = jQuery;
     var _path = localStorage.getItem('__wpdm_am_cp');
-    var searchAsset = new Vue({
+
+    /* === searchAsset === */
+    var searchAsset = Vue.createApp({
+        data() {
+            return { keyword: '' };
+        },
+        methods: {
+            execute() {
+                WPDMAM.searchDir(current_path, this.keyword);
+            }
+        }
+    }).mount('#__file_search');
+
+    /* === assetPages === */
+    var assetPages = Vue.createApp({
+        data() {
+            return {
+                total_pages: 1,
+                current_page: 1,
+                items_per_page: 15,
+                goto_page: 1
+            };
+        },
+        methods: {
+            nextPage() {
+                let topage = this.current_page + 1;
+                topage = topage > this.total_pages ? 1 : topage;
+                WPDMAM.scanDir(current_path, topage);
+            },
+            prevPage() {
+                let topage = this.current_page - 1;
+                topage = topage < 1 ? 1 : topage;
+                WPDMAM.scanDir(current_path, topage);
+            },
+            gotoPage() {
+                WPDMAM.scanDir(current_path, this.goto_page);
+            }
+        }
+    }).mount('#__asset_pages');
+
+    /* keep your line as-is */
+    if (typeof _path !== 'undefined' && _path) current_path = _path;
+
+    /* === assetSettings === */
+    var assetSettings = Vue.createApp({
+        data() {
+            return { asset: [] };
+        }
+    }).mount('#__asset_settings');
+
+    /* === linkSettings === */
+    var linkSettings = Vue.createApp({
+        data() {
+            return {
+                link: {
+                    access: {
+                        roles: ['guest'],
+                        users: ['admin']
+                    }
+                }
+            };
+        },
+        methods: {
+            roleSelected(role) {
+                for (var i = 0; i < this.link.access.roles.length; i++) {
+                    if (this.link.access.roles[i] == role) return true;
+                }
+                return false;
+            }
+        }
+    }).mount('#__link_settings');
+
+    /*var searchAsset = new Vue({
         el: '#__file_search',
         data: {
             keyword: '',
@@ -979,7 +1051,7 @@ if(is_admin()){
                 return false
             }
         }
-    });
+    });*/
 
     /* View in fullscreen */
     function openFullscreen(elementid) {

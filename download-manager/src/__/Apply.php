@@ -703,6 +703,8 @@ class Apply
      */
     function activatePremiumPackage()
     {
+        __::isAuthentic('wpdmappnonce', WPDM_PRI_NONCE, WPDM_ADMIN_CAP);
+
         if (current_user_can(WPDM_ADMIN_CAP)) {
             include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
             include_once ABSPATH . 'wp-admin/includes/plugin-install.php';

@@ -146,15 +146,18 @@ if ( ! defined( "ABSPATH" ) ) {
     </form>
     <link rel="stylesheet" href="<?php echo WPDM_BASE_URL ?>assets/simplebar/simplebar.css"/>
     <script src="<?php echo WPDM_BASE_URL ?>assets/simplebar/simplebar.min.js"></script>
-    <script type="text/javascript">
+    <script>
 
-        var stitle = new Vue({
-            el: '#stitle',
-            data: {
-                stitle: '<?= __( 'General', WPDM_TEXT_DOMAIN ); ?>',
-                icon: 'fa-solid fa-sliders'
+        const { createApp } = Vue;
+
+        var stitle = createApp({
+            data() {
+                return {
+                    stitle: '<?= __( 'General', WPDM_TEXT_DOMAIN ); ?>',
+                    icon: 'fa-solid fa-sliders'
+                };
             }
-        });
+        }).mount('#stitle');
 
         jQuery(function ($) {
             var $body = $('body'), section;

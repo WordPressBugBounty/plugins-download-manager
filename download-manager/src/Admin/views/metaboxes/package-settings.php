@@ -128,7 +128,7 @@
             jQuery(function(){
                 jQuery('#wpdm-activate-shop-link').on('click', function(){
                     jQuery(this).html('Activating...')
-                    jQuery.post(ajaxurl,{action:'wpdm-activate-shop'}, function(res){
+                    jQuery.post(ajaxurl,{action:'wpdm-activate-shop', wpdmappnonce: '<?php echo wp_create_nonce(WPDM_PRI_NONCE) ?>'}, function(res){
                         jQuery('#wpdm-activate-shop-info').html(res);
                     });
                     return false;

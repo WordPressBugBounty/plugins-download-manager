@@ -26,9 +26,58 @@
         })
     };
 
-    $.fn.tooltip = function() {};
+    $.fn.tooltip = function (options) {
+        // Default options
+        var settings = $.extend({
+            background: "#333",
+            color: "#fff",
+            padding: "5px 10px",
+            borderRadius: "4px",
+            fontSize: "12px"
+        }, options);
+
+        // Create tooltip element once
+        var $tooltip = $("<div class='simple-tooltip'></div>").css({
+            position: "absolute",
+            maxWidth: "200px",
+            display: "none",
+            zIndex: 9999,
+            background: settings.background,
+            color: settings.color,
+            padding: settings.padding,
+            borderRadius: settings.borderRadius,
+            fontSize: settings.fontSize,
+            pointerEvents: "none",
+        }).appendTo("body");
+
+        // Attach events
+        return this.each(function () {
+            var $elem = $(this);
+            var title = $elem.attr("title");
+
+            $elem.on("mouseenter", function (e) {
+                if (!title) return;
+                $elem.data("tip-title", title).removeAttr("title"); // prevent default browser tooltip
+                $tooltip.text(title).fadeIn(150);
+                $tooltip.css({
+                    top: e.pageY + 10,
+                    left: e.pageX + 10
+                });
+            }).on("mousemove", function (e) {
+                $tooltip.css({
+                    top: e.pageY + 10,
+                    left: e.pageX + 10
+                });
+            }).on("mouseleave", function () {
+                $tooltip.hide();
+                $elem.attr("title", $elem.data("tip-title")); // restore original title
+            });
+        });
+    };
 
 }( jQuery ));
+
+
 
 jQuery(function($) {
     $body = $('body');
@@ -43,7 +92,8 @@ jQuery(function($) {
     $body.on('click', '.w3eden [data-toggle="tab"]', function(e) {
         e.preventDefault();
         const $tabs = $(this).parents('.nav-tabs');
-        $tabs.find('a').each(function() {
+        console.log($tabs);
+        $tabs.find('a[data-toggle="tab"]').each(function() {
             $(this).removeClass('active');
             $($(this).attr('href')).removeClass('active');
         });

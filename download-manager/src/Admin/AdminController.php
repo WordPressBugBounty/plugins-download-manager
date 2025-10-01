@@ -60,7 +60,7 @@ class AdminController {
     }
 
     function registerScripts(){
-        wp_register_script('wpdm-admin-bootstrap', WPDM_BASE_URL.'assets/adminui/js/bootstrap.min.js', array('jquery'));
+        wp_register_script('wpdm-admin-js', WPDM_BASE_URL.'assets/js/wpdm.min.js', array('jquery'));
         wp_register_style('wpdm-admin-base', WPDM_BASE_URL.'assets/adminui/css/base.css');
         wp_register_style('wpdm-font-awesome', WPDM_FONTAWESOME_URL);
     }
@@ -93,9 +93,9 @@ class AdminController {
             wp_enqueue_style('select2-css', WPDM_BASE_URL.'assets/select2/css/select2.min.css');
             wp_enqueue_style('jqui-css', WPDM_BASE_URL.'assets/jqui/theme/jquery-ui.css');
 
-            wp_enqueue_script('wpdm-admin-bootstrap' );
+            wp_enqueue_script('wpdm-admin-js' );
 
-            wp_enqueue_script('wpdm-vue', WPDM_BASE_URL.'assets/js/vue.min.js');
+            wp_enqueue_script('wpdm-vue', WPDM_BASE_URL.'assets/js/vue.js');
             wp_enqueue_script('wpdm-admin', WPDM_BASE_URL.'assets/js/wpdm-admin.js', array('jquery'));
 
 

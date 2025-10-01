@@ -13,7 +13,17 @@ if (!defined('ABSPATH')) die();
     <meta http-equiv="Content-Type"
           content="<?php bloginfo( 'html_type' ); ?>; charset=<?php bloginfo( 'charset' ); ?>"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL.'bootstrap/css/bootstrap.css'; ?>" />
+    <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL.'css/front.min.css'; ?>" />
+    <?php
+    $_font = get_option('__wpdm_google_font', 'Sen');
+    $font = explode(":", $_font);
+    $font = $font[0];
+    $font = $font ? $font . ',' : '';
+    if($_font) {
+    ?>
+    <link href="https://fonts.googleapis.com/css2?family=<?php echo str_replace("regular", 400, $_font); ?>" rel="stylesheet">
+    <?php } ?>
+    <?php WPDM()->apply::uiColors(); ?>
     <style>
         body{
             font-family: var(--wpdm-font);
@@ -43,8 +53,21 @@ if (!defined('ABSPATH')) die();
             margin: 15px 0 !important;
         }
 
+        .w3eden .inner {
+            letter-spacing: 0.3px;
+        }
+        .w3eden .inner .card-header strong,
+        .w3eden .inner .card-header {
+            font-weight: 600;
+            font-size: 16px !important;
+        }
+        .w3eden .inner .card {
+            width: 500px;
+            margin: 0 auto;
+        }
+
     </style>
-    <?php WPDM()->apply::uiColors(); ?>
+
 </head>
 <body class="w3eden">
 <div class="outer">
