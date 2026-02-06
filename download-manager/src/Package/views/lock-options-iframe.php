@@ -9,6 +9,14 @@ if (!defined('ABSPATH')) die();
 error_reporting(0);
 //global $post;
 $ID = wpdm_query_var('__wpdmlo');
+
+$post_type = get_post_type($ID);
+$post_status = get_post_status($ID);
+if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
+    \WPDM\__\Messages::fullPage("Error: Invalid request", \WPDM\__\UI::card("Error: Invalid request", ["Your request could not be processed."]));
+    die();
+}
+
 //$post = get_post(wpdm_query_var('__wpdmlo'));
 //setup_postdata($post);
 //$pack = new \WPDM\Package();
@@ -16,23 +24,26 @@ $ID = wpdm_query_var('__wpdmlo');
 $form_lock = (int)get_post_meta($ID, '__wpdm_form_lock', true);
 $terms_lock = (int)get_post_meta($ID, '__wpdm_terms_lock', true);
 $base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
-$post_type = get_post_type($ID);
-$post_status = get_post_status($ID);
-if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
-    \WPDM\__\Messages::fullPage("Error: Invalid request", \WPDM\__\UI::card("Error: Invalid request", ["Your request could not be processed."]));
-    die();
-}
+$color_scheme = get_option('__wpdm_color_scheme', 'light');
+
 ?><!DOCTYPE html>
 <html style="background: transparent">
 <head>
     <title>Download <?php get_the_title($ID); ?></title>
+
+
     <?php if($form_lock === 1  || $base_price > 0) wp_head(); else { ?>
-        <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>css/front.css" />
-        <link rel="stylesheet" href="<?= WPDM_FONTAWESOME_URL ?>" />
+        <script type="text/javascript">
+            const wpdm_url = <?php echo json_encode(WPDM()->wpdm_urls);?>;
+        </script>
+        <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>css/front.min.css" />
+        <?php if ($color_scheme !== 'light') { ?>
+        <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>css/front-dark.min.css" />
+        <?php } ?>
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.min.js"></script>
         <script src="<?php echo WPDM_ASSET_URL; ?>js/wpdm.js"></script>
-        <script src="<?php echo WPDM_ASSET_URL; ?>js/front.js"></script>
+        <script src="<?php echo WPDM_ASSET_URL; ?>js/front.min.js"></script>
         <?php
         $_font = get_option('__wpdm_google_font', 'Sen');
         $font = explode(":", $_font);
@@ -144,197 +155,440 @@ if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
     }
     ?>
     <style>
-        html, body{
+        /* ============================================
+           Enterprise Modal - Modern Design System
+           ============================================ */
+
+        :root {
+            --modal-bg: #ffffff;
+            --modal-border: rgba(0, 0, 0, 0.08);
+            --modal-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.03),
+                0 2px 4px rgba(0, 0, 0, 0.02),
+                0 8px 16px rgba(0, 0, 0, 0.04),
+                0 16px 32px rgba(0, 0, 0, 0.06),
+                0 32px 64px rgba(0, 0, 0, 0.08);
+            --modal-radius: 20px;
+            --icon-size: 80px;
+            --backdrop-blur: 12px;
+            --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-exit: cubic-bezier(0.4, 0, 1, 1);
+        }
+
+        html, body {
             overflow: visible;
             height: 100%;
             width: 100%;
             padding: 0;
             margin: 0;
-            font-weight: 300;
+            font-weight: 400;
             font-size: 10pt;
             font-family: var(--wpdm-font);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        h4.modal-title{
+
+        /* Backdrop */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.2) !important;
+            opacity: 0 !important;
+            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: blur(1px);
+            transition: opacity 0.4s var(--transition-smooth) !important;
+        }
+
+        .modal-backdrop.show {
+            opacity: 1 !important;
+        }
+
+        /* Modal Dialog Container */
+        .modal.fade .modal-dialog {
+            transform: scale(0.9) translateY(30px);
+            opacity: 0;
+            transition:
+                transform 0.5s var(--transition-spring),
+                opacity 0.4s var(--transition-smooth);
+        }
+
+        .modal.show .modal-dialog {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Exit animation */
+        .modal.fade:not(.show) .modal-dialog {
+            transform: scale(0.95) translateY(20px);
+            opacity: 0;
+            transition:
+                transform 0.25s var(--transition-exit),
+                opacity 0.2s var(--transition-exit);
+        }
+
+        /* Modal Content - Enterprise Card */
+        .w3eden .modal-content {
+            background: var(--modal-bg);
+            border: none;
+            border-radius: var(--modal-radius);
+            box-shadow: var(--modal-shadow);
+            max-width: 100%;
+            padding-top: calc(var(--icon-size) / 2 + 8px) !important;
+            overflow: visible;
+            position: relative;
+        }
+
+        /* Subtle gradient overlay on content */
+        .w3eden .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.03) 0%, transparent 100%);
+            pointer-events: none;
+            border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+        }
+
+        /* Modal Header */
+        .w3eden .modal-header {
+            border: 0;
+            padding: 0;
+        }
+
+        /* Modal Title */
+        h4.modal-title,
+        .modal-content h4 {
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #555555;
-            font-size: 11pt;
+            letter-spacing: 1.5px;
+            color: #1e293b;
+            font-size: 12pt;
             display: inline-block;
             font-family: var(--wpdm-font);
+            margin: 0 0 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: modalContentFadeIn 0.5s var(--transition-spring) 0.2s forwards;
         }
 
-        .w3eden label{
-            font-weight: 400;
-        }
-        img{
-            max-width: 100%;
-        }
-        .modal-backdrop{
-            background: rgba(0,0,0,0.5);
+        /* Product title animation */
+        .modal-content .color-purple {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: modalContentFadeIn 0.5s var(--transition-spring) 0.3s forwards;
         }
 
-        .wpdm-social-lock.btn {
-            display: block;
-            width: 100%;
+        @keyframes modalContentFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        @-moz-keyframes spin {
-            from { -moz-transform: rotate(0deg); }
-            to { -moz-transform: rotate(360deg); }
-        }
-        @-webkit-keyframes spin {
-            from { -webkit-transform: rotate(0deg); }
-            to { -webkit-transform: rotate(360deg); }
-        }
-        @keyframes spin {
-            from {transform:rotate(0deg);}
-            to {transform:rotate(360deg);}
-        }
-        .spin{
-            -webkit-animation-name: spin;
-            -webkit-animation-duration: 2000ms;
-            -webkit-animation-iteration-count: infinite;
-            -webkit-animation-timing-function: linear;
-            -moz-animation-name: spin;
-            -moz-animation-duration: 2000ms;
-            -moz-animation-iteration-count: infinite;
-            -moz-animation-timing-function: linear;
-            -ms-animation-name: spin;
-            -ms-animation-duration: 2000ms;
-            -ms-animation-iteration-count: infinite;
-            -ms-animation-timing-function: linear;
-
-            animation-name: spin;
-            animation-duration: 2000ms;
-            animation-iteration-count: infinite;
-            animation-timing-function: linear;
-            display: inline-block;
+        /* Modal Icon - Floating Design */
+        .modal-icon {
+            width: var(--icon-size);
+            height: var(--icon-size);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 0;
+            border-radius: 50%;
+            margin-top: calc(var(--icon-size) / -2);
+            left: calc(50% - var(--icon-size) / 2);
+            position: absolute;
+            z-index: 999999;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.08),
+                0 8px 24px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            opacity: 0;
+            transform: scale(0.5) translateY(20px);
+            animation: modalIconPop 0.6s var(--transition-spring) 0.1s forwards;
         }
 
+        @keyframes modalIconPop {
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Icon ring effect */
+        .modal-icon::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary, #6366f1) 0%, var(--color-purple, #8557D3) 100%);
+            opacity: 0.15;
+            z-index: -1;
+        }
+
+        .modal-icon img,
+        .modal-icon .wp-post-image {
+            border-radius: 50%;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+
+        /* Close Button - Minimal Design */
+        .close {
+            position: absolute;
+            z-index: 999999;
+            top: 16px;
+            right: 16px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            opacity: 0.4 !important;
+            cursor: pointer;
+        }
+
+        .close svg {
+            color: #64748b;
+            transition: all 0.2s var(--transition-smooth);
+        }
+
+        .close:hover {
+            opacity: 1 !important;
+        }
+
+        .close:hover svg {
+            color: #ef4444;
+        }
+
+        .close:active {
+            transform: scale(0.9);
+        }
+
+        /* Modal Body */
+        .w3eden .modal-body {
+            max-height: calc(100vh - 240px);
+            overflow-y: auto;
+            padding: 0 20px 20px !important;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: modalBodyFadeIn 0.5s var(--transition-spring) 0.35s forwards;
+        }
+
+        @keyframes modalBodyFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbar */
+        .w3eden .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .w3eden .modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .w3eden .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        .w3eden .modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Cards inside modal */
+        .w3eden .card {
+            margin-bottom: 0;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: all 0.25s var(--transition-smooth);
+        }
+
+        .w3eden .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .w3eden .card:last-child {
+            margin-bottom: 10px !important;
+        }
 
         .w3eden .card-default {
             margin-top: 10px !important;
         }
-        .btn{
-            outline: none !important;
-        }
-        .w3eden .card{
-            margin-bottom: 0;
-        }
-        .w3eden .card:last-child{
-            margin-bottom: 10px !important;
-        }
-        .w3eden .modal-header{
-            border: 0;
-        }
-        .w3eden .modal-content{
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
-            border: 0;
-            border-radius: 6px;
-            background: rgb(255,255,255);
-            max-width: 100%;
-        }
-        .w3eden .modal-body{
-            max-height:  calc(100vh - 210px);
-            overflow-y: auto;
-            padding: 0 10px !important;
+
+        .card-body {
+            line-height: 1.6;
+            letter-spacing: 0.3px;
+            font-size: 11pt;
+            color: #334155;
         }
 
-
-        .w3eden .input-group-lg .input-group-btn .btn{
-            border-top-right-radius: 4px !important;
-            border-bottom-right-radius: 4px !important;
+        /* Form Elements */
+        .w3eden label {
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
         }
-        .w3eden .wpforms-field-medium{
-            max-width: 100% !important;
-            width: 100% !important;
+
+        .w3eden .form-control {
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 10px 14px;
+            transition: all 0.25s var(--transition-smooth);
+        }
+
+        .w3eden .form-control:focus {
+            border-color: var(--color-primary, #6366f1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .w3eden .input-group-lg .form-control {
+            font-size: 14pt !important;
+        }
+
+        .w3eden .input-group-lg .input-group-btn .btn {
+            border-top-right-radius: 10px !important;
+            border-bottom-right-radius: 10px !important;
         }
 
         .w3eden .input-group.input-group-lg .input-group-btn .btn {
             font-size: 11pt !important;
         }
 
-        .modal-icon{
-            padding: 4px;
-            display: inline-block;
-            width: 72px;
-            height: 72px;
-            top: 0;
-            border-radius: 500px;
-            margin-top: -36px;
-            left: calc(50% - 36px);
-            box-shadow: 0 0 3px rgba(0,0,0,0.3);
-            position: absolute;
-            z-index: 999999;
-            background: rgb(254,254,254);
-            background: -moz-linear-gradient(45deg,  rgba(254,254,254,1) 19%, rgba(226,226,226,1) 100%);
-            background: -webkit-linear-gradient(45deg,  rgba(254,254,254,1) 19%,rgba(226,226,226,1) 100%);
-            background: linear-gradient(45deg,  rgba(254,254,254,1) 19%,rgba(226,226,226,1) 100%);
-            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#e2e2e2',GradientType=1 );
+        .w3eden .wpforms-field-medium {
+            max-width: 100% !important;
+            width: 100% !important;
         }
 
-        .modal-content{
-            padding-top: 36px !important;
-        }
-        .close{
-            position: absolute;
-            z-index: 999999;
-            top: 5px;
-            right: 5px;
-            opacity: 0 !important;
-        }
-        .modal-content h4{
-            margin: 0 0 10px;
-            font-size: 11pt;
-        }
-        .modal-content:hover .close{
-            opacity: 0.8 !important;
-        }
-        .close:hover .fa-times-circle{
-            color: #ff3c54 !important;
-        }
-        .close .fa-times-circle,
-        .close:hover .fa-times-circle,
-        .modal-content:hover .close,
-        .close{
-            -webkit-transition: ease-in-out 400ms;
-            -moz-transition: ease-in-out 400ms;
-            -ms-transition: ease-in-out 400ms;
-            -o-transition: ease-in-out 400ms;
-            transition: ease-in-out 400ms;
-        }
-        .wp-post-image{
-            width: 100%;
-            height: auto;
-            border-radius: 500px;
+        /* Buttons */
+        .btn {
+            outline: none !important;
+            text-decoration: none !important;
         }
 
         .btn-viewcart,
-        #cart_submit{
+        #cart_submit {
             line-height: 30px !important;
             width: 100%;
         }
-        .w3eden h3.wpdmpp-product-price{
-            text-align: center;
-            margin-bottom: 30px !important;
-        }
-        .modal-icon img{
-            border-radius: 500px;
-            width: 100% !important;
-            height: auto !important;
-        }
-        form *{
-            max-width: 100% !important;
-        }
-        .card-body {
-            line-height: 1.5;
-            letter-spacing: 0.5px;
-            font-size: 11pt;
+
+        /* Social Lock Buttons */
+        .wpdm-social-lock.btn {
+            display: block;
+            width: 100%;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
         }
 
-        .w3eden .input-group-lg .form-control{
-            font-size: 15pt !important;
+        /* Price Display */
+        .w3eden h3.wpdmpp-product-price {
+            text-align: center;
+            margin-bottom: 24px !important;
+            font-size: 24pt;
+            color: #1e293b;
+        }
+
+        /* Spin Animation */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spin {
+            animation: spin 1.5s linear infinite;
+            display: inline-block;
+        }
+
+        /* Images */
+        img {
+            max-width: 100%;
+        }
+
+        .wp-post-image {
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+        }
+
+        form * {
+            max-width: 100% !important;
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            .modal.fade .modal-dialog,
+            .modal-backdrop,
+            .modal-icon,
+            h4.modal-title,
+            .modal-content .color-purple,
+            .w3eden .modal-body {
+                animation: none !important;
+                transition-duration: 0.01ms !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .close {
+                opacity: 0.4 !important;
+            }
+        }
+
+        /* Manual dark mode - always apply when .dark-mode class is present */
+        .w3eden.dark-mode .modal-content::before {
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%);
+        }
+        .w3eden.dark-mode h4.modal-title,
+        .w3eden.dark-mode .modal-content h4 {
+            color: var(--dm-text);
+        }
+        .w3eden.dark-mode .modal-content .color-purple {
+            color: #c4b5fd !important;
+        }
+        .w3eden.dark-mode .modal-icon {
+            background: linear-gradient(145deg, var(--dm-bg-tertiary) 0%, var(--dm-bg-secondary) 100%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .w3eden.dark-mode .close svg {
+            color: var(--dm-text-muted);
+        }
+        .w3eden.dark-mode .close:hover svg {
+            color: #f87171;
+        }
+
+        /* System preference dark mode - only when OS prefers dark AND no light-mode class */
+        @media (prefers-color-scheme: dark) {
+            .w3eden:not(.light-mode) .modal-content::before {
+                background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%);
+            }
+            .w3eden:not(.light-mode) h4.modal-title,
+            .w3eden:not(.light-mode) .modal-content h4 {
+                color: var(--dm-text);
+            }
+            .w3eden:not(.light-mode) .modal-content .color-purple {
+                color: #c4b5fd !important;
+            }
+            .w3eden:not(.light-mode) .modal-icon {
+                background: linear-gradient(145deg, var(--dm-bg-tertiary) 0%, var(--dm-bg-secondary) 100%);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+            .w3eden:not(.light-mode) .close svg {
+                color: var(--dm-text-muted);
+            }
+            .w3eden:not(.light-mode) .close:hover svg {
+                color: #f87171;
+            }
         }
 
     </style>
@@ -344,7 +598,17 @@ if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
 
     <?php do_action("wpdm_modal_iframe_head"); ?>
 </head>
-<body class="w3eden" style="background: transparent">
+<?php
+// Build body classes based on color scheme setting
+$body_classes = 'w3eden';
+if ($color_scheme === 'light') {
+    $body_classes .= ' light-mode';
+} elseif ($color_scheme === 'dark') {
+    $body_classes .= ' dark-mode';
+}
+// 'system' = no extra class, follows OS preference via @media (prefers-color-scheme: dark)
+?>
+<body class="<?php echo esc_attr($body_classes); ?>" style="background: transparent">
 
 <div class="modal fade" id="wpdm-locks" tabindex="-1" role="dialog" aria-labelledby="wpdm-optinmagicLabel">
     <div class="modal-dialog modal-dialog-centered" role="document" style="width: <?php echo $terms_lock === 1?395:365; ?>px;max-width: calc(100% - 20px);margin: 0 auto;">
@@ -375,7 +639,6 @@ if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
 </div>
 
 <script>
-
     jQuery(function ($) {
 
         $('a').each(function () {

@@ -12,7 +12,11 @@ use WPDM\__\Template;
 
 class UI
 {
+	static $elements = [];
 
+	static function el($element) {
+		self::$elements['name'] = $element;
+	}
     static function div($content, $class = '', $attrs = [])
     {
         $class = $class ? " class='{$class}'" : '';
@@ -37,9 +41,9 @@ class UI
         $label = $label ? $label : $link;
         $_attrs = "";
         foreach ($attrs as $name => $val){
-            $_attrs .= " {$name}='$val'";
+            $_attrs .= esc_attr($name) . '="'.esc_attr($val).'"';
         }
-        return "<a href='{$link}' $_attrs>{$label}</a>";
+        return '<a href="'.esc_attr($link).'"'.$_attrs.'>'.$label.'</a>';
     }
 
     static function button($label, $attrs = []){

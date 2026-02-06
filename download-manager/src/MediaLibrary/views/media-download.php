@@ -16,6 +16,9 @@ $picon = "<img width='48px' src='".WPDM_ASSET_URL."images/locked.png' />";
         var wpdm_url = <?= json_encode(WPDM()->wpdm_urls); ?>;
     </script>
     <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/front.min.css" />
+    <?php $color_scheme = get_option('__wpdm_color_scheme', 'system'); if ($color_scheme !== 'light') { ?>
+    <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/front-dark.min.css" />
+    <?php } ?>
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.js"></script>
     <script src="<?php echo WPDM_BASE_URL; ?>assets/js/wpdm.js"></script>

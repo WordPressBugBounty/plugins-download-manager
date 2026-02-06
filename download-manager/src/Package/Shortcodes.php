@@ -40,6 +40,9 @@ class Shortcodes
         //Search downloads
         add_shortcode('wpdm_search_result', [$this, 'searchResult']);
 
+        // Changelog display
+        add_shortcode("wpdm_changelog", [$this, 'changelog']);
+
 
     }
 
@@ -433,6 +436,54 @@ class Shortcodes
             return $data;
         }
     }
+
+	/**
+	 * Display package changelog with a modern timeline UI
+	 *
+	 * Shortcode: [wpdm_changelog]
+	 *
+	 * @since 6.0
+	 *
+	 * @param array $params {
+	 *     Shortcode attributes.
+	 *
+	 *     @type int    $id         Required. The package/post ID.
+	 *     @type string $title      Optional. Header title displayed above the changelog.
+	 *                              Default: 'Changelog'
+	 *     @type bool   $show_empty Optional. Whether to show a message when no changelog exists.
+	 *                              Default: false
+	 *     @type int    $limit      Optional. Maximum number of entries to display.
+	 *                              Use 0 to show all entries. Default: 0
+	 *     @type bool   $collapsed  Optional. Whether to collapse all entries except the first (latest).
+	 *                              Default: true
+	 * }
+	 *
+	 * @return string HTML output of the changelog timeline, or empty string if no ID provided.
+	 *
+	 * Usage Examples:
+	 *
+	 *   Basic usage (package ID required):
+	 *   [wpdm_changelog id="123"]
+	 *
+	 *   Custom title:
+	 *   [wpdm_changelog id="123" title="Version History"]
+	 *
+	 *   Show all entries expanded:
+	 *   [wpdm_changelog id="123" collapsed="false"]
+	 *
+	 *   Limit to latest 5 entries:
+	 *   [wpdm_changelog id="123" limit="5"]
+	 *
+	 *   Show message when no changelog exists:
+	 *   [wpdm_changelog id="123" show_empty="true"]
+	 *
+	 *   Combined parameters:
+	 *   [wpdm_changelog id="123" title="Release Notes" limit="10" collapsed="true"]
+	 */
+	function changelog($params) {
+		if(!isset($params['id'])) return '';
+		return WPDM()->package->changelog($params['id'], $params);
+	}
 
 }
 

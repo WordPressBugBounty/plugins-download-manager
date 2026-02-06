@@ -20,7 +20,7 @@ if(!defined('WPDM_CLOUD_STORAGE')){
 		<br/>
 		<div class="panel panel-default" style="margin-bottom: 0">
 			<div class="panel-body">
-				<small><?php echo esc_attr__('To store files in cloud storage or to link files from could storage ( ex: DropBox, Google Drive, Amazon S3), please check our cloud storage add-ons', 'download-manager')  ?></small>
+				<small><?php echo esc_attr__('To store files in cloud storage or to link files from cloud storage ( ex: DropBox, Google Drive, Amazon S3), please check our cloud storage add-ons', 'download-manager')  ?></small>
 			</div>
 			<div class="panel-footer"><a target="_blank" class="btn wpdm-linkedin btn-nlock" href="https://www.wpdownloadmanager.com/downloads/cloud-storage/"><?php echo esc_attr__('Cloud Storage Add-ons', 'download-manager')  ?></a></div>
 		</div>

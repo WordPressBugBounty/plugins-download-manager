@@ -30,7 +30,6 @@ class DashboardWidgets
     function addDashboardWidget()
     {
         wp_add_dashboard_widget('wpdm_overview', __( "Download Manager Overview" , "download-manager" ), array($this, 'overview'));
-        wp_add_dashboard_widget('wpdm_social_overview', __( "Social Overview" , "download-manager" ), array($this, 'socialOverview'));
 
     }
 

@@ -125,7 +125,7 @@ var WPDM = {
         let modal_id = '__bootModal_' + WPDM.uniqueID();
         if(typeof content === 'object') {
             url = content.url;
-            content = `<div id='${modal_id}_cont'><i class='fa fa-sun fa-spin'></i> Loading...</div>`;
+            content = `<div id='${modal_id}_cont'><div  style="padding: 40px;text-align: center"><i class='fa fa-sun fa-spin'></i> Loading...</div></div>`;
         }
         if (!width) width = 400;
         html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" class="modal fade" tabindex="-1" role="dialog">\n' +
@@ -142,6 +142,9 @@ var WPDM = {
             '</div></div>';
         jQuery('body').append(html);
         jQuery("#" + modal_id).modal({show: true, backdrop: 'static'});
+        jQuery("#" + modal_id).on('hidden.bs.modal', function (event) {
+            jQuery("#" + modal_id).remove()
+        })
 
         if(url !== '') {
             url = url.indexOf('?') > 0 ? url+'&__mdid=' + modal_id : url+'?__mdid=' + modal_id;
@@ -289,7 +292,7 @@ var WPDM = {
             _buttons += '</div>\n';
         }
 
-        html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" tabindex="-1" role="dialog">\n' +
+        html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog">\n' +
             '  <div class="modal-dialog" role="document" style="max-width: 100%;width: 350px">\n' +
             '    <div class="modal-content" style="border-radius: 3px;overflow: hidden">\n' +
             '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
@@ -317,9 +320,9 @@ var WPDM = {
         var $ = jQuery, song_length, song_length_m, song_length_s;
 
         if (parseInt(wpdm_asset.bsversion) !== 3)
-            var player_html = '<div class="w3eden"><div style="display: none" class="wpdm-audio-player-ui" id="wpdm-audio-player-ui"><div class="card m-2"><div class="card-body text-center"><div class="media"><div class="mr-3 wpdm-audio-control-buttons"><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-primary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-primary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button></div><div class="media-body"><div class="position-relative"><div id="played">00:00</div><div id="mins">00:00</div></div><div class="progress"><div  id="wpdm-audio-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div><div class="ml-3 wpdm-audio-control-buttons"> <button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button> <div class="volumctrl"><input type="range" min="0" max="1" step="0.01" value="3" class="p-0" id="wpdm-audio-volume"></div></div></div></div></div></div></div>';
+            var player_html = '<div class="w3eden"><div style="display: none" class="wdmapui" id="wdmapui"><div class="card m-2"><div class="card-body text-center"><div class="media"><div class="mr-3 wpdm-audio-control-buttons"><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-primary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-primary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button></div><div class="media-body"><div class="position-relative"><div id="played">00:00</div><div id="mins">00:00</div></div><div class="progress"><div  id="wpdm-audio-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div><div class="ml-3 wpdm-audio-control-buttons"> <button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button> <div class="volumctrl"><input type="range" min="0" max="1" step="0.01" value="3" class="p-0" id="wpdm-audio-volume"></div></div></div></div></div></div></div>';
         else
-            var player_html = '<div class="w3eden"><div style="display: none" class="wpdm-audio-player-ui" id="wpdm-audio-player-ui"><div class="panel panel-default" style="margin: 0;border: 0;border-radius: 0;border-top: 1px solid #dddddd;background: #fcfcfc"><div class="panel-body text-center"><div class="media"><div class="pull-right wpdm-audio-control-buttons"><button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button> <div class="volumctrl"> <input type="range" min="0" max="1" step="0.01" value="3" class="p-0" id="wpdm-audio-volume"> </div></div><div class="wpdm-audio-control-buttons pull-left"><nobr><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-primary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-primary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button></nobr></div><div class="media-body"><div class="position-relative"><div id="played">00:00</div><div id="mins">00:00</div></div><div class="progress"><div  id="wpdm-audio-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div></div></div></div></div></div>';
+            var player_html = '<div class="w3eden"><div style="display: none" class="wdmapui" id="wdmapui"><div class="panel panel-default" style="margin: 0;border: 0;border-radius: 0;border-top: 1px solid #dddddd;background: #fcfcfc"><div class="panel-body text-center"><div class="media"><div class="pull-right wpdm-audio-control-buttons"><button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button> <div class="volumctrl"> <input type="range" min="0" max="1" step="0.01" value="3" class="p-0" id="wpdm-audio-volume"> </div></div><div class="wpdm-audio-control-buttons pull-left"><nobr><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-primary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-primary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button></nobr></div><div class="media-body"><div class="position-relative"><div id="played">00:00</div><div id="mins">00:00</div></div><div class="progress"><div  id="wpdm-audio-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div></div></div></div></div></div>';
 
         if (audio.duration !== Infinity) {
             song_length = parseInt(audio.duration);
@@ -344,11 +347,11 @@ var WPDM = {
             }, false);
         }
 
-        if ($('#wpdm-audio-player-ui').length === 0) {
+        if ($('#wdmapui').length === 0) {
             $('body').append(player_html);
-            $("#wpdm-audio-player-ui").slideDown();
+            $("#wdmapui").slideDown();
             $('#mins').html(song_length_m + ":" + song_length_s);
-            $('body').on('click', '#wpdm-audio-player-ui .progress', function (e) {
+            $('body').on('click', '#wdmapui .progress', function (e) {
                 let value = e.offsetX * 100 / this.clientWidth;
                 var played = parseInt(song_length * value / 100);
                 var played_m = parseInt(played / 60);
@@ -361,7 +364,7 @@ var WPDM = {
                 //video.currentTime = duration * (value / 100);
             });
             $('body').on('click', '#wpdm-btn-backward', function () {
-                let value = (parseInt($('#wpdm-audio-player-ui .progress-bar').css('width')) / parseInt($('#wpdm-audio-player-ui .progress').css('width'))) * 100 - 10;
+                let value = (parseInt($('#wdmapui .progress-bar').css('width')) / parseInt($('#wdmapui .progress').css('width'))) * 100 - 10;
                 if (value < 0) value = 0;
                 var played = parseInt(song_length * value / 100);
                 var played_m = parseInt(played / 60);
@@ -370,10 +373,10 @@ var WPDM = {
                 played_s = played_s > 9 ? played_s : "0" + played_s;
                 $('#played').html(played_m + ":" + played_s);
                 audio.currentTime = (song_length * value) / 100;
-                $('#wpdm-audio-player-ui .progress-bar').css('width', value + "%");
+                $('#wdmapui .progress-bar').css('width', value + "%");
             });
             $('body').on('click', '#wpdm-btn-forward', function () {
-                let value = (parseInt($('#wpdm-audio-player-ui .progress-bar').css('width')) / parseInt($('#wpdm-audio-player-ui .progress').css('width'))) * 100 + 10;
+                let value = (parseInt($('#wdmapui .progress-bar').css('width')) / parseInt($('#wdmapui .progress').css('width'))) * 100 + 10;
                 if (value > 100) value = 100;
                 var played = parseInt(song_length * value / 100);
                 var played_m = parseInt(played / 60);
@@ -382,7 +385,7 @@ var WPDM = {
                 played_s = played_s > 9 ? played_s : "0" + played_s;
                 $('#played').html(played_m + ":" + played_s);
                 audio.currentTime = (song_length * value) / 100;
-                $('#wpdm-audio-player-ui .progress-bar').css('width', value + "%");
+                $('#wdmapui .progress-bar').css('width', value + "%");
             });
             $('#wpdm-btn-volumctrl').on('click', function () {
                 $(this).next('.volumctrl').toggle();

@@ -20,6 +20,7 @@ class Settings
         add_action('admin_menu', array($this, 'Menu'), 999999);
 
 	    add_action('wp_ajax_wpdm_delete_cron', array($this, 'deleteCron'));
+	    add_action('wp_ajax_wpdm_test_recaptcha', array($this, 'testRecaptcha'));
     }
 
     function Menu(){
@@ -167,7 +168,7 @@ class Settings
             foreach ($_POST as $optn => $optv) {
                 if(strpos("__".$optn, '_wpdm_')) {
                     //$optv = wpdm_sanitize_array($optv);
-	                $optv = wpdm_sanitize_array($optv, "/([^\#a-zA-Z0-9_\-\s:\.\;\@])/");
+	                $optv = wpdm_sanitize_array($optv, "/([^\#a-zA-Z0-9_\+\-\s:\.\;\@])/");
                     //echo $optn."=".$optv."<br/>";
                     update_option($optn, $optv, false);
                 }
@@ -293,6 +294,7 @@ class Settings
             update_option('__wpdm_checkout_privacy_label', wpdm_query_var('__wpdm_checkout_privacy_label', 'txt'));
 	        update_option('__wpdm_tmp_storage', wpdm_query_var('__wpdm_tmp_storage', 'txt', 'db'));
 	        update_option('__wpdm_auto_clean_cache', wpdm_query_var('__wpdm_auto_clean_cache', 'int', 0));
+	        update_option('__wpdm_cron_key', wpdm_query_var('__wpdm_cron_key', 'alphanum', ''));
 	        _e("Privacy Settings Saved Successfully", "download-manager");
             die();
         }
@@ -311,6 +313,36 @@ class Settings
 		__::isAuthentic('wpdmdcx', WPDM_PRI_NONCE, WPDM_ADMIN_CAP);
 		CronJob::delete(wpdm_query_var('cronid', 'int'));
 		wp_send_json(['success' => true]);
+	}
+
+	function testRecaptcha() {
+		if (!current_user_can(WPDM_ADMIN_CAP)) {
+			wp_send_json_error(['message' => __('Permission denied.', 'download-manager')]);
+		}
+
+		if (!wp_verify_nonce(wpdm_query_var('_wpnonce'), 'wpdm_test_recaptcha')) {
+			wp_send_json_error(['message' => __('Security token expired. Please refresh the page.', 'download-manager')]);
+		}
+
+		$token = wpdm_query_var('token', 'txt');
+		if (empty($token)) {
+			wp_send_json_error(['message' => __('No reCAPTCHA token provided.', 'download-manager')]);
+		}
+
+		$result = wpdm_recaptcha_enterprise_verify($token, 'TEST');
+
+		if ($result['success']) {
+			wp_send_json_success([
+				'message' => __('reCAPTCHA verification successful!', 'download-manager'),
+				'score' => isset($result['score']) ? $result['score'] : 'N/A'
+			]);
+		} else {
+			wp_send_json_error([
+				'message' => isset($result['error']) ? $result['error'] : __('Verification failed.', 'download-manager'),
+				'error_code' => isset($result['error_code']) ? $result['error_code'] : '',
+				'error_details' => isset($result['error_details']) ? $result['error_details'] : ''
+			]);
+		}
 	}
 
 }

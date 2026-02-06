@@ -6,7 +6,6 @@ if ( ! defined( "ABSPATH" ) ) {
 	die( "Shit happens!" );
 }
 ?>
-<link rel="stylesheet" href="<?= WPDM_CSS_URL ?>settings-ui.css"/>
 <style>
     #wpfooter {
         display: none;
@@ -79,7 +78,7 @@ if ( ! defined( "ABSPATH" ) ) {
                                 <div class="media">
                                     <div class="pull-right">
                                         <div id="wpdm_notify"
-                                             style="position: absolute; cursor: pointer;right: 220px"></div>
+                                             style="position: fixed; cursor: pointer;right: 20px;bottom: 20px"></div>
                                         <button type="submit" style="min-width:200px"
                                                 class="btn btn-admin btn-block btn-lg">
                                             <i class="sinc far fa-hdd"></i>

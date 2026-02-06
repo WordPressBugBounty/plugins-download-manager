@@ -37,17 +37,10 @@
     </div>
     <div class="card mb-3">
         <div class="card-header">
-
-            <div class="nav nav-tabs card-header-tabs" id="nav-tab" role="tablist">
-                <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-desc" role="tab" aria-controls="nav-home" aria-selected="true">[txt=Description]</a>
-            </div>
+            [txt=Description]
         </div>
         <div class="card-body">
-            <div class="tab-content" id="nav-tabContent">
-                <div class="tab-pane active" id="nav-desc" role="tabpanel" aria-labelledby="nav-home-tab">[description]</div>
-
-            </div>
-
+            [description]
         </div>
     </div>
 

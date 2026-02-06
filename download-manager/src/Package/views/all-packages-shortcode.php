@@ -107,7 +107,7 @@ if(isset($params['jstable']) && $params['jstable']==1):
         vertical-align: middle !important;
     }
     #wpdmmydls-<?php echo $tid; ?> td.__dt_col_download_link .btn{
-        display: block;
+        display: flex;
         width: 100%;
     }
     #wpdmmydls-<?php echo $tid; ?> td.__dt_col_download_link,

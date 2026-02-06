@@ -87,6 +87,18 @@ class Packages {
 				$meta_value = array_unique( $meta_value );
 			} else if ( $meta_key == 'terms_conditions' ) {
 				$meta_value = __::sanitize_var( $meta_value, 'kses' );
+			} else if ( $meta_key == 'changelog' ) {
+				if ( is_array( $meta_value ) ) {
+					foreach ( $meta_value as &$entry ) {
+						if ( is_array( $entry ) ) {
+							$entry['id'] = sanitize_text_field( $entry['id'] );
+							$entry['version'] = sanitize_text_field( $entry['version'] );
+							$entry['date'] = sanitize_text_field( $entry['date'] );
+							$entry['changes'] = wp_kses_post( $entry['changes'] );
+							$entry['timestamp'] = absint( $entry['timestamp'] );
+						}
+					}
+				}
 			} else {
 				$meta_value = is_array( $meta_value ) ? wpdm_sanitize_array( $meta_value, 'txt' ) : htmlspecialchars( $meta_value );
 			}
@@ -408,6 +420,7 @@ class Packages {
                         <div class="modal-content">
 
                             <div class="modal-header">
+                                <div class="pull-right"><a href="#" data-dismiss="modal" style="margin-top: 4px;margin-right: -6px"><i class="fa fa-times-circle text-danger" style="font-size: 20px;"></i></a></div>
                                 <h4 class="modal-title"><i
                                             class="far fa-arrow-alt-circle-down color-purple"></i> <?php _e( "Generate Download Link", "download-manager" ); ?>
                                 </h4>

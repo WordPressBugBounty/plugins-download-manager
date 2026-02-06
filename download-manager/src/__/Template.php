@@ -18,22 +18,30 @@ class Template
         );
         if($tpldir !== '') {
             $template_dirs[] = trailingslashit($tpldir);
-            $template_dirs[] = get_stylesheet_directory().'/download-manager/'.$tpldir.'/';
-            $template_dirs[] = get_template_directory().'/download-manager/'.$tpldir.'/';
+			if(!substr_count(trailingslashit($tpldir), ABSPATH)) {
+				$template_dirs[] = trailingslashit(get_stylesheet_directory() . '/download-manager/' . trim( $tpldir, '/' ));
+				$template_dirs[] = trailingslashit(get_template_directory() . '/download-manager/' . trim( $tpldir, '/' ));
+			}
         } else
-            $template_dir[] = '';
+            $template_dirs[] = '';
 
         if($fallback !== '')
             $template_dirs[] = trailingslashit($fallback);
-
-        $template_dirs = apply_filters("wpdm_template_path", $template_dirs, $file);
+		$template_dirs = apply_filters("wpdm_template_path", $template_dirs, $file);
         foreach ($template_dirs as $template_dir){
-            if(file_exists($template_dir.$file))
-                return $template_dir.$file;
+            if(file_exists($template_dir.$file)) {
+	            return $template_dir . $file;
+            }
         }
         //wpdmdd($file);
         return "";
     }
+
+	public static function locate_url($file, $tpldir = '', $fallback = ''){
+		$file = self::locate($file, $tpldir, $fallback);
+		$url = str_replace(ABSPATH, site_url('/'), $file);
+		return $url;
+	}
 
     function assign($var, $val = null){
         if(is_array($var) && is_array($val)){
@@ -50,10 +58,9 @@ class Template
     }
 
     function fetch($template, $tpldir = '' , $fallback = ''){
-		$template = self::locate($template, $tpldir);
+        $template = self::locate($template, $tpldir);
         if(is_array($this->vars))
-            extract($this->vars);
-	    if(!$template) return "";
+        extract($this->vars);
         ob_start();
         include $template;
         return ob_get_clean();
@@ -61,6 +68,14 @@ class Template
 
     function display($template, $tpldir = '' , $fallback = ''){
         echo $this->fetch($template, $tpldir, $fallback);
+    }
+
+    function execute($code){
+        ob_start();
+        if(is_array($this->vars))
+            extract($this->vars);
+        echo $code;
+        return ob_get_clean();
     }
 
     static function output($data, $vars, $tpldir = '')
@@ -74,3 +89,4 @@ class Template
     }
 
 }
+

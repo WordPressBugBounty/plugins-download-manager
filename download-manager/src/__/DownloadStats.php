@@ -26,6 +26,9 @@ class DownloadStats
      * @param $oid
      */
     function add($pid, $filename, $oid = null){
+
+	    if(defined("WPDM_DISABLE_STATS") && WPDM_DISABLE_STATS === true) return;
+
         global $wpdb;
 
 	    $current_user = wp_get_current_user();

@@ -5,7 +5,7 @@ Plugin URI: https://www.wpdownloadmanager.com/purchases/
 Description: Manage, Protect and Track file downloads, and sell digital products from your WordPress site. A complete digital asset management solution.
 Author: W3 Eden, Inc.
 Author URI: https://www.wpdownloadmanager.com/
-Version: 3.3.25
+Version: 3.3.47
 Text Domain: download-manager
 Domain Path: /languages
 */
@@ -13,6 +13,7 @@ Domain Path: /languages
 namespace WPDM;
 
 use WPDM\__\Apply;
+use WPDM\__\CronJob;
 use WPDM\__\Crypt;
 use WPDM\__\DownloadStats;
 use WPDM\__\Email;
@@ -39,7 +40,7 @@ use WPDM\Widgets\WidgetController;
 
 global $WPDM;
 
-define('WPDM_VERSION','3.3.25');
+define('WPDM_VERSION','3.3.47');
 
 define('WPDM_TEXT_DOMAIN','download-manager');
 
@@ -112,9 +113,6 @@ if(!defined('WPDM_PUB_NONCE'))
 if(!defined('WPDM_PRI_NONCE'))
     define('WPDM_PRI_NONCE',        '.r&`|]S1GEAdm^hTA^XmE8vU3F^=K+)419alVN=EbDQ Z-pfl/nd-12^I&oRfDC]');
 
-if(!defined('WPDM_CRON_KEY'))
-	define('WPDM_CRON_KEY',        'mKNVRCdbJr1DiedHE18N');
-
 @ini_set('upload_tmp_dir',WPDM_CACHE_DIR);
 
 
@@ -142,6 +140,8 @@ final class WordPressDownloadManager{
     public $message;
 	public $updater;
     public $ui;
+    public $cronJob;
+    public $cronJobs;
     public $wpdm_urls;
 
     private static $wpdm_instance = null;
@@ -202,8 +202,8 @@ final class WordPressDownloadManager{
         $this->updater          = new Updater();
         $this->ui               = new UI();
         $this->email            = new Email();
-
-        CronJobs::getInstance();
+        $this->cronJob          = CronJob::getInstance();
+        $this->cronJobs          = CronJobs::getInstance();
         WidgetController::instance();
 
         if (!defined('WPDM_ASSET_MANAGER') || WPDM_ASSET_MANAGER === true) {
@@ -223,6 +223,10 @@ final class WordPressDownloadManager{
 
         flush_rewrite_rules();
         self::createDir();
+
+        // Set flag to redirect to welcome page after activation
+        set_transient('wpdm_activation_redirect', 'yes', 300);
+        update_option('__wpdm_activation_redirect', 'yes', false);
 
     }
 
@@ -417,7 +421,8 @@ final class WordPressDownloadManager{
 
         if(is_admin()) return;
 
-        wp_register_style('wpdm-front', plugins_url('/assets/css/front.min.css', __FILE__) , 99999999);
+        wp_register_style('wpdm-front', plugins_url('/assets/css/front.min.css', __FILE__), [], WPDM_VERSION);
+        wp_register_style('wpdm-front-dark', plugins_url('/assets/css/front-dark.min.css', __FILE__), ['wpdm-front'], WPDM_VERSION);
         wp_register_script('jquery-validate', plugins_url('/assets/js/jquery.validate.min.js', __FILE__), array('jquery'));
 	    wp_register_script('wpdm-frontend-js', plugins_url('/assets/js/wpdm.min.js', __FILE__), array('jquery'));
 
@@ -440,11 +445,29 @@ final class WordPressDownloadManager{
 
 	    wp_enqueue_style('wpdm-front' );
 
+        // Color scheme support
+        $color_scheme = get_option('__wpdm_color_scheme', 'system');
+
+        // Only load dark mode CSS when needed (dark or system mode)
+        // For light mode, skip loading front-dark.css entirely (performance + prevents flash)
+        if ($color_scheme !== 'light') {
+            wp_enqueue_style('wpdm-front-dark');
+        }
+
+        if ($color_scheme === 'dark' || $color_scheme === 'light') {
+            $scheme_class = $color_scheme === 'dark' ? 'dark-mode' : 'light-mode';
+            wp_add_inline_style('wpdm-front', ".w3eden { /* color-scheme: {$color_scheme} */ }");
+            wp_add_inline_script('jquery', "document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.w3eden').forEach(function(el){el.classList.add('{$scheme_class}')})});", 'after');
+        }
+
         wp_register_script('wpdm-frontjs', plugins_url('/assets/js/front.min.js', __FILE__), array('jquery'), WPDM_VERSION);
+
+        if((int)get_option('__wpdm_adblocked_off', 0) === 1)
+            wp_enqueue_script('wpdm-ad', plugins_url('/download-manager/assets/js/blocker.js'));
 
         $wpdm_js = array(
             'spinner' => '<i class="wpdm-icon wpdm-sun wpdm-spin"></i>',
-            'client_id' => Session::$deviceID
+            'client_id' => Session::deviceID()
         );
         $wpdm_js = apply_filters("wpdm_js_vars", $wpdm_js);
 
@@ -490,6 +513,9 @@ final class WordPressDownloadManager{
                 echo $this->user->login->modalForm();
             ?>
             <script>
+                const abmsg = "<?php echo esc_attr(get_option('__wpdm_adblocked_msg', 'We noticed an ad blocker. Consider whitelisting us to support the site ❤️')) ?>";
+                const abmsgd = "<?php echo esc_attr(get_option('__wpdm_adblocked_msgd', 'download')); ?>";
+                const iswpdmpropage = <?php echo is_singular('wpdmpro') ? 1 : 0 ?>;
                 jQuery(function($){
 
                     <?php if(is_singular('wpdmpro') && $view_count){ ?>

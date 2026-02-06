@@ -273,6 +273,9 @@ class MediaAccessControl {
 	}
 
 	function mediaAccessControl() {
+
+        __::isAuthentic('pmanonce', WPDM_PRI_NONCE, WPDM_ADMIN_CAP);
+
 		$id                 = wpdm_query_var( 'mediaid' );
 		$wpdm_media_access  = maybe_unserialize( get_post_meta( $id, '__wpdm_media_access', true ) );
 		$wpdm_media_pass    = get_post_meta( $id, '__wpdm_media_pass', true );
@@ -436,7 +439,7 @@ class MediaAccessControl {
                 xhr = $.ajax({
                     type: "GET",
                     url: ajaxurl,
-                    data: "action=wpdm_media_access&mediaid=<?php echo $post->ID; ?>", //+$(this).data('id'),
+                    data: "action=wpdm_media_access&mediaid=<?php echo $post->ID; ?>&pmanonce=<?php echo wp_create_nonce(WPDM_PRI_NONCE) ?>", //+$(this).data('id'),
                     success: function (res) {
                         $('#wpdm-media-access').html(res);
                     }

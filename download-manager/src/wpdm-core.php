@@ -151,6 +151,147 @@ function wpdm_remote_post($url, $data, $headers = [])
 }
 
 /**
+ * Verify reCAPTCHA Enterprise token
+ * @param string $token The reCAPTCHA token from the frontend
+ * @param string $expected_action Optional expected action name
+ * @return array ['success' => bool, 'score' => float, 'error' => string]
+ */
+function wpdm_recaptcha_enterprise_verify($token, $expected_action = '')
+{
+    $project_id = get_option('_wpdm_recaptcha_project_id', '');
+    $api_key = get_option('_wpdm_recaptcha_secret_key', '');
+    $site_key = get_option('_wpdm_recaptcha_site_key', '');
+
+    if (empty($project_id) || empty($api_key) || empty($site_key)) {
+        return ['success' => false, 'score' => 0, 'error' => 'reCAPTCHA Enterprise not configured'];
+    }
+
+    $url = 'https://recaptchaenterprise.googleapis.com/v1/projects/' . $project_id . '/assessments?key=' . $api_key;
+
+    $body = [
+        'event' => [
+            'token' => $token,
+            'siteKey' => $site_key,
+        ]
+    ];
+
+    if (!empty($expected_action)) {
+        $body['event']['expectedAction'] = $expected_action;
+    }
+
+    $response = wp_remote_post($url, [
+        'method' => 'POST',
+        'timeout' => 10,
+        'headers' => ['Content-Type' => 'application/json'],
+        'body' => wp_json_encode($body),
+    ]);
+
+    if (is_wp_error($response)) {
+        return ['success' => false, 'score' => 0, 'error' => $response->get_error_message(), 'error_code' => 'WP_ERROR'];
+    }
+
+    $response_code = wp_remote_retrieve_response_code($response);
+    $result = json_decode(wp_remote_retrieve_body($response), true);
+
+    // Handle API-level errors (wrong API key, project ID, etc.)
+    if ($response_code !== 200) {
+        $api_error = isset($result['error']['message']) ? $result['error']['message'] : 'API request failed';
+        $api_status = isset($result['error']['status']) ? $result['error']['status'] : '';
+        return [
+            'success' => false,
+            'score' => 0,
+            'error' => $api_error,
+            'error_code' => $api_status,
+            'error_details' => wpdm_recaptcha_get_api_error_help($api_status, $api_error)
+        ];
+    }
+
+    if (!$result) {
+        return ['success' => false, 'score' => 0, 'error' => 'Invalid response from reCAPTCHA Enterprise', 'error_code' => 'INVALID_RESPONSE'];
+    }
+
+    // Check if token is valid
+    $valid = isset($result['tokenProperties']['valid']) && $result['tokenProperties']['valid'] === true;
+    $score = isset($result['riskAnalysis']['score']) ? (float)$result['riskAnalysis']['score'] : 0;
+    $invalid_reason = isset($result['tokenProperties']['invalidReason']) ? $result['tokenProperties']['invalidReason'] : '';
+
+    // For checkbox mode, we mainly check validity
+    // Score threshold can be configured if needed
+    return [
+        'success' => $valid,
+        'score' => $score,
+        'error' => $valid ? '' : wpdm_recaptcha_get_error_message($invalid_reason),
+        'error_code' => $invalid_reason,
+        'error_details' => $valid ? '' : wpdm_recaptcha_get_error_help($invalid_reason)
+    ];
+}
+
+/**
+ * Get human-readable error message for reCAPTCHA invalid reasons
+ */
+function wpdm_recaptcha_get_error_message($reason)
+{
+    $messages = [
+        'INVALID_REASON_UNSPECIFIED' => 'Token validation failed',
+        'UNKNOWN_INVALID_REASON' => 'Unknown validation error',
+        'MALFORMED' => 'Malformed token',
+        'EXPIRED' => 'Token has expired',
+        'DUPE' => 'Token already used',
+        'MISSING' => 'Token is missing',
+        'BROWSER_ERROR' => 'Browser error during verification',
+        'SITE_MISMATCH' => 'Site key mismatch',
+    ];
+
+    return isset($messages[$reason]) ? $messages[$reason] : 'Verification failed';
+}
+
+/**
+ * Get troubleshooting help for reCAPTCHA errors
+ */
+function wpdm_recaptcha_get_error_help($reason)
+{
+    $help = [
+        'INVALID_REASON_UNSPECIFIED' => 'This usually means the Site Key doesn\'t match the one registered in Google Cloud Console. Please verify: 1) The Site Key is correct, 2) Your domain is added to the allowed domains in reCAPTCHA settings, 3) The key type is "Checkbox" (not Score-based).',
+        'UNKNOWN_INVALID_REASON' => 'An unexpected error occurred. Please try again or check Google Cloud Console for any issues.',
+        'MALFORMED' => 'The reCAPTCHA token is corrupted. This may be caused by JavaScript conflicts. Try disabling other plugins temporarily.',
+        'EXPIRED' => 'The CAPTCHA expired before verification. Please complete the CAPTCHA and submit quickly (within 2 minutes).',
+        'DUPE' => 'This token was already verified. Each CAPTCHA completion can only be used once. Please complete the CAPTCHA again.',
+        'MISSING' => 'No token was received. Ensure the reCAPTCHA widget loaded correctly and the form includes the token.',
+        'BROWSER_ERROR' => 'The browser encountered an error. Try a different browser or check for JavaScript errors in the console.',
+        'SITE_MISMATCH' => 'The Site Key used on this page doesn\'t match the key configured in Google Cloud. Verify your Site Key is correct.',
+    ];
+
+    return isset($help[$reason]) ? $help[$reason] : 'Please verify your reCAPTCHA Enterprise configuration in Google Cloud Console.';
+}
+
+/**
+ * Get troubleshooting help for API-level errors
+ */
+function wpdm_recaptcha_get_api_error_help($status, $message)
+{
+    $help = [
+        'PERMISSION_DENIED' => 'The API Key doesn\'t have permission. Common causes: 1) API Key has HTTP referrer restrictions - this will NOT work because verification happens server-side. Remove referrer restrictions or use IP address restrictions instead (your server IP). 2) reCAPTCHA Enterprise API is not enabled in your Google Cloud project. 3) The API Key is incorrect.',
+        'INVALID_ARGUMENT' => 'Invalid configuration. Check that your Project ID and Site Key are correct and match your Google Cloud Console settings.',
+        'NOT_FOUND' => 'Project or resource not found. Verify your Google Cloud Project ID is correct.',
+        'UNAUTHENTICATED' => 'Authentication failed. Your API Key may be invalid or expired. Generate a new API Key in Google Cloud Console.',
+    ];
+
+    if (isset($help[$status])) {
+        return $help[$status];
+    }
+
+    if (strpos($message, 'API key not valid') !== false) {
+        return 'Your API Key is invalid. Please check: 1) The API Key is copied correctly (no extra spaces), 2) The key hasn\'t been deleted or regenerated, 3) If the key has restrictions, do NOT use HTTP referrer restrictions - use IP address (server IP) instead, as verification is done server-side.';
+    }
+
+    if (strpos($message, 'Requests from referer') !== false || strpos($message, 'referer') !== false) {
+        return 'Your API Key has HTTP referrer restrictions which will not work. reCAPTCHA verification happens on the server, not in the browser, so referrer headers are not sent. Solution: In Google Cloud Console, edit your API Key and either remove all restrictions, or change to IP address restrictions using your server\'s IP address.';
+    }
+
+    return 'Please verify all credentials in Google Cloud Console: Project ID, Site Key, and API Key. Important: If your API Key has restrictions, do not use HTTP referrer restrictions - use IP address restrictions instead.';
+}
+
+/**
  * @usage Get with cURL
  * @param $url
  * @param $headers (array)

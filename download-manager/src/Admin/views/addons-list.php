@@ -201,7 +201,6 @@
         display: none;
     }
 </style>
-<link rel="stylesheet" href="<?php echo  WPDM_BASE_URL ?>assets/css/settings-ui.css" />
 <div class="wrap w3eden">
     <div id="wpdm-admin-page-header">
         <div id="wpdm-admin-main-header">

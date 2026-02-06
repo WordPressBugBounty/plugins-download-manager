@@ -3,9 +3,9 @@ Contributors: w3eden, codename065, shahriar0822, shimo16ab, shafayat-alam
 Donate link:
 Tags: download manager, document management, file manager, digital store, ecommerce, download monitor
 Requires at least: 5.3
-Tested up to: 6.8
+Tested up to: 6.9
 License: GPLv3
-Stable tag: 3.3.25 
+Stable tag: 3.3.47
 
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
@@ -34,6 +34,7 @@ Need to sell digital products? You may use WordPress Download Manager as a compl
 *   Download speed control
 *	Password protection
 *	CAPTCHA protection
+*   Ad blocker detection
 *   IP block option to prevent bot downloads or downloads from unwanted IP addresses
 *   Download logs to check who is downloading which file from where and when
 *   Terms protection - Agree with Terms & Conditions before download
@@ -42,7 +43,7 @@ Need to sell digital products? You may use WordPress Download Manager as a compl
 *	File type icon support
 *   Full Featured User Dashboard ( use short-code [wpdm_user_dashboard] )
 *   Custom front-end login / signup form short-code
-*   Custom oEmbed t emplate
+*   Custom oEmbed template
 *	Responsive DataTable support ( use short-code [wpdm_all_packages jstable=1 items_per_page=20] )
 *	Searching and Sorting Option
 *	Custom link label
@@ -143,7 +144,7 @@ Download and Install following free add-on to add additional features as per you
 Check download stats and get a push notification when someone downloads, install:
 
 * [WPDM API](https://www.wpdownloadmanager.com/download/wpdm-api/) - install this add-on on your site and configure API key
-* [WPDM for Abdroid](https://www.wpdownloadmanager.com/download/wpdm-android/) - Install the app on your android phone
+* [WPDM for Android](https://www.wpdownloadmanager.com/download/wpdm-android/) - Install the app on your android phone
 * [WPDM for iOS](https://www.wpdownloadmanager.com/download/wpdm-ios/) - Check download and sales stats directly from your iPhone or iPad
 
 = Free Themes =
@@ -201,6 +202,102 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.47 - 2026.02.06 =
+* Fixed: Security vulnerability - Reflected XSS in login form redirect parameter
+* Added: New modal dialog system with AJAX content loading support
+* Improved: Front-end UI
+
+= 3.3.46 - 2026.01.15 =
+* Redesigned email templates
+* Improved light/dark mode support
+
+= 3.3.45 - 2026.01.13 =
+* Added 2 new link templates: Glassmorphism Card and Spotlight Hero
+* Added reCAPTCHA test widget in admin settings to verify configuration
+* Added detailed error messages with troubleshooting guidance for reCAPTCHA errors
+* Added HTTP referrer restriction warning for reCAPTCHA API keys
+* Improved email templates
+
+= 3.3.44 - 2026.01.07 =
+* Migrated reCAPTCHA to reCAPTCHA Enterprise API for improved security and bot protection
+* Added Google Cloud Project ID field in reCAPTCHA settings
+* Updated reCAPTCHA verification to use Google Cloud assessments API
+
+= 3.3.43 - 2026.01.06 =
+* Fixed welcome page redirect not triggering on plugin activation
+* Added "Restart Setup Wizard" link to quick actions page
+* Improved activation redirect reliability
+
+= 3.3.42 - 2026.01.06 =
+* Removed auto-redirection to wpdm login page
+* Redesigned welcome/onboarding page with modern card-based UI
+* Improved first-time user setup experience
+
+= 3.3.41 - 2026.01.04 =
+* Improved: front-end UI
+* Fixed: Security vulnerability in Crypt.php - Addressed CBC bit-flipping attack vector by implementing proper authentication/integrity checks for encrypted data ( Reported by Wordfence )
+
+= 3.3.40 - 2025.12.26 =
+* Fixed an issue with the all package table
+* Improved front-end and admin UI
+
+= 3.3.39 - 2025.12.23 =
+* Fixed a fatal error with Session class during early WordPress initialization
+* Added fallbacks for WordPress functions not available during plugin loading
+* Improved compatibility with various server configurations
+
+= 3.3.38 - 2025.12.23 =
+* Added Color Scheme option (System/Light/Dark) in UI settings
+* Modernized front-end CSS with dark mode support
+* Added changelog component for file uploads with timeline UI
+* Fixed and issue with the Google font preview
+* Improved download link generation performance by priming meta caches
+* Optimized Session class with in-memory caching and prepared statements
+* Optimized Query class with cache priming and batch term lookups
+
+= 3.3.37 - 2025.12.17 =
+* Enhanced admin interface for an improved user experience
+
+= 3.3.36 - 2025.12.11 =
+* Enhanced server file picker
+* Revamped admin UI for a smoother user experience
+* Updated package description rendering with improved link templating
+
+= 3.3.35 - 2025.12.11 =
+* Fixed an issue with the package description rendering.
+
+= 3.3.34 - 2025.12.10 =
+* Fixed an issue with the terms lock option.
+
+= 3.3.33 - 2025.12.08 =
+* Fixed the nonce check issue with the media protection function ( Reported by Wordfence )
+* Improved front-end and admin ui
+
+= 3.3.32 - 2025.11.05 =
+* Fixed an issue with the asset manager file picker
+
+= 3.3.31 - 2025.11.05 =
+* Improved cron job functions
+* Improved ad blocker detection features
+
+= 3.3.30 - 2025.10.28 =
+* Fixed an issue with the cron job functions ( Reported by Wordfence )
+* Added a new option to display custom messages and disable download link when ad-blocking extensions are detected.
+
+= 3.3.29 - 2025.10.20 =
+* Fixed an issue with the asset manager pagination
+
+= 3.3.28 - 2025.10.15 =
+* Fixed an issue with the download link options modal popup
+
+= 3.3.27 - 2025.10.09 =
+* Fixed the display issue with the `Generate Download Link` modal
+
+= 3.3.26 - 2025.10.07 =
+* Fixed a CSS issue with the asset manager scroll bar
+* Fixed an issue with the stats filtering options
+* Updated vue js integrations
 
 = 3.3.25 - 2025.10.01 =
 * Removed bootstrap dependency

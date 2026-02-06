@@ -50,9 +50,13 @@ do_action("wpdm_privacy_settings_panel");
         <label><input type="checkbox" name="__wpdm_auto_clean_cache" <?php checked(1, get_option('__wpdm_auto_clean_cache', 0)); ?> value="1" /> <?php echo __( "Auto clean cache dir & temporary storage everyday", "download-manager" ) ?></label>
     </div>
     <div class="panel-footer bg-white">
+        <label><?= __('Cron Key', WPDM_TEXT_DOMAIN) ?></label>
+        <input type="text" class="form-control" name="__wpdm_cron_key" id="wpdmckey" value="<?php echo WPDM()->cronJob->cronKey(); ?>" />
+    </div>
+    <div class="panel-footer bg-white">
         <label><?php echo esc_attr__('Cron URL', "download-manager") ?></label>
         <div class="input-group">
-            <input type="text" class="form-control" id="cccronurl" readonly value="<?php echo home_url('/?cpc=wpdmcc&cronkey='.WPDM_CRON_KEY); ?>" />
+            <input type="text" class="form-control" id="cccronurl" readonly value="<?php echo home_url('/?cpc=wpdmcc&cronkey='.WPDM()->cronJob->cronKey()); ?>" />
             <div class="input-group-btn">
                 <button class="btn btn-secondary ttip" type="button" title="<?php echo esc_attr__('Copy', "download-manager") ?>" onclick="WPDM.copy('cccronurl')"><i class="fa fa-copy"></i></button>
             </div>
@@ -77,6 +81,12 @@ do_action("wpdm_privacy_settings_panel");
             });
             return false;
         });
+
+        WPDM.addAction("wpdm_save_settings", function (page, data) {
+            if(page === 'privacy') {
+                $('#cccronurl').val("<?= home_url('/?cpc=wpdmcc&cronkey='); ?>" + $('#wpdmckey').val());
+            }
+        })
 
     });
 </script>

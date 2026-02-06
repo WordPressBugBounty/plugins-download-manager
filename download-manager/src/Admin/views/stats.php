@@ -2,7 +2,6 @@
 $type = wpdm_query_var('type', array('validate' => 'alpha', 'default' => 'history'));
 $base_page_uri = "edit.php?post_type=wpdmpro&page=wpdm-stats";
 ?>
-<link rel="stylesheet" href="<?php echo  WPDM_BASE_URL ?>/assets/css/settings-ui.css" />
 <link rel="stylesheet" href="<?php echo WPDM_BASE_URL; ?>assets/css/wpdm-elegant-history.css?v=<?php echo WPDM_VERSION; ?>">
 <div class="wrap w3eden">
 

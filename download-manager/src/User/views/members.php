@@ -5,10 +5,9 @@
  * Time: 12:26 AM
  */
 if (!defined('ABSPATH')) die();
-$sid = wpdm_valueof($params, 'sid'); 
 ?>
 
-<div class="w3eden" id="wpdm-authors<?php echo $sid ? "-".esc_attr($sid) : ''; ?>">
+<div class="w3eden" id="wpdm-authors<?php echo isset($params['sid'])?"-{$params['sid']}":""; ?>">
     <?php $this->listAuthors($params); ?>
 </div>
 

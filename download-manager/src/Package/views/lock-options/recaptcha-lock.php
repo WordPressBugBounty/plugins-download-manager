@@ -14,33 +14,33 @@ if (!defined('ABSPATH')) die();
         <span id="capcv_label_<?php echo $package['ID']; ?>" style="display: none"><?php _e( "Your Download Link is Ready" , "download-manager" ); ?></span>
     </div>
     <div class='panel-body card-body wpdm-social-locks text-center'>
-<script src='https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit'></script>
-<div  id="reCaptchaLock_<?php echo $package['ID']; ?>"></div>
-<div id="msg_<?php echo $package['ID']; ?>"></div>
+<script src='https://www.google.com/recaptcha/enterprise.js?onload=onloadCallback&render=explicit'></script>
+<div  id="reCaptchaLock_<?php echo esc_attr($package['ID']); ?>"></div>
+<div id="msg_<?php echo esc_attr($package['ID']); ?>"></div>
 <script type="text/javascript">
     var ctz = new Date().getMilliseconds();
-    var siteurl = "<?php echo home_url('/?__wpdmnocache='); ?>"+ctz,force="<?php echo $force; ?>";
-    var verifyCallback_<?php echo $package['ID']; ?> = function(response) {
-        jQuery.post("<?php echo wpdm_rest_url('validate-captcha'); ?>",{__wpdm_ID:<?php echo $package['ID'];?>,dataType:'json',force:force,social:'c',reCaptchaVerify:response,action:'wpdm_ajax_call'},function(res){
+    var siteurl = "<?php echo esc_url(home_url('/?__wpdmnocache=')); ?>"+ctz,force="<?php echo esc_js($force); ?>";
+    var verifyCallback_<?php echo esc_js($package['ID']); ?> = function(response) {
+        jQuery.post("<?php echo esc_url(wpdm_rest_url('validate-captcha')); ?>",{__wpdm_ID:<?php echo (int)$package['ID'];?>,dataType:'json',force:force,social:'c',reCaptchaVerify:response,action:'wpdm_ajax_call'},function(res){
             if(res.downloadurl!='' && res.downloadurl != undefined && res!= undefined ) {
 
                 if(window.parent == undefined)
                     location.href = res.downloadurl;
                 else
                     window.parent.location.href = res.downloadurl;
-                jQuery('#capc_label_<?php echo $package['ID']; ?>').hide();
-                jQuery('#capcv_label_<?php echo $package['ID']; ?>').show();
-                jQuery('#reCaptchaLock_<?php echo $package['ID']; ?>').html('<a href="'+res.downloadurl+'" class="wpdm-download-button btn btn-success btn-block btn-lg"><?php _e( "Download" , "download-manager" ); ?></a>');
+                jQuery('#capc_label_<?php echo esc_js($package['ID']); ?>').hide();
+                jQuery('#capcv_label_<?php echo esc_js($package['ID']); ?>').show();
+                jQuery('#reCaptchaLock_<?php echo esc_js($package['ID']); ?>').html('<a href="'+res.downloadurl+'" class="wpdm-download-button btn btn-success btn-block btn-lg"><?php esc_html_e( "Download" , "download-manager" ); ?></a>');
             } else {
-                jQuery('#msg_<?php echo $package['ID']; ?>').html(''+res.error);
+                jQuery('#msg_<?php echo esc_js($package['ID']); ?>').html(''+res.error);
             }
         });
     };
     var widgetId2;
     var onloadCallback = function() {
-        grecaptcha.render('reCaptchaLock_<?php echo $package['ID']; ?>', {
-            'sitekey' : '<?php echo get_option('_wpdm_recaptcha_site_key'); ?>',
-            'callback' : verifyCallback_<?php echo $package['ID']; ?>,
+        grecaptcha.enterprise.render('reCaptchaLock_<?php echo esc_js($package['ID']); ?>', {
+            'sitekey' : '<?php echo esc_js(get_option('_wpdm_recaptcha_site_key')); ?>',
+            'callback' : verifyCallback_<?php echo esc_js($package['ID']); ?>,
             'theme' : 'light'
         });
     };

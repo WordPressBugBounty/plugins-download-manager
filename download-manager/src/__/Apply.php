@@ -31,6 +31,7 @@ class Apply
         add_action("wp_ajax_wpdm_generate_password", [$this, 'generatePassword']);
         add_action("wp_ajax_wpdm-activate-shop", [$this, 'activatePremiumPackage']);
 
+        add_filter( 'wp_kses_allowed_html', [$this, 'allowStyleTagInKses'], 10, 2 );
 
         if (is_admin()) return;
 
@@ -566,7 +567,7 @@ class Apply
         //$ptemplates = maybe_unserialize(get_option("_fm_page_templates", true));
 	    $font      = get_option( '__wpdm_google_font', 'Sen' );
 	    $font      = explode( ":", $font );
-	    $font      = $font[0];
+        $font      = str_replace("+", " ", $font[0]);
 	    $font      = $font ? "{$font}" : '';
 	    $font = $font ? "{$font}" : '-apple-system';
 
@@ -647,6 +648,10 @@ class Apply
                 --color-primary-rgb: <?php echo esc_attr(wpdm_hex2rgb($primary)); ?>;
                 --color-primary-hover: <?php echo esc_attr( isset($uicolors['primary'])?$uicolors['primary_hover']:'#4a8eff' ); ?>;
                 --color-primary-active: <?php echo esc_attr( isset($uicolors['primary'])?$uicolors['primary_active']:'#4a8eff' ); ?>;
+                --clr-sec: <?php echo $secondary; ?>;
+                --clr-sec-rgb: <?php echo wpdm_hex2rgb($secondary); ?>;
+                --clr-sec-hover: <?php echo isset($uicolors['secondary'])?$uicolors['secondary_hover']:'#4a8eff'; ?>;
+                --clr-sec-active: <?php echo isset($uicolors['secondary'])?$uicolors['secondary_active']:'#4a8eff'; ?>;
                 --color-secondary: <?php echo esc_attr( $secondary ); ?>;
                 --color-secondary-rgb: <?php echo esc_attr(wpdm_hex2rgb($secondary)); ?>;
                 --color-secondary-hover: <?php echo esc_attr( isset($uicolors['secondary'])?$uicolors['secondary_hover']:'#4a8eff' ); ?>;
@@ -696,6 +701,29 @@ class Apply
         include(Template::locate('generate-password.php', __DIR__.'/views'));
         die();
 
+    }
+
+    /**
+     * Allow <style> tag in wp_kses_post filter.
+     *
+     * @param array  $allowed_tags Allowed HTML tags and attributes.
+     * @param string $context      The context for which to retrieve tags.
+     * @return array Modified allowed tags.
+     */
+    function allowStyleTagInKses( $allowed_tags, $context ) {
+        if ( 'post' !== $context ) {
+            return $allowed_tags;
+        }
+
+        $allowed_tags['style'] = array(
+                'type'  => true,
+                'media' => true,
+                'nonce' => true,
+                'id'    => true,
+                'class' => true,
+        );
+
+        return $allowed_tags;
     }
 
     /**

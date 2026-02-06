@@ -1498,14 +1498,14 @@
     background-color: #fff;
     background-image: none;
     border: 1px solid var(--border-color);
-    border-radius: 3px;
+    border-radius: 6px;
     box-shadow: none;
     transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
 }
 .w3eden .form-control:focus {
-    border-color: rgba(var(--color-primary-rgb), 0.8);
+    border-color: var(--admin-color);
     outline: 0;
-    box-shadow: none;
+    box-shadow: 0 0 0 2px rgba(var(--admin-color-rgb), 0.2);
 }
 .w3eden .form-control::-moz-placeholder {
     color: #999;
@@ -1533,34 +1533,7 @@
 .w3eden input[type=search] {
     -webkit-appearance: none;
 }
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-    .w3eden input[type=date],
-    .w3eden input[type=time],
-    .w3eden input[type=datetime-local],
-    .w3eden input[type=month] {
-        line-height: 34px;
-    }
-    .w3eden .input-group-sm input[type=date],
-    .w3eden .input-group-sm input[type=time],
-    .w3eden .input-group-sm input[type=datetime-local],
-    .w3eden .input-group-sm input[type=month],
-    .w3eden input[type=date].input-sm,
-    .w3eden input[type=time].input-sm,
-    .w3eden input[type=datetime-local].input-sm,
-    .w3eden input[type=month].input-sm {
-        line-height: 30px;
-    }
-    .w3eden .input-group-lg input[type=date],
-    .w3eden .input-group-lg input[type=time],
-    .w3eden .input-group-lg input[type=datetime-local],
-    .w3eden .input-group-lg input[type=month],
-    .w3eden input[type=date].input-lg,
-    .w3eden input[type=time].input-lg,
-    .w3eden input[type=datetime-local].input-lg,
-    .w3eden input[type=month].input-lg {
-        line-height: 46px;
-    }
-}
+
 .w3eden .form-group {
     margin-bottom: 15px;
 }
@@ -1642,7 +1615,7 @@
     padding: 5px 10px;
     font-size: 12px;
     line-height: 1.5;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 .w3eden select.input-sm {
     height: 30px;
@@ -1946,7 +1919,7 @@
     user-select: none;
     background-image: none;
     border: 1px solid transparent;
-    border-radius: 3px;
+    border-radius: 6px;
 }
 .w3eden .btn.active.focus,
 .w3eden .btn.active:focus,
@@ -2294,14 +2267,14 @@
     padding: 10px 16px;
     font-size: 18px;
     line-height: 1.3333333;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 .w3eden .btn-group-sm > .btn,
 .w3eden .btn-sm {
     padding: 5px 10px;
     font-size: 12px;
     line-height: 1.5;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 .w3eden .btn-group-xs > .btn,
 .w3eden .btn-xs {
@@ -2501,7 +2474,7 @@
 .w3eden .btn-group,
 .w3eden .btn-group-vertical {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
     vertical-align: middle;
 }
 .w3eden .btn-group-vertical > .btn,
@@ -2759,7 +2732,7 @@
 .w3eden .input-group-addon.input-sm {
     padding: 5px 10px;
     font-size: 12px;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 .w3eden .input-group-addon.input-lg {
     padding: 10px 16px;
@@ -2942,9 +2915,9 @@
 .w3eden .nav-pills > li + li {
     margin-left: 2px;
 }
-.w3eden .nav-pills > li.active > a,
-.w3eden .nav-pills > li.active > a:focus,
-.w3eden .nav-pills > li.active > a:hover {
+.w3eden .nav-pills > li > a.active,
+.w3eden .nav-pills > li > a.active:focus,
+.w3eden .nav-pills > li > a:hover {
     color: #fff;
     background-color: var(--color-primary);
 }
@@ -3304,10 +3277,7 @@
 }
 .w3eden .navbar-fixed-bottom .navbar-nav > li > .dropdown-menu {
     margin-bottom: 0;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 4px 4px 0 0;
 }
 .w3eden .navbar-btn {
     margin-top: 8px;
@@ -4257,9 +4227,10 @@
     margin-bottom: 20px;
     background-color: #fff;
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-radius: 8px;
     -webkit-box-shadow: 0 0 6px rgba(94, 141, 255, 0.1);
     box-shadow: 0 0 6px rgba(94, 141, 255, 0.1);
+    overflow: hidden;
 }
 .w3eden .panel-body {
     padding: 15px;
@@ -4267,8 +4238,7 @@
 .w3eden .panel-heading {
     padding: 12px 15px;
     border-bottom: 1px solid transparent;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
+    border-radius: 8px 8px 0 0;
 }
 .w3eden .panel-heading > .dropdown .dropdown-toggle {
     color: inherit;
@@ -4622,8 +4592,8 @@
     min-height: 20px;
     padding: 19px;
     margin-bottom: 20px;
-    background-color: rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(0, 0, 0, 0.09);
+    background-color: rgba(0, 0, 0, 0.01);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
 }
 .w3eden .well blockquote {
@@ -4663,6 +4633,13 @@
     background: 0 0;
     border: 0;
 }
+.w3eden .modal-backdrop.wpdm-mbd.show {
+    position: fixed;
+    opacity: 0.7 !important;
+    z-index: 99999 !important;
+    left: 0;
+    top: 0;
+}
 .w3eden .modal-open {
     overflow: hidden;
 }
@@ -4672,26 +4649,21 @@
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 1050;
+    z-index: 999999 !important;
     display: none;
     overflow: hidden;
     -webkit-overflow-scrolling: touch;
     outline: 0;
 }
+/* Modern Modal Dialog Styles */
 .w3eden .modal.fade .modal-dialog {
-    -webkit-transition: -webkit-transform 0.3s ease-out;
-    -o-transition: -o-transform 0.3s ease-out;
-    transition: transform 0.3s ease-out;
-    -webkit-transform: translate(0, -25%);
-    -ms-transform: translate(0, -25%);
-    -o-transform: translate(0, -25%);
-    transform: translate(0, -25%);
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
 }
 .w3eden .modal.in .modal-dialog {
-    -webkit-transform: translate(0, 0);
-    -ms-transform: translate(0, 0);
-    -o-transform: translate(0, 0);
-    transform: translate(0, 0);
+    opacity: 1;
+    transform: scale(1) translateY(0);
 }
 .w3eden .modal-open .modal {
     overflow-x: hidden;
@@ -4700,20 +4672,23 @@
 .w3eden .modal-dialog {
     position: relative;
     width: auto;
-    margin: 10px;
+    margin: 20px;
+    pointer-events: none;
 }
 .w3eden .modal-content {
     position: relative;
-    background-color: #fff;
-    -webkit-background-clip: padding-box;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    background-color: #ffffff;
     background-clip: padding-box;
-    border: 1px solid #999;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
+    border: none;
+    border-radius: 12px;
     outline: 0;
-    -webkit-box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
-    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
+
+/* Modal Backdrop - Modern blur effect */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -4721,41 +4696,85 @@
     bottom: 0;
     left: 0;
     z-index: 1040;
-    background-color: #000000;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 .modal-backdrop.fade {
-    filter: alpha(opacity=0);
     opacity: 0;
+    transition: opacity 0.2s ease;
 }
 .modal-backdrop.in {
-    filter: alpha(opacity=50);
-    opacity: 0.5;
+    opacity: 1;
 }
+
+/* Modal Header - Modern design */
 .w3eden .modal-header {
-    min-height: 16.43px;
-    padding: 15px;
-    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
 }
 .w3eden .modal-header .close {
-    margin-top: -2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 300;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    opacity: 1;
+}
+.w3eden .modal-header .close:hover {
+    color: #1e293b;
+    background: rgba(0, 0, 0, 0.06);
+}
+.w3eden .modal-header .close:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 .w3eden .modal-title {
     margin: 0;
-    line-height: 1.42857143;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.5;
 }
+
+/* Modal Body */
 .w3eden .modal-body {
     position: relative;
-    padding: 15px;
+    flex: 1 1 auto;
+    padding: 24px;
+    color: #475569;
+    line-height: 1.6;
 }
-.w3eden .modal-footer {
-    padding: 15px;
-    text-align: right;
-    border-top: 1px solid #e5e5e5;
 
+/* Modal Footer - Modern design */
+.w3eden .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 12px 12px;
 }
 .w3eden .modal-footer .btn + .btn {
     margin-bottom: 0;
-    margin-left: 5px;
+    margin-left: 0;
 }
 .w3eden .modal-footer .btn-group .btn + .btn {
     margin-left: -1px;
@@ -4763,6 +4782,24 @@
 .w3eden .modal-footer .btn-block + .btn-block {
     margin-left: 0;
 }
+
+/* Modal with icon in header */
+.w3eden .modal-header-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.w3eden .modal-header-icon .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--color-info, #6366f1) 0%, var(--color-info-hover, #4f46e5) 100%);
+    border-radius: 10px;
+    color: #ffffff;
+}
+
 .w3eden .modal-scrollbar-measure {
     position: absolute;
     top: -9999px;
@@ -4770,23 +4807,68 @@
     height: 50px;
     overflow: scroll;
 }
+
+/* Responsive Modal Sizes */
 @media (min-width: 768px) {
     .w3eden .modal-dialog {
-        width: 600px;
-        margin: 100px auto;
+        width: 540px;
+        margin: 60px auto;
     }
     .w3eden .modal-content {
-        -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
     }
     .w3eden .modal-sm {
-        width: 300px;
+        width: 340px;
     }
 }
 @media (min-width: 992px) {
     .w3eden .modal-lg {
-        width: 900px;
+        width: 800px;
     }
+    .w3eden .modal-xl {
+        width: 1000px;
+    }
+}
+
+/* Modal variants */
+.w3eden .modal-content.modal-danger .modal-header {
+    background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
+    border-bottom-color: #fecaca;
+}
+.w3eden .modal-content.modal-danger .modal-title {
+    color: var(--color-danger, #dc2626);
+}
+
+.w3eden .modal-content.modal-success .modal-header {
+    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+    border-bottom-color: #bbf7d0;
+}
+.w3eden .modal-content.modal-success .modal-title {
+    color: var(--color-success, #16a34a);
+}
+
+.w3eden .modal-content.modal-warning .modal-header {
+    background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+    border-bottom-color: #fde68a;
+}
+.w3eden .modal-content.modal-warning .modal-title {
+    color: #b45309;
+}
+
+/* Centered modal */
+.w3eden .modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 60px);
+}
+
+/* Scrollable modal body */
+.w3eden .modal-dialog-scrollable .modal-content {
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+}
+.w3eden .modal-dialog-scrollable .modal-body {
+    overflow-y: auto;
 }
 .w3eden .tooltip {
     position: absolute;
@@ -5301,6 +5383,7 @@
 }
 .w3eden .show {
     display: block !important;
+    opacity: 1 !important;
 }
 .w3eden .invisible {
     visibility: hidden;
@@ -5552,7 +5635,6 @@
     font-size: 14px;
     font-weight: 300;
     font-style: italic;
-    border-radius: 2px !important;
 }
 .w3eden .btn-group .btn:first-child:not(:last-child),
 .w3eden .input-group .form-control:first-child:not(:last-child){ border-top-right-radius: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0.2em; border-top-left-radius: 0.2em; }

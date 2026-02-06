@@ -70,7 +70,7 @@ class CronJobs
 	function clearTempDataCPCron(){
 		if(!isset($_REQUEST['cpc']) || !isset($_REQUEST['cronkey']) || $_REQUEST['cpc'] !== 'wpdmcc') return;
 
-		if($_REQUEST['cronkey'] !== WPDM_CRON_KEY) return;
+		if($_REQUEST['cronkey'] !== WPDM()->cronJob->cronKey()) return;
 
 		global $wpdb;
         $time = time();
@@ -83,7 +83,7 @@ class CronJobs
 	function deleteExpired(){
 
 		if(!isset($_REQUEST['cde']) || !isset($_REQUEST['cronkey']) || $_REQUEST['cde'] !== 'wpdmde') return;
-		if($_REQUEST['cronkey'] !== WPDM_CRON_KEY) return;
+		if($_REQUEST['cronkey'] !== WPDM()->cronJob->cronKey()) return;
 
 		if(!(int)get_option('__wpdm_delete_expired', 0)) return;
 

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace WPDM\User;
 
 use WPDM\__\__;
@@ -50,8 +49,7 @@ class EditProfile
 
     function updateProfile()
     {
-        global $current_user;
-
+        $current_user = wp_get_current_user();
         if (isset($_POST['wpdm_profile']) && is_user_logged_in() && wp_verify_nonce(wpdm_query_var('__wpdm_epnonce'), NONCE_KEY)) {
 
             $error = 0;
@@ -60,7 +58,7 @@ class EditProfile
             $pfile_data['user_email'] = sanitize_email($_POST['wpdm_profile']['user_email']);
 
 
-            if ($_POST['password'] != $_POST['cpassword']) {
+            if ($_POST['password'] !== $_POST['cpassword']) {
                 Session::set('member_error', 'Password not matched');
                 $error = 1;
             }
@@ -71,9 +69,21 @@ class EditProfile
 
                 wp_update_user($pfile_data);
 
-                update_user_meta($current_user->ID, 'payment_account', wpdm_query_var('payment_account'));
+                update_user_meta($current_user->ID, '__wpdm_title', __::query_var('wpdm_profile/title', 'txt'));
+                update_user_meta($current_user->ID, 'description', __::query_var('wpdm_profile/description', 'txt'));
+
+				if(isset($_POST['payment_account']))
+					update_user_meta($current_user->ID, 'payment_account', $_POST['payment_account']);
+
                 Session::set('member_success', 'Profile data updated successfully.');
             }
+
+			if(__::query_var('__wpdm_profile_pic')) {
+				$profile = maybe_unserialize(get_user_meta(get_current_user_id(), '__wpdm_public_profile', true));
+				if(!is_array($profile)) $profile = [];
+				$profile['logo'] = __::query_var('__wpdm_profile_pic', 'url');
+				update_user_meta(get_current_user_id(), '__wpdm_public_profile', $profile);
+			}
 
             do_action("wpdm_update_profile", $current_user->ID);
 
@@ -96,7 +106,7 @@ class EditProfile
                     die();
                 }
             }
-            header("location: " . sanitize_text_field($_SERVER['HTTP_REFERER']));
+            header("location: " . $_SERVER['HTTP_REFERER']);
             die();
         }
     }

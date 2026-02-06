@@ -39,9 +39,8 @@ class PackageLocks
         $limit = get_option('__wpdm_private_link_usage_limit', 3);
         $xpire_period = ((int)get_option('__wpdm_private_link_expiration_period', 3)) * ((int)get_option('__wpdm_private_link_expiration_period_unit', 60));
         $xpire_period = $xpire_period > 0 ? $xpire_period : 3600;
-        $ret = wpdm_remote_post('https://www.google.com/recaptcha/api/siteverify', array('secret' => get_option('_wpdm_recaptcha_secret_key'), 'response' => wpdm_query_var('reCaptchaVerify'), 'remoteip' => $_SERVER['REMOTE_ADDR']));
-        $ret = json_decode($ret);
-        if ($ret->success == 1) {
+        $ret = wpdm_recaptcha_enterprise_verify(wpdm_query_var('reCaptchaVerify'), 'DOWNLOAD');
+        if ($ret['success']) {
             $download_url = WPDM()->package->expirableDownloadLink(wpdm_query_var('__wpdm_ID', 'int'), $limit, $xpire_period);
             $data['downloadurl'] = $download_url;
         } else {

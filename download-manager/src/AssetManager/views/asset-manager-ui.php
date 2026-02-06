@@ -516,6 +516,58 @@ if(is_admin()){
             height: calc(100vh - 146px);
             box-shadow: none;
         }
+        .ss-wrapper {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+            float: left;
+        }
+
+        .ss-content {
+            height: 100%;
+            width: calc(100% + 18px);
+            padding: 0 0 0 0;
+            position: relative;
+            overflow-x: hidden !important;
+            overflow-y: scroll;
+            box-sizing: border-box;
+        }
+
+        .ss-content.rtl {
+            width: calc(100% + 18px);
+            right: auto;
+        }
+
+        .ss-scroll {
+            position: relative;
+            background: rgba(0, 0, 0, 0.1);
+            width: 9px;
+            border-radius: 4px;
+            top: 0;
+            z-index: 2;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.25s linear;
+        }
+
+        .ss-hidden {
+            display: none;
+        }
+
+        .ss-container:hover .ss-scroll,
+        .ss-container:active .ss-scroll {
+            opacity: 1;
+        }
+
+        .ss-grabbed {
+            -o-user-select: none;
+            -ms-user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
     </style>
 
 <div class="w3eden" id="mainfmarea">
@@ -553,12 +605,12 @@ if(is_admin()){
             <div id="ldn" style="float:right;font-size: 9pt;margin-top: 10px;display: none" class="text-danger"><i class="fa fa-sun fa-spin"></i> <?php echo  esc_attr__( 'Loading', "download-manager" ); ?>...</div>
             <div v-if="total_pages > 1" id="__asset_pages" style="margin: 0;float: right;font-weight: 400;font-family: 'Overpass Mono', sans-serif !important;white-space: nowrap">
                 <div style="float:left;">
-                    <div class="c-pointer d-inline-block" v-on:click="assetPages.prevPage()"><i v-if="current_page > 1" class="fa fa-arrow-alt-circle-left"></i></div> <span class="text-muted">On Page</span> <strong>{{current_page}}</strong> <span class="text-muted">of total</span> <strong>{{total_pages}}</strong> <div class="c-pointer d-inline-block" v-if="current_page < total_pages" v-on:click="assetPages.nextPage()"><i class="fa fa-arrow-alt-circle-right"></i></div>
+                    <div class="c-pointer d-inline-block" v-on:click="prevPage()"><i v-if="current_page > 1" class="fa fa-arrow-alt-circle-left"></i></div> <span class="text-muted">On Page</span> <strong>{{current_page}}</strong> <span class="text-muted">of total</span> <strong>{{total_pages}}</strong> <div class="c-pointer d-inline-block" v-if="current_page < total_pages" v-on:click="nextPage()"><i class="fa fa-arrow-alt-circle-right"></i></div>
                 </div>
                 <div style="display: inline-block;margin-left: 10px">
                     <div class="input-group input-group-xs" style="width: 90px;">
                         <input type="number" @input="event => goto_page = event.target.value" :value="current_page" :max="total_pages" min="1" placeholder="Page" class="form-control" style="min-height: 16px; line-height: 20px; height: 20px; padding: 0px; font-size: 10px;text-align: center;font-family: 'Overpass Mono', monospace;">
-                        <div class="input-group-btn"><button type="button" v-on:click="assetPages.gotoPage()" class="btn btn-secondary btn-xs">GO</button></div>
+                        <div class="input-group-btn"><button type="button" v-on:click="gotoPage()" class="btn btn-secondary btn-xs">GO</button></div>
                     </div>
                 </div>
             </div>
@@ -908,7 +960,6 @@ if(is_admin()){
 
 </div>
 
-    <script src="<?php echo WPDM_BASE_URL ?>assets/js/vue.min.js"></script>
     <script src="<?php echo WPDM_BASE_URL ?>assets/js/simple-scrollbar.min.js"></script>
 <script>
     var current_path = '', editor = '', opened = '', wpdmfm_active_asset = '', wpdmfm_active_asset_settings, $ = jQuery;

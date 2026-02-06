@@ -1,145 +1,291 @@
 <?php
 /**
- * User: shahnuralam
- * Date: 01/11/18
- * Time: 7:08 PM
- * From v4.7.9
- * Last Updated: 10/11/2018
+ * Session Management Class
+ *
+ * Handles user session data with database or file-based storage.
+ * Uses cookie-based device ID for session tracking.
+ *
+ * @package    WPDM
+ * @subpackage Core
+ * @author     WPDM Team
+ * @since      4.7.9
+ * @version    3.3.39
+ *
+ * @updated    2024-12-23
+ * @changelog  Added function_exists() checks for WordPress functions
+ *             Added fallbacks for early initialization scenarios
+ *             Fixed namespace prefix for global PHP functions
+ *             Improved compatibility with various server configurations
  */
 
 namespace WPDM\__;
 
-
 class Session
 {
-    static $data;
-    static $deviceID = null;
-    static $store;
+    private static $data = [];      // In-memory cache
+    public static $deviceID = null;
+    private static $store;
+    private static $initialized = false;
 
-    function __construct()
+    /**
+     * Initialize session - call once per request
+     */
+    static function init()
     {
-        if(isset($_COOKIE['__wpdm_client']))
-            $deviceID = __::sanitize_var($_COOKIE['__wpdm_client'], 'alphanum');
-        else {
-            $agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '';
-            $deviceID = md5(__::get_client_ip() . $agent);
-            $deviceID = __::sanitize_var($deviceID, 'alphanum');
-            if(!defined('WPDM_ACCEPT_COOKIE') || WPDM_ACCEPT_COOKIE !== false) {
-				//Implement user consent
-				if(apply_filters('wpdm_user_accept_cookies', true)) {
-					@setcookie( '__wpdm_client', $deviceID, 0, "/", "", is_ssl(), true );
-					$_COOKIE['__wpdm_client'] = $deviceID;
-				}
-            }
-        }
-        self::$deviceID = $deviceID;
+        if (self::$initialized) return;
+        self::$initialized = true;
 
-        self::$store = get_option('__wpdm_tmp_storage', 'db');
+        // get_option should be available, but fallback to 'db' if not
+        self::$store = \function_exists('get_option') ? \get_option('__wpdm_tmp_storage', 'db') : 'db';
+        self::initDeviceID();
 
         if (self::$store === 'file') {
-			$session_file = realpath(WPDM_CACHE_DIR . "/session-{$deviceID}.txt");
-            if (file_exists($session_file) && substr_count($session_file, WPDM_CACHE_DIR)) {
-                $data = file_get_contents($session_file);
-                $data = Crypt::decrypt($data, true);
-                if (!is_array($data)) $data = array();
-            } else {
-                $data = array();
-            }
-
-            self::$data = $data;
-
-            register_shutdown_function(array($this, 'saveSession'));
+            self::loadFileSession();
+            \register_shutdown_function([__CLASS__, 'saveSession']);
         }
     }
 
-    static function deviceID($deviceID = null)
+    /**
+     * Constructor for backward compatibility
+     */
+    function __construct()
     {
-        if(!$deviceID) {
-            $agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '';
-            $deviceID = md5(__::get_client_ip() . $agent);
+        self::init();
+    }
+
+    /**
+     * Get or generate device ID - cookie-first approach
+     */
+    private static function initDeviceID()
+    {
+        // Check cached value
+        if (self::$deviceID) return self::$deviceID;
+
+        // Check existing cookie
+        if (!empty($_COOKIE['__wpdm_client'])) {
+            self::$deviceID = __::sanitize_var($_COOKIE['__wpdm_client'], 'alphanum');
+            return self::$deviceID;
         }
-        $deviceID = __::sanitize_var($deviceID, 'alphanum');
+
+        // Generate new ID (random is more reliable than IP+UA)
+        // Use wp_generate_password if available, otherwise fallback to PHP random
+        if (\function_exists('wp_generate_password')) {
+            $deviceID = \wp_generate_password(32, false);
+        } else {
+            // Fallback for early initialization before WordPress is fully loaded
+            $deviceID = \bin2hex(\random_bytes(16));
+        }
         self::$deviceID = $deviceID;
+        self::setDeviceCookie($deviceID);
+
         return self::$deviceID;
     }
 
+    /**
+     * Set device cookie with proper domain and security flags
+     */
+    private static function setDeviceCookie($deviceID)
+    {
+        if (\defined('WPDM_ACCEPT_COOKIE') && WPDM_ACCEPT_COOKIE === false) return;
+
+        // Check if apply_filters is available (WordPress fully loaded)
+        if (\function_exists('apply_filters') && !\apply_filters('wpdm_user_accept_cookies', true)) return;
+
+        // Get domain - with fallback for early initialization
+        if (\function_exists('home_url')) {
+            $domain = \wp_parse_url(\home_url(), PHP_URL_HOST);
+        } else {
+            // Fallback: parse from server variables
+            $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+            $domain = \preg_replace('/:\d+$/', '', $domain); // Remove port if present
+        }
+
+        $secure = \function_exists('is_ssl') ? \is_ssl() : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        @\setcookie('__wpdm_client', $deviceID, 0, "/", $domain, $secure, true);
+        $_COOKIE['__wpdm_client'] = $deviceID;
+    }
+
+    /**
+     * Get or set device ID
+     *
+     * @param string|null $deviceID Optional device ID to set
+     * @return string Current device ID
+     */
+    static function deviceID($deviceID = null)
+    {
+        if ($deviceID) {
+            self::$deviceID = __::sanitize_var($deviceID, 'alphanum');
+            self::setDeviceCookie(self::$deviceID);
+        } elseif (!self::$deviceID) {
+            self::init();
+        }
+        return self::$deviceID;
+    }
+
+    /**
+     * Set session value - with in-memory caching
+     *
+     * @param string $name Session key
+     * @param mixed $value Session value
+     * @param int $expire Expiration time in seconds (default 30 minutes)
+     */
     static function set($name, $value, $expire = 1800)
     {
-        global $wpdb;
-        if(!$name) return;
-        if(!self::$deviceID) Session::deviceID();
-        if (self::$store === 'file') self::$data[$name] = array('value' => $value, 'expire' => time() + $expire);
-        else {
-            self::clear($name);
-			if($value)
-				$wpdb->insert("{$wpdb->prefix}ahm_sessions", array('deviceID' => self::$deviceID, 'name' => $name, 'value' => maybe_serialize($value), 'expire' => time() + $expire));
-        }
-    }
+        if (!$name) return;
+        if (!self::$initialized) self::init();
 
-    static function get($name)
-    {
-        if(!self::$deviceID) new Session();
+        $expireTime = \time() + $expire;
+
+        // Always cache in memory
+        self::$data[$name] = ['value' => $value, 'expire' => $expireTime];
 
         if (self::$store === 'file') {
-            if (!isset(self::$data[$name])) return null;
-            $_value = self::$data[$name];
-            if (count($_value) == 0) return null;
-            extract($_value);
-            if (isset($expire) && $expire < time()) {
-                unset(self::$data[$name]);
-                $value = null;
-            }
+            // File storage saves on shutdown
+            return;
         }
-        else {
-            global $wpdb;
-            $deviceID = self::$deviceID;
-            $time = time();
-            $value = $wpdb->get_var("select `value` from {$wpdb->prefix}ahm_sessions where deviceID = '{$deviceID}' and `name` = '{$name}' and expire > $time");
-        }
-        return maybe_unserialize($value);
 
+        // DB storage - use REPLACE for single query instead of DELETE + INSERT
+        global $wpdb;
+        if ($value) {
+            $wpdb->query($wpdb->prepare(
+                "REPLACE INTO {$wpdb->prefix}ahm_sessions (deviceID, name, value, expire) VALUES (%s, %s, %s, %d)",
+                self::$deviceID, $name, \maybe_serialize($value), $expireTime
+            ));
+        } else {
+            self::clear($name);
+        }
     }
 
+    /**
+     * Get session value - with in-memory caching
+     *
+     * @param string $name Session key
+     * @return mixed|null Session value or null if not found/expired
+     */
+    static function get($name)
+    {
+        if (!self::$initialized) self::init();
+
+        // Check in-memory cache first
+        if (isset(self::$data[$name])) {
+            $cached = self::$data[$name];
+            if ($cached['expire'] > \time()) {
+                return $cached['value'];
+            }
+            // Expired - remove from cache
+            unset(self::$data[$name]);
+            return null;
+        }
+
+        if (self::$store === 'file') {
+            return null; // File storage loads everything upfront
+        }
+
+        // DB storage - use prepared statement
+        global $wpdb;
+        $value = $wpdb->get_var($wpdb->prepare(
+            "SELECT value FROM {$wpdb->prefix}ahm_sessions
+             WHERE deviceID = %s AND name = %s AND expire > %d",
+            self::$deviceID, $name, \time()
+        ));
+
+        if ($value !== null) {
+            $unserialized = \maybe_unserialize($value);
+            // Cache for subsequent calls in same request
+            self::$data[$name] = ['value' => $unserialized, 'expire' => \time() + 300];
+            return $unserialized;
+        }
+
+        return null;
+    }
+
+    /**
+     * Clear session data
+     *
+     * @param string $name Optional key to clear. Empty clears all.
+     */
     static function clear($name = '')
     {
+        if (!self::$initialized) self::init();
+
         global $wpdb;
 
-        if(!self::$deviceID) new Session();
-
-        if ($name == '') {
-            if (self::$store === 'file') self::$data = array();
-            else $wpdb->delete("{$wpdb->prefix}ahm_sessions", array('deviceID' => self::$deviceID));
+        if ($name === '') {
+            self::$data = [];
+            if (self::$store !== 'file') {
+                $wpdb->delete("{$wpdb->prefix}ahm_sessions", ['deviceID' => self::$deviceID]);
+            }
         } else {
-            //if(self::$store === 'cookie') setcookie($name, null, '/', time() - 3600);
-            if (self::$store === 'file' && isset(self::$data[$name])) unset(self::$data[$name]);
-            else $wpdb->delete("{$wpdb->prefix}ahm_sessions", array('deviceID' => self::$deviceID, 'name' => $name));
+            unset(self::$data[$name]);
+            if (self::$store !== 'file') {
+                $wpdb->delete("{$wpdb->prefix}ahm_sessions", ['deviceID' => self::$deviceID, 'name' => $name]);
+            }
         }
     }
 
-	static function reset()
-	{
-		global $wpdb;
-		$wpdb->query("delete from {$wpdb->prefix}ahm_sessions where deviceID != 'alldevice'");
-	}
+    /**
+     * Cleanup expired sessions - call via cron
+     */
+    static function cleanup()
+    {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->prefix}ahm_sessions WHERE expire < %d AND deviceID != 'alldevice'",
+            \time()
+        ));
+    }
 
+    /**
+     * Reset all sessions except 'alldevice'
+     */
+    static function reset()
+    {
+        global $wpdb;
+        $wpdb->query("DELETE FROM {$wpdb->prefix}ahm_sessions WHERE deviceID != 'alldevice'");
+    }
+
+    /**
+     * Debug: Show session data
+     */
     static function show()
     {
         wpdmprecho(self::$data);
     }
 
-    static function saveSession()
+    /**
+     * Load session data from file storage
+     */
+    private static function loadFileSession()
     {
-        if(!self::$deviceID) new Session();
-
-        if (self::$store === 'file' && is_array(self::$data) && count(self::$data) > 0) {
-            $data = Crypt::encrypt(self::$data);
-            if (!file_exists(WPDM_CACHE_DIR))
-                @mkdir(WPDM_CACHE_DIR, 0755, true);
-            file_put_contents(WPDM_CACHE_DIR . 'session-' . self::$deviceID . '.txt', $data);
+        $file = WPDM_CACHE_DIR . "/session-" . self::$deviceID . ".txt";
+        $realpath = \realpath($file);
+        if ($realpath && \file_exists($realpath) && \substr_count($realpath, WPDM_CACHE_DIR)) {
+            $data = \file_get_contents($realpath);
+            $data = Crypt::decrypt($data, true);
+            self::$data = \is_array($data) ? $data : [];
         }
-
     }
 
+    /**
+     * Save session data to file storage (called on shutdown)
+     */
+    static function saveSession()
+    {
+        if (self::$store !== 'file' || empty(self::$data)) return;
+
+        // Filter out expired entries before saving
+        $now = \time();
+        self::$data = \array_filter(self::$data, function($v) use ($now) {
+            return $v['expire'] > $now;
+        });
+
+        if (empty(self::$data)) return;
+
+        if (!\file_exists(WPDM_CACHE_DIR)) {
+            @\mkdir(WPDM_CACHE_DIR, 0755, true);
+        }
+
+        $data = Crypt::encrypt(self::$data);
+        \file_put_contents(WPDM_CACHE_DIR . 'session-' . self::$deviceID . '.txt', $data);
+    }
 }
-
-

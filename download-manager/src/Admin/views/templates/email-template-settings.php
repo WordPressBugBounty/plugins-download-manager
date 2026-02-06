@@ -23,6 +23,7 @@ if($ttype == 'email'){ ?>
                                 <?php
                                 $eds = \WPDM\__\FileSystem::scanDir(WPDM()->email->templateDir);
                                 $__wpdm_email_template = get_option('__wpdm_email_template', "default.html");
+                                $__wpdm_email_template = $__wpdm_email_template ? $__wpdm_email_template : "default.html";
                                 $__wpdm_email_setting = maybe_unserialize(get_option('__wpdm_email_setting'));
                                 foreach ($eds as $file) {
                                     if(strstr($file, ".html")) {

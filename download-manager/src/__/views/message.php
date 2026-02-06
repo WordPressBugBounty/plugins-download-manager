@@ -14,6 +14,9 @@ if (!defined('ABSPATH')) die();
           content="<?php bloginfo( 'html_type' ); ?>; charset=<?php bloginfo( 'charset' ); ?>"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL.'css/front.min.css'; ?>" />
+    <?php $color_scheme = get_option('__wpdm_color_scheme', 'system'); if ($color_scheme !== 'light') { ?>
+    <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL.'css/front-dark.min.css'; ?>" />
+    <?php } ?>
     <?php
     $_font = get_option('__wpdm_google_font', 'Sen');
     $font = explode(":", $_font);

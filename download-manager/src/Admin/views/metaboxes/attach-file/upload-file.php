@@ -9,9 +9,9 @@ $afile = wpdm_valueof($afiles, 0);
 
     <input type="hidden" name="file[files][]" value="<?php  echo esc_attr($afile); ?>" id="wpdmfile" />
 
-    <div class="cfile" id="cfl" style="cursor: auto;padding: 15px;border-radius: 6px !important;background: linear-gradient(#ffffff 90%,rgba(17,141,60,0.08));margin: 10px 0 20px;box-shadow: 0 5px 15px 0 #00000026">
+    <div class="cfile" id="cfl">
 		<?php
-
+        $icon_info = ['icon' => 'fa-file', 'color' => '#28a745', 'gradient' => 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'];
 		$filesize = "<em style='color: darkred'>( ".__("attached file is missing/deleted",'download-manager')." )</em>";
         $afile = rtrim($afile);
 
@@ -32,16 +32,82 @@ $afile = wpdm_valueof($afiles, 0);
 				$afile = $afile[1];
 			}
 
+            // Determine file icon based on extension
+            $file_ext = strtolower(pathinfo($afile, PATHINFO_EXTENSION));
+            $icon_map = [
+                // Documents
+                'pdf' => ['icon' => 'fa-file-pdf', 'color' => '#e53e3e', 'gradient' => 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)'],
+                'doc' => ['icon' => 'fa-file-word', 'color' => '#2b6cb0', 'gradient' => 'linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%)'],
+                'docx' => ['icon' => 'fa-file-word', 'color' => '#2b6cb0', 'gradient' => 'linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%)'],
+                'xls' => ['icon' => 'fa-file-excel', 'color' => '#276749', 'gradient' => 'linear-gradient(135deg, #38a169 0%, #276749 100%)'],
+                'xlsx' => ['icon' => 'fa-file-excel', 'color' => '#276749', 'gradient' => 'linear-gradient(135deg, #38a169 0%, #276749 100%)'],
+                'ppt' => ['icon' => 'fa-file-powerpoint', 'color' => '#c05621', 'gradient' => 'linear-gradient(135deg, #dd6b20 0%, #c05621 100%)'],
+                'pptx' => ['icon' => 'fa-file-powerpoint', 'color' => '#c05621', 'gradient' => 'linear-gradient(135deg, #dd6b20 0%, #c05621 100%)'],
+                'txt' => ['icon' => 'fa-file-alt', 'color' => '#718096', 'gradient' => 'linear-gradient(135deg, #a0aec0 0%, #718096 100%)'],
+                // Archives
+                'zip' => ['icon' => 'fa-file-archive', 'color' => '#d69e2e', 'gradient' => 'linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)'],
+                'rar' => ['icon' => 'fa-file-archive', 'color' => '#d69e2e', 'gradient' => 'linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)'],
+                '7z' => ['icon' => 'fa-file-archive', 'color' => '#d69e2e', 'gradient' => 'linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)'],
+                'tar' => ['icon' => 'fa-file-archive', 'color' => '#d69e2e', 'gradient' => 'linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)'],
+                'gz' => ['icon' => 'fa-file-archive', 'color' => '#d69e2e', 'gradient' => 'linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%)'],
+                // Images
+                'jpg' => ['icon' => 'fa-file-image', 'color' => '#805ad5', 'gradient' => 'linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)'],
+                'jpeg' => ['icon' => 'fa-file-image', 'color' => '#805ad5', 'gradient' => 'linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)'],
+                'png' => ['icon' => 'fa-file-image', 'color' => '#805ad5', 'gradient' => 'linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)'],
+                'gif' => ['icon' => 'fa-file-image', 'color' => '#805ad5', 'gradient' => 'linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)'],
+                'svg' => ['icon' => 'fa-file-image', 'color' => '#805ad5', 'gradient' => 'linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)'],
+                'webp' => ['icon' => 'fa-file-image', 'color' => '#805ad5', 'gradient' => 'linear-gradient(135deg, #9f7aea 0%, #805ad5 100%)'],
+                // Audio
+                'mp3' => ['icon' => 'fa-file-audio', 'color' => '#00b5d8', 'gradient' => 'linear-gradient(135deg, #0bc5ea 0%, #00b5d8 100%)'],
+                'wav' => ['icon' => 'fa-file-audio', 'color' => '#00b5d8', 'gradient' => 'linear-gradient(135deg, #0bc5ea 0%, #00b5d8 100%)'],
+                'ogg' => ['icon' => 'fa-file-audio', 'color' => '#00b5d8', 'gradient' => 'linear-gradient(135deg, #0bc5ea 0%, #00b5d8 100%)'],
+                'flac' => ['icon' => 'fa-file-audio', 'color' => '#00b5d8', 'gradient' => 'linear-gradient(135deg, #0bc5ea 0%, #00b5d8 100%)'],
+                // Video
+                'mp4' => ['icon' => 'fa-file-video', 'color' => '#e53e3e', 'gradient' => 'linear-gradient(135deg, #fc8181 0%, #e53e3e 100%)'],
+                'avi' => ['icon' => 'fa-file-video', 'color' => '#e53e3e', 'gradient' => 'linear-gradient(135deg, #fc8181 0%, #e53e3e 100%)'],
+                'mov' => ['icon' => 'fa-file-video', 'color' => '#e53e3e', 'gradient' => 'linear-gradient(135deg, #fc8181 0%, #e53e3e 100%)'],
+                'mkv' => ['icon' => 'fa-file-video', 'color' => '#e53e3e', 'gradient' => 'linear-gradient(135deg, #fc8181 0%, #e53e3e 100%)'],
+                'webm' => ['icon' => 'fa-file-video', 'color' => '#e53e3e', 'gradient' => 'linear-gradient(135deg, #fc8181 0%, #e53e3e 100%)'],
+                // Code
+                'html' => ['icon' => 'fa-file-code', 'color' => '#ed8936', 'gradient' => 'linear-gradient(135deg, #f6ad55 0%, #ed8936 100%)'],
+                'css' => ['icon' => 'fa-file-code', 'color' => '#3182ce', 'gradient' => 'linear-gradient(135deg, #63b3ed 0%, #3182ce 100%)'],
+                'js' => ['icon' => 'fa-file-code', 'color' => '#ecc94b', 'gradient' => 'linear-gradient(135deg, #faf089 0%, #ecc94b 100%)'],
+                'php' => ['icon' => 'fa-file-code', 'color' => '#667eea', 'gradient' => 'linear-gradient(135deg, #7f9cf5 0%, #667eea 100%)'],
+                'json' => ['icon' => 'fa-file-code', 'color' => '#48bb78', 'gradient' => 'linear-gradient(135deg, #68d391 0%, #48bb78 100%)'],
+                'xml' => ['icon' => 'fa-file-code', 'color' => '#ed8936', 'gradient' => 'linear-gradient(135deg, #f6ad55 0%, #ed8936 100%)'],
+            ];
 
-			?>
-            <div class="media">
-                <a href="#" id="dcf" title="Delete Current File" class="pull-right" style="font-size:24px">
-                    <i class="fa fa-trash color-red"></i>
+            $icon_info = $icon_map[$file_ext] ?? ['icon' => 'fa-file', 'color' => '#28a745', 'gradient' => 'linear-gradient(135deg, #28a745 0%, #20c997 100%)'];
+
+            // Use link icon for URLs
+            if ($url) {
+                $icon_info = ['icon' => 'fa-link', 'color' => '#3182ce', 'gradient' => 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)'];
+            }
+            ?>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: linear-gradient(135deg, #f8fffe 0%, #f0faf7 100%); border: 1px solid #d4edda; border-radius: 8px; transition: all 0.2s ease;">
+                <div style="width: 42px; height: 42px; background: <?php echo $icon_info['gradient']; ?>; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px <?php echo $icon_info['color']; ?>40;">
+                    <i class="fas <?php echo $icon_info['icon']; ?>" style="color: #fff; font-size: 18px;"></i>
+                </div>
+                <div class="media-body" style="flex: 1; min-width: 0;">
+                    <strong style="display: block; font-size: 13px; color: #2d3748; line-height: 1.4; word-break: break-word; margin-bottom: 2px;"><?php echo esc_html(basename(urldecode($afile))); ?></strong>
+                    <span style="font-size: 12px; color: #718096;"><?php echo $filesize; ?></span>
+                </div>
+                <a href="#" id="dcf" title="Delete Current File" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; color: #a0aec0; transition: all 0.2s ease; flex-shrink: 0;" onmouseover="this.style.background='#fed7d7'; this.style.borderColor='#fc8181'; this.style.color='#c53030';" onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0'; this.style.color='#a0aec0';">
+                    <i class="fa fa-trash" style="font-size: 14px;"></i>
                 </a>
-                <div class="media-body"><strong><?php echo  esc_html(basename(urldecode($afile))); ?></strong><br><span class="text-success"><?php echo $filesize; ?></span></div>
             </div>
 
-		<?php } else echo "<div style='letter-spacing: 1px;color:#c81a1a;text-align: center;text-transform: uppercase;font-size: 11px'>&mdash; ". __('No file uploaded yet!', 'download-manager')." &mdash;</div>"; ?>
+		<?php } else { ?>
+            <div style="display: flex; padding: 10px; gap: 10px; background: linear-gradient(135deg, #fefefe 0%, #f7fafc 100%); border: 2px dashed #e2e8f0; border-radius: 8px; text-align: left;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 20px; color: #a0aec0;"></i>
+                </div>
+                <div>
+                    <div style="font-size: 14px; margin-top: 4px; color: #718096; font-weight: 500;"><?php echo __('No file attached yet!', 'download-manager'); ?></div>
+                    <span style="font-size: 11px; color: #a0aec0; margin-top: 4px;"><?php echo __('Use any option below', 'download-manager'); ?></span>
+                </div>
+            </div>
+        <?php } ?>
         <div style="clear: both;"></div>
     </div>
 
@@ -168,6 +234,21 @@ $afile = wpdm_valueof($afiles, 0);
         <div class="clear"></div>
     </div>
 
+    <script type="text/x-template" id="atftpl">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: linear-gradient(135deg, #f8fffe 0%, #f0faf7 100%); border: 1px solid #d4edda; border-radius: 8px; transition: all 0.2s ease;">
+            <div style="width: 42px; height: 42px; background: <?php echo $icon_info['gradient']; ?>; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px <?php echo $icon_info['color']; ?>40;">
+                <i class="fas <?php echo $icon_info['icon']; ?>" style="color: #fff; font-size: 18px;"></i>
+            </div>
+            <div class="media-body" style="flex: 1; min-width: 0;">
+                <strong style="display: block; font-size: 13px; color: #2d3748; line-height: 1.4; word-break: break-word; margin-bottom: 2px;">{{filetitle}}</strong>
+                <span style="font-size: 12px; color: #718096;"><i class="fa fa-check-double"></i> Attached</span>
+            </div>
+            <a href="#" id="dcf" title="Delete Current File" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; color: #a0aec0; transition: all 0.2s ease; flex-shrink: 0;" onmouseover="this.style.background='#fed7d7'; this.style.borderColor='#fc8181'; this.style.color='#c53030';" onmouseout="this.style.background='#fff'; this.style.borderColor='#e2e8f0'; this.style.color='#a0aec0';">
+                <i class="fa fa-trash" style="font-size: 14px;"></i>
+            </a>
+        </div>
+    </script>
+
 
     <script>
         function wpdm_html_compile(html, dataset){
@@ -179,7 +260,10 @@ $afile = wpdm_valueof($afiles, 0);
         function wpdm_attach_file(file)
         {
             jQuery('#wpdmfile').val(file.filepath);
-            jQuery('#cfl').html('<div class="media"><a href="#" class="pull-right ttip" id="dcf" title="<?php _e('Delete Current File', 'download-manager');?>" style="font-size: 24px"><i class="fa fa-trash color-red"></i></a><div class="media-body"><strong>' + file.filetitle + '</strong><br/>&mdash;</div></div>').slideDown();
+            let atftpl = jQuery('#atftpl').html();
+            atftpl = wpdm_html_compile(atftpl, file);
+            jQuery('#cfl').html(atftpl);
+            //jQuery('#cfl').html('<div class="media"><a href="#" class="pull-right ttip" id="dcf" title="<?php _e('Delete Current File', 'download-manager');?>" style="font-size: 24px"><i class="fa fa-trash color-red"></i></a><div class="media-body"><strong>' + file.filetitle + '</strong><br/>&mdash;</div></div>').slideDown();
 
 
         }

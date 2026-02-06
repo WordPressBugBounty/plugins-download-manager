@@ -1,5 +1,5 @@
 /**
- * Version: 2.2.2
+ * Version: 2.3.0
  */
 var allps, pss;
 var wpdm_pass_target = '#pps_z';
@@ -45,7 +45,7 @@ var WPDM = {
         WPDM.actions[action].push(func);
     },
 
-    doAction: function (action, ...params) {
+    doAction: async function (action, ...params) {
         if(typeof WPDM.actions[action] !== 'undefined')
             WPDM.actions[action].forEach(fn => fn(...params));
     },
@@ -56,6 +56,31 @@ var WPDM = {
         copyText.setSelectionRange(0, 99999);
         document.execCommand("copy");
         WPDM.notify('<i class="fa fa-check-double"></i> Copied', 'success', 'top-center', 1000);
+    },
+
+    copyTxt: function (textToCopy) {
+        WPDM.notify('<i class="fa fa-check-double"></i> Copied', 'success', 'top-center', 1000);
+        // navigator clipboard api needs a secure context (https)
+        if (navigator.clipboard && window.isSecureContext) {
+            // navigator clipboard api method'
+            return navigator.clipboard.writeText(textToCopy);
+        } else {
+            // text area method
+            let textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            // make the textarea out of viewport
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            return new Promise((res, rej) => {
+                // here the magic happens
+                document.execCommand('copy') ? res() : rej();
+                textArea.remove();
+            });
+        }
     },
 
     beep: function () {
@@ -70,14 +95,35 @@ var WPDM = {
         return str.wpdm_hash();
     },
 
-    uniqueID: function () {
+    uniqueID: function (prefix) {
         var uniq = Date.now() + "abcdefghijklmnopqrstuvwxyz_";
         uniq = uniq.wpdm_shuffle();
         uniq = uniq.substring(1, 10);
+        uniq = typeof prefix !== 'undefined' ? prefix + uniq : uniq;
         return uniq;
     },
 
-    popupWindow: function (url, title, w, h) {
+    fileTypeIcon: function (ext) {
+        //let colors = color.split('|');
+
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" style="margin: 4px">
+                <defs>
+                    <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop stop-color="#269def" offset="0"/>
+                        <stop stop-color="#26bdef" offset="1"/>
+                    </linearGradient>
+                </defs>
+                <g>
+                    <rect fill="url(#gradient)" x="0" y="0" width="40" height="40" rx="3" ry="3"/>
+                    <text x="5" y="19" font-family="Arial, Helvetica, sans-serif" font-size="10px" letter-spacing="1" fill="#FFFFFF">
+                        <tspan>${ext}</tspan>
+                        <tspan x="6" y="28">_</tspan>
+                    </text>
+                </g>
+            </svg>`;
+    },
+
+    popupWindow: function (url, title, w, h, onclose) {
         /* Fixes dual-screen position                         Most browsers      Firefox */
         var dualScreenLeft = typeof window.screenLeft !== 'undefined' ? window.screenLeft : screen.left;
         var dualScreenTop = typeof window.screenTop !== 'undefined' ? window.screenTop : screen.top;
@@ -93,7 +139,10 @@ var WPDM = {
         if (window.focus) {
             newWindow.focus();
         }
-
+        if (onclose !== undefined)
+            newWindow.onbeforeunload = function () {
+                onclose.call();
+            }
         return false;
     },
 
@@ -114,7 +163,7 @@ var WPDM = {
         return el[0].outerHTML;
     },
     card: function (header, body, footer, id, style) {
-        if (typeof id === 'undefined') id = 'card_'+WPDM.uniqueID();
+        if (typeof id === 'undefined') id = 'card_' + WPDM.uniqueID();
         if (typeof style === 'undefined') style = '';
         header = header !== '' ? WPDM.el("div", {'class': 'card-header'}, header) : '';
         body = WPDM.el("div", {'class': 'card-body'}, body);
@@ -124,27 +173,35 @@ var WPDM = {
     fa: function (icon) {
         return WPDM.el("i", {'class': icon});
     },
-    bootAlert: function (heading, content, width) {
-        var html;
+    bootAlert: function (heading, content, width, backdrop) {
+        let html, url = '';
+        let modal_id = '__bootModal_' + WPDM.uniqueID();
+        if (typeof content === 'object') {
+            url = content.url;
+            content = `<div id='${modal_id}_cont'><i class='fa fa-sun fa-spin'></i> Loading...</div>`;
+        }
+        let hasBackdrop = typeof backdrop === 'undefined' ? 'static' : backdrop;
         if (!width) width = 400;
-        var modal_id = '__bootModal_' + WPDM.uniqueID();
-        html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" class="modal fade" tabindex="-1" role="dialog">\n' +
-            '  <div class="modal-dialog" style="width: ' + width + 'px" role="document">\n' +
-            '    <div class="modal-content" style="border-radius: 4px;overflow: hidden">\n' +
-            '      <div class="modal-header" style="padding: 12px 15px;background: rgba(0,0,0,0.02);">\n' +
-            '        <h4 class="modal-title" style="font-size: 10pt;font-weight: 600;padding: 0;margin: 0;letter-spacing: 0.5px">' + heading + '</h4>\n' +
-            '      </div>\n' +
-            '      <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">\n' +
-            '        ' + content + '\n' +
-            '      </div>\n' +
-            '      <div class="modal-footer" style="padding: 10px 15px">\n' +
-            '        <button type="button" class="btn btn-secondary btn-xs" data-target="#' + modal_id + '" data-dismiss="modal">Close</button>\n' +
-            '      </div>\n' +
-            '    </div>\n' +
-            '  </div>\n' +
-            '</div></div>';
+        html = `<div class="w3eden" id="w3eden${modal_id}"><div id="${modal_id}" class="modal fade" tabindex="-1" role="dialog">
+              <div class="modal-dialog" style="width: ${width}px;max-width: 96%;" role="document">
+                <div class="modal-content" style="border-radius: 4px;overflow: hidden">
+                  <div class="modal-header" style="padding: 12px 15px;background: rgba(0,0,0,0.02);line-height: 18px">
+                    <div style="display: flex;align-content: last;width:100%"><h4 class="modal-title" style="font-size: 10pt;font-weight: 600;padding: 0;margin: 0;letter-spacing: 0.5px;line-height: 18px">${heading}</h4><button style="line-height: 18px;font-size: 10pt;background: transparent;outline: none" type="button" class="close" data-target="#${modal_id}" data-dismiss="modal"><i class="fa fa-times-circle"></i></button></div>
+                  </div>
+                  <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">
+            ${content}
+                  </div>
+                </div>
+              </div>
+            </div></div>`;
         jQuery('body').append(html);
-        jQuery("#" + modal_id).modal({show: true, backdrop: 'static'});
+        jQuery("#" + modal_id).modal({show: true, backdrop: hasBackdrop});
+
+        if (url !== '') {
+            url = url.indexOf('?') > 0 ? url + '&__mdid=' + modal_id : url + '?__mdid=' + modal_id;
+            jQuery("#" + modal_id + "_cont").load(url);
+        }
+
         return jQuery("#" + modal_id);
     },
 
@@ -204,10 +261,10 @@ var WPDM = {
         if (type === undefined || !type) type = 'info';
         if (position === undefined || !position) position = 'top-right';
         if (type === 'danger') type = 'error';
-        var notifycont = position.indexOf('#') >= 0 ? position : '#wpdm-notify-' + position;
+        let notifycont = position.indexOf('#') >= 0 ? position : '#wpdm-notify-' + position;
         if ($(notifycont).length == 0)
             $('body').prepend("<div id='wpdm-notify-" + position + "'></div>");
-        var notif = $("<div class='wpdm-notify fetfont wpdm-notify-" + type + "' style='display: none'>" + message + "</div>");
+        var notif = $("<div class='wpdm-notify fetfont wpdm-notify-" + type + "' style='display: none'>" + message + "</div><div class='wpdm-clear'></div>");
         $(notifycont).append(notif);
         $(notif).fadeIn();
         if (autoclose !== undefined) {
@@ -251,6 +308,7 @@ var WPDM = {
     },
 
     unblockUI: function (element) {
+        if (typeof element === 'undefined') element = '.blockui';
         jQuery(element).removeClass("blockui");
     },
 
@@ -268,25 +326,30 @@ var WPDM = {
     },
 
 
-    confirm: function (heading, content, buttons) {
+    confirm: function (heading, content, buttons, width) {
         var html, $ = jQuery;
         var modal_id = '__boot_popup_' + WPDM.uniqueID();
         $("#w3eden__boot_popup").remove();
+        if (!width) width = 350;
         var _buttons = '';
         if (buttons) {
-            _buttons = '<div class="modal-footer" style="padding: 8px 15px;">\n';
+            _buttons = '<div class="modal-footer text-center" style="padding: 8px 15px;justify-content: center;">\n';
             $.each(buttons, function (i, button) {
-                var id = 'btx_' + i;
-                _buttons += "<button id='" + id + "' class='" + button.class + " btn-xs' style='font-size: 10px;padding: 3px 20px;'>" + button.label + "</button> ";
+                var btnid = WPDM.uniqueID();
+                _buttons += "<button id='" + btnid + "' class='" + button.class + " btn-xs' style='font-size: 12px;padding: 4px 16px;border-radius: 4px'>" + button.label + "</button> ";
+                $('body').on('click', '#' + btnid, function () {
+                    button.callback.call($("#" + modal_id));
+                    return false;
+                });
             });
             _buttons += '</div>\n';
         }
 
         html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" tabindex="-1" role="dialog">\n' +
-            '  <div class="modal-dialog" role="document" style="max-width: 100%;width: 350px">\n' +
-            '    <div class="modal-content" style="border-radius: 3px;overflow: hidden">\n' +
+            '  <div class="modal-dialog wpdm-modal-confirm modal-dialog-centered" role="document" style="max-width: 100%;width: ' + width + 'px">\n' +
+            '    <div class="modal-content" style="border-radius: 6px;overflow: hidden">\n' +
             '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
-            '        <h4 class="modal-title" style="font-size: 9pt;font-weight: 500;padding: 0;margin: 0;font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px">' + heading + '</h4>\n' +
+            '        <h4 class="modal-title" style="font-size: 12pt;font-weight: 500;padding: 0;margin: 0;font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px">' + heading + '</h4>\n' +
             '      </div>\n' +
             '      <div class="modal-body text-center" style="font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px;font-size: 10pt;font-weight: 300;padding: 25px;line-height: 1.5">\n' +
             '        ' + content + '\n' +
@@ -296,20 +359,12 @@ var WPDM = {
             '</div></div>';
         $('body').append(html);
         $("#" + modal_id).modal('show');
-        $.each(buttons, function (i, button) {
-            var id = 'btx_' + i;
-            $('#' + id).unbind('click');
-            $('#' + id).bind('click', function () {
-                button.callback.call($("#" + modal_id));
-                return false;
-            });
-        });
         return $("#" + modal_id);
     },
     audioUI: function (audio) {
         var $ = jQuery, song_length, song_length_m, song_length_s;
 
-        var player_html = '<div class="w3eden"><div style="display: none" class="wpdm-audio-player-ui" id="wpdm-audio-player-ui"><div class="card m-2"><div class="card-body text-center"><div class="media"><div class="mr-3 wpdm-audio-control-buttons"><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-primary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-primary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button></div><div class="media-body"><div class="position-relative"><div id="played">00:00</div><div id="mins">00:00</div></div><div class="progress"><div  id="wpdm-audio-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div><div class="ml-3 wpdm-audio-control-buttons"> <button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button> <div class="volumctrl"><input type="range" min="0" max="1" step="0.01" value="3" class="p-0" id="wpdm-audio-volume"></div></div></div></div></div></div></div>';
+        var player_html = `<div class="w3eden"><div style="display: none" class="wdmapui" id="wdmapui"><div id="wpdm_close_player"><svg style="width: 20px" data-name="Livello 1" viewBox="0 0 151.57 151.57" xmlns="http://www.w3.org/2000/svg"><circle cx="1038.5" cy="467.01" r="72.28" style="fill:#da2244;stroke:#f2f2f2;stroke-linecap:round;stroke-linejoin:round;stroke-width:7px" transform="translate(-988.78 479.89) rotate(-45)"/><line style="fill:#da2244;stroke:#f2f2f2;stroke-linecap:round;stroke-linejoin:round;stroke-width:7px" x1="47.57" x2="103.99" y1="103.99" y2="47.57"/><line style="fill:#da2244;stroke:#f2f2f2;stroke-linecap:round;stroke-linejoin:round;stroke-width:7px" x1="45.8" x2="105.7" y1="45.87" y2="105.77"/></svg></div><div class="card m-2"><div class="card-body text-center"><div class="mb-3 wpdm-audio-control-buttons d-block d-sm-none"><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-secondary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-secondary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button> <button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button></div><div class="media"><div class="mr-3 wpdm-audio-control-buttons d-none d-sm-block"><button class="btn btn-primary btn-play" id="wpdm-btn-play"><i class="fa fa-play"></i></button> <button class="btn btn-secondary btn-backward" id="wpdm-btn-backward"><i class="fa fa-backward"></i></button> <button class="btn btn-secondary btn-forward" id="wpdm-btn-forward"><i class="fa fa-forward"></i></button></div><div class="media-body"><div class="position-relative"><div id="played">00:00</div><div id="mins">00:00</div></div><div class="progress"><div  id="wpdm-audio-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div></div></div><div class="ml-3 wpdm-audio-control-buttons  d-none d-sm-block"> <button class="btn btn-info btn-volumctrl" id="wpdm-btn-volumctrl"><i class="fa fa-volume-up"></i></button> <div class="volumctrl"><input type="range" min="0" max="1" step="0.01" value="3" class="p-0" id="wpdm-audio-volume"></div></div></div></div></div></div></div>`;
 
         if (audio.duration !== Infinity) {
             song_length = parseInt(audio.duration);
@@ -334,11 +389,11 @@ var WPDM = {
             }, false);
         }
 
-        if ($('#wpdm-audio-player-ui').length === 0) {
+        if ($('#wdmapui').length === 0) {
             $('body').append(player_html);
-            $("#wpdm-audio-player-ui").slideDown();
+            $("#wdmapui").slideDown();
             $('#mins').html(song_length_m + ":" + song_length_s);
-            $('body').on('click', '#wpdm-audio-player-ui .progress', function (e) {
+            $('body').on('click', '#wdmapui .progress', function (e) {
                 let value = e.offsetX * 100 / this.clientWidth;
                 var played = parseInt(song_length * value / 100);
                 var played_m = parseInt(played / 60);
@@ -350,8 +405,8 @@ var WPDM = {
                 $(this).find('.progress-bar').css('width', value + "%");
                 //video.currentTime = duration * (value / 100);
             });
-            $('body').on('click', '#wpdm-btn-backward', function () {
-                let value = (parseInt($('#wpdm-audio-player-ui .progress-bar').css('width')) / parseInt($('#wpdm-audio-player-ui .progress').css('width'))) * 100 - 10;
+            $('body').on('click', '.btn-backward', function () {
+                let value = (parseInt($('#wdmapui .progress-bar').css('width')) / parseInt($('#wdmapui .progress').css('width'))) * 100 - 10;
                 if (value < 0) value = 0;
                 var played = parseInt(song_length * value / 100);
                 var played_m = parseInt(played / 60);
@@ -360,10 +415,10 @@ var WPDM = {
                 played_s = played_s > 9 ? played_s : "0" + played_s;
                 $('#played').html(played_m + ":" + played_s);
                 audio.currentTime = (song_length * value) / 100;
-                $('#wpdm-audio-player-ui .progress-bar').css('width', value + "%");
+                $('#wdmapui .progress-bar').css('width', value + "%");
             });
-            $('body').on('click', '#wpdm-btn-forward', function () {
-                let value = (parseInt($('#wpdm-audio-player-ui .progress-bar').css('width')) / parseInt($('#wpdm-audio-player-ui .progress').css('width'))) * 100 + 10;
+            $('body').on('click', '.btn-forward', function () {
+                let value = (parseInt($('#wdmapui .progress-bar').css('width')) / parseInt($('#wdmapui .progress').css('width'))) * 100 + 10;
                 if (value > 100) value = 100;
                 var played = parseInt(song_length * value / 100);
                 var played_m = parseInt(played / 60);
@@ -372,9 +427,9 @@ var WPDM = {
                 played_s = played_s > 9 ? played_s : "0" + played_s;
                 $('#played').html(played_m + ":" + played_s);
                 audio.currentTime = (song_length * value) / 100;
-                $('#wpdm-audio-player-ui .progress-bar').css('width', value + "%");
+                $('#wdmapui .progress-bar').css('width', value + "%");
             });
-            $('#wpdm-btn-volumctrl').on('click', function () {
+            $('body').on('click', '.btn-volumctrl', function () {
                 $(this).next('.volumctrl').toggle();
             });
             $('body').on('click', '.btn-play', function () {
@@ -395,10 +450,10 @@ var WPDM = {
         }
         $('#mins').html(song_length_m + ":" + song_length_s);
         audio.addEventListener("play", function () {
-            $('#wpdm-btn-play').find('.fa').addClass('fa-pause').removeClass('fa-play');
+            $('.btn-play .fa').addClass('fa-pause').removeClass('fa-play');
         });
         audio.addEventListener("pause", function () {
-            $('#wpdm-btn-play').find('.fa').addClass('fa-play').removeClass('fa-pause');
+            $('.btn-play .fa').addClass('fa-play').removeClass('fa-pause');
         });
         audio.addEventListener("timeupdate", function (e) {
             var song_length = parseInt(audio.duration);
@@ -424,6 +479,15 @@ jQuery(function ($) {
 
     var $body = $('body');
 
+    const saves_state = localStorage.getItem('page_state_' + wpdm_url.page_code) || null;
+    const container = localStorage.getItem('page_state_container_' + wpdm_url.page_code) || null;
+    if(saves_state && container) {
+        $.get(saves_state, function (res) {
+            $(container).html($(res).find(container).html());
+            $(container).removeClass('blockui');
+        });
+    }
+
     $body.on('click', '.wpdm-notify, .wpdm-floatify', function () {
         $(this).animate({
             opacity: 0
@@ -444,12 +508,15 @@ jQuery(function ($) {
         parentWindow.href = document.referrer.toString();
         var __sep = '?';
         if (wpdm_url.home.indexOf('?') > 0) __sep = '&';
+        let extras = '';
+        if ($(this).data('file') !== undefined) extras += '__wpdmfl=' + $(this).data('file');
+        extras += '&REFERRER=' + encodeURI(location.href);
         if (parentWindow.hostname === window.location.hostname || 1)
-            $(window.parent.document.body).append("<iframe id='wpdm-lock-frame' style='left:0;top:0;width: 100%;height: 100%;z-index: 999999999;position: fixed;background: rgba(255,255,255,0.4) url(" + wpdm_url.home + "wp-content/plugins/download-manager/assets/images/loader.svg) center center no-repeat;background-size: 80px 80px;border: 0;' src='" + wpdm_url.home + __sep + "__wpdmlo=" + $(this).data('package') + "'></iframe>");
+            $(window.parent.document.body).append("<iframe id='wpdm-lock-frame' style='left:0;top:0;width: 100%;height: 100%;z-index: 999999999;position: fixed;background: rgba(255,255,255,0.4) url(" + wpdm_url.home + "wp-content/plugins/download-manager/assets/images/loader.svg) center center no-repeat;background-size: 80px 80px;border: 0;' src='" + wpdm_url.home + __sep + "__wpdmlo=" + $(this).data('package') + "&" + extras + "'></iframe>");
         else
             window.parent.postMessage({
                 'task': 'showiframe',
-                'iframe': "<iframe id='wpdm-lock-frame' style='left:0;top:0;width: 100%;height: 100%;z-index: 999999999;position: fixed;background: rgba(255,255,255,0.4) url(" + wpdm_url.home + "wp-content/plugins/download-manager/assets/images/loader.svg) center center no-repeat;background-size: 80px 80px;border: 0;' src='" + wpdm_url.home + __sep + "__wpdmlo=" + $(this).data('package') + "'></iframe>"
+                'iframe': "<iframe id='wpdm-lock-frame' style='left:0;top:0;width: 100%;height: 100%;z-index: 999999999;position: fixed;background: rgba(255,255,255,0.4) url(" + wpdm_url.home + "wp-content/plugins/download-manager/assets/images/loader.svg) center center no-repeat;background-size: 80px 80px;border: 0;' src='" + wpdm_url.home + __sep + "__wpdmlo=" + $(this).data('package') + __sep + "__wpdmfl=" +  + "'></iframe>"
             }, "*");
 
     });
@@ -485,17 +552,17 @@ jQuery(function ($) {
 
         try {
 
-
-            _PopupCenter($(this).data('url'), 'Social Lock', 600, 400);
+            if ($(this).data('url'))
+                _PopupCenter($(this).data('url'), 'Social Lock', 600, 400);
 
         } catch (e) {
         }
 
     });
 
-    /*$body.on('click', '#wpdm-dashboard-sidebar a.list-group-item', function (e) {
+    $body.on('click', '#wdmds a.list-group-item', function (e) {
         location.href = this.href;
-    });*/
+    });
 
     var $input_group_input = $('.input-group input');
     $input_group_input.on('focus', function () {
@@ -527,7 +594,7 @@ jQuery(function ($) {
                         label: 'Close',
                         class: 'btn btn-secondary',
                         callback: function () {
-                            this.modal('hide');
+                            $('#__boot_popup').modal('hide');
                             return false;
                         }
                     }]
@@ -567,6 +634,10 @@ jQuery(function ($) {
         });
     });
 
+    $body.on('click', '#wpdm_close_player', function (e) {
+        $('#wdmapui').slideUp();
+    });
+
     $body.on('click', '.wpdm-btn-play', function (e) {
         e.preventDefault();
 
@@ -588,7 +659,7 @@ jQuery(function ($) {
         }
 
         if (btn.data('state') === 'playing') {
-            $(this).data('state', 'paused');
+            btn.data('state', 'paused');
             player.trigger('pause');
             $(this).html("<i class='fa fa-play'></i>");
             return false;
@@ -599,6 +670,7 @@ jQuery(function ($) {
             player.trigger('play');
             $('.wpdm-btn-play').html("<i class='fa fa-play'></i>");
             $(this).html("<i class='fa fa-pause'></i>");
+            $('#wdmapui').slideDown();
             return false;
         }
 
@@ -613,6 +685,7 @@ jQuery(function ($) {
             btn.data('state', 'playing');
             WPDM.audioUI(this);
         });
+
         document.getElementById('wpdm-audio-player').onended = function () {
             btn.html("<i class='fa fa-redo'></i>");
             btn.data('state', 'stop');
@@ -688,8 +761,11 @@ jQuery(function ($) {
     $body.on('click', '.pagination.async a, .__wpdm_load_async', function (e) {
         e.preventDefault();
         var _cont = $(this).data('container');
+        var href = this.href;
         $(_cont).addClass('blockui');
-        $.get(this.href, function (res) {
+        localStorage.setItem('page_state_' + wpdm_url.page_code, href);
+        localStorage.setItem('page_state_container_' + wpdm_url.page_code, _cont);
+        $.get(href, function (res) {
             $(_cont).html($(res).find(_cont).html());
             $(_cont).removeClass('blockui');
         });
@@ -789,21 +865,21 @@ function wpdm_bootModal(heading, content, width) {
     var html;
     if (!width) width = 400;
     jQuery("#w3eden__bootModal").remove();
-    html = '<div class="w3eden" id="w3eden__bootModal"><div id="__bootModal" class="modal fade" tabindex="-1" role="dialog">\n' +
-        '  <div class="modal-dialog" style="width: ' + width + 'px" role="document">\n' +
-        '    <div class="modal-content" style="border-radius: 3px;overflow: hidden">\n' +
-        '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
-        '        <h4 class="modal-title" style="font-size: 9pt;font-weight: 500;padding: 0;margin: 0;letter-spacing: 0.5px">' + heading + '</h4>\n' +
-        '      </div>\n' +
-        '      <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">\n' +
-        '        ' + content + '\n' +
-        '      </div>\n' +
-        '      <div class="modal-footer" style="padding: 10px 15px">\n' +
-        '        <button type="button" class="btn btn-secondary btn-xs" data-dismiss="modal">Close</button>\n' +
-        '      </div>\n' +
-        '    </div>\n' +
-        '  </div>\n' +
-        '</div></div>';
+    html = `<div class="w3eden" id="w3eden__bootModal"><div id="__bootModal" class="modal fade" tabindex="-1" role="dialog">
+      <div class="modal-dialog" style="width: ${width}px;max-width: 96%;" role="document">
+        <div class="modal-content" style="border-radius: 3px;overflow: hidden">
+          <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">
+            <h4 class="modal-title" style="font-size: 9pt;font-weight: 500;padding: 0;margin: 0;letter-spacing: 0.5px">${heading} </h4>
+          </div>
+          <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">
+             ${content}
+          </div>
+          <div class="modal-footer" style="padding: 10px 15px">
+            <button type="button" class="btn btn-secondary btn-xs" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div></div>`;
     jQuery('body').append(html);
     jQuery("#__bootModal").modal('show');
 }
@@ -822,7 +898,7 @@ function wpdm_boot_popup(heading, content, buttons) {
     }
 
     html = '<div class="w3eden" id="w3eden__boot_popup"><div id="__boot_popup" style="z-index: 9999999 !important;" class="modal fade" tabindex="-1" role="dialog">\n' +
-        '  <div class="modal-dialog" role="document" style="max-width: 100%;width: 350px">\n' +
+        '  <div class="modal-dialog" role="document" style="max-width: 96%;width: 350px">\n' +
         '    <div class="modal-content" style="border-radius: 3px;overflow: hidden">\n' +
         '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
         '        <h4 class="modal-title" style="font-size: 9pt;font-weight: 500;padding: 0;margin: 0;letter-spacing: 0.5px">' + heading + '</h4>\n' +
@@ -869,5 +945,3 @@ function wpdm_iframe_modal(url, closebutton) {
     $('#wpdm_iframe_modal').fadeIn();
 
 }
-
-
