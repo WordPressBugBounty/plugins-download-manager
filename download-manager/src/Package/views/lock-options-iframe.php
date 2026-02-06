@@ -23,7 +23,7 @@ if($post_type !== 'wpdmpro' && $post_status !== 'publish'){
 //$pack->Prepare(get_the_ID());
 $form_lock = (int)get_post_meta($ID, '__wpdm_form_lock', true);
 $terms_lock = (int)get_post_meta($ID, '__wpdm_terms_lock', true);
-$base_price = (double)get_post_meta($ID, '__wpdm_base_price', true);
+$base_price = (float)get_post_meta($ID, '__wpdm_base_price', true);
 $color_scheme = get_option('__wpdm_color_scheme', 'light');
 
 ?><!DOCTYPE html>
@@ -40,6 +40,7 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
         <?php if ($color_scheme !== 'light') { ?>
         <link rel="stylesheet" href="<?php echo WPDM_ASSET_URL; ?>css/front-dark.min.css" />
         <?php } ?>
+        <link rel="stylesheet" href="<?= WPDM_FONTAWESOME_URL ?>" />
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
         <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.min.js"></script>
         <script src="<?php echo WPDM_ASSET_URL; ?>js/wpdm.js"></script>
@@ -156,24 +157,25 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
     ?>
     <style>
         /* ============================================
-           Enterprise Modal - Modern Design System
+           Lock Panel - Premium Modal UI
            ============================================ */
 
         :root {
-            --modal-bg: #ffffff;
-            --modal-border: rgba(0, 0, 0, 0.08);
-            --modal-shadow:
-                0 0 0 1px rgba(0, 0, 0, 0.03),
-                0 2px 4px rgba(0, 0, 0, 0.02),
-                0 8px 16px rgba(0, 0, 0, 0.04),
-                0 16px 32px rgba(0, 0, 0, 0.06),
-                0 32px 64px rgba(0, 0, 0, 0.08);
-            --modal-radius: 20px;
-            --icon-size: 80px;
-            --backdrop-blur: 12px;
-            --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-exit: cubic-bezier(0.4, 0, 1, 1);
+            --lp-bg: #ffffff;
+            --lp-shadow:
+                0 0 0 1px rgba(0, 0, 0, 0.04),
+                0 4px 8px rgba(0, 0, 0, 0.04),
+                0 12px 24px rgba(0, 0, 0, 0.06),
+                0 24px 48px rgba(0, 0, 0, 0.08),
+                0 48px 96px rgba(0, 0, 0, 0.12);
+            --lp-radius: 24px;
+            --lp-icon-size: 88px;
+            --lp-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --lp-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --lp-exit: cubic-bezier(0.4, 0, 1, 1);
+            --lp-accent: var(--color-primary, #6366f1);
+            --lp-accent-rgb: var(--color-primary-rgb, 99, 102, 241);
+            --lp-accent2: var(--color-purple, #8557D3);
         }
 
         html, body {
@@ -189,199 +191,300 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Backdrop */
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.2) !important;
-            opacity: 0 !important;
-            backdrop-filter: blur(1px);
-            -webkit-backdrop-filter: blur(1px);
-            transition: opacity 0.4s var(--transition-smooth) !important;
+        /* Lock Panel Root */
+        .wpdm-lp {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            visibility: hidden;
         }
 
-        .modal-backdrop.show {
-            opacity: 1 !important;
+        .wpdm-lp--visible {
+            pointer-events: auto;
+            visibility: visible;
         }
 
-        /* Modal Dialog Container */
-        .modal.fade .modal-dialog {
-            transform: scale(0.9) translateY(30px);
+        /* Backdrop - deeper, richer */
+        .wpdm-lp__backdrop {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.35) 0%, rgba(30, 20, 60, 0.4) 100%);
+            backdrop-filter: blur(6px) saturate(1.2);
+            -webkit-backdrop-filter: blur(6px) saturate(1.2);
+            opacity: 0;
+            transition: opacity 0.5s var(--lp-smooth);
+        }
+
+        .wpdm-lp--visible .wpdm-lp__backdrop {
+            opacity: 1;
+        }
+
+        /* Dialog Container */
+        .wpdm-lp__dialog {
+            position: relative;
+            z-index: 1;
+            transform: scale(0.92) translateY(40px);
             opacity: 0;
             transition:
-                transform 0.5s var(--transition-spring),
-                opacity 0.4s var(--transition-smooth);
+                transform 0.6s var(--lp-spring),
+                opacity 0.4s var(--lp-smooth);
         }
 
-        .modal.show .modal-dialog {
+        .wpdm-lp--visible .wpdm-lp__dialog {
             transform: scale(1) translateY(0);
             opacity: 1;
         }
 
         /* Exit animation */
-        .modal.fade:not(.show) .modal-dialog {
+        .wpdm-lp--closing .wpdm-lp__backdrop {
+            opacity: 0;
+            transition: opacity 0.3s var(--lp-exit);
+        }
+
+        .wpdm-lp--closing .wpdm-lp__dialog {
             transform: scale(0.95) translateY(20px);
             opacity: 0;
             transition:
-                transform 0.25s var(--transition-exit),
-                opacity 0.2s var(--transition-exit);
+                transform 0.25s var(--lp-exit),
+                opacity 0.2s var(--lp-exit);
         }
 
-        /* Modal Content - Enterprise Card */
-        .w3eden .modal-content {
-            background: var(--modal-bg);
-            border: none;
-            border-radius: var(--modal-radius);
-            box-shadow: var(--modal-shadow);
+        /* Panel */
+        .wpdm-lp__panel {
+            background: var(--lp-bg);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: var(--lp-radius);
+            box-shadow: var(--lp-shadow);
             max-width: 100%;
-            padding-top: calc(var(--icon-size) / 2 + 8px) !important;
+            padding-top: calc(var(--lp-icon-size) / 2 + 12px);
             overflow: visible;
             position: relative;
         }
 
-        /* Subtle gradient overlay on content */
-        .w3eden .modal-content::before {
+        /* Accent gradient wash across top */
+        .wpdm-lp__panel::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 120px;
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.03) 0%, transparent 100%);
+            height: 140px;
+            background: linear-gradient(175deg,
+                rgba(var(--lp-accent-rgb), 0.06) 0%,
+                rgba(var(--lp-accent-rgb), 0.02) 40%,
+                transparent 100%);
             pointer-events: none;
-            border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+            border-radius: var(--lp-radius) var(--lp-radius) 0 0;
         }
 
-        /* Modal Header */
-        .w3eden .modal-header {
-            border: 0;
-            padding: 0;
+        /* Top accent stripe */
+        .wpdm-lp__panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--lp-accent), var(--lp-accent2));
+            border-radius: 0 0 3px 3px;
+            opacity: 0;
+            animation: lpStripeFadeIn 0.4s var(--lp-smooth) 0.5s forwards;
         }
 
-        /* Modal Title */
-        h4.modal-title,
-        .modal-content h4 {
+        @keyframes lpStripeFadeIn {
+            to { opacity: 0.7; }
+        }
+
+        /* Header */
+        .wpdm-lp__header {
+            padding: 0 24px;
+            position: relative;
+        }
+
+        .wpdm-lp__header h4 {
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             color: #1e293b;
-            font-size: 12pt;
+            font-size: 11px;
             display: inline-block;
             font-family: var(--wpdm-font);
-            margin: 0 0 8px;
+            margin: 0 0 10px;
+            padding: 5px 14px;
+            background: linear-gradient(135deg, rgba(var(--lp-accent-rgb), 0.08), rgba(var(--lp-accent-rgb), 0.04));
+            border-radius: 20px;
+            border: 1px solid rgba(var(--lp-accent-rgb), 0.1);
             opacity: 0;
             transform: translateY(10px);
-            animation: modalContentFadeIn 0.5s var(--transition-spring) 0.2s forwards;
+            animation: lpContentFadeIn 0.5s var(--lp-spring) 0.2s forwards;
         }
 
-        /* Product title animation */
-        .modal-content .color-purple {
+        /* Package title */
+        .wpdm-lp__header .wpdm-lp__title {
+            display: block;
+            font-size: 13pt;
+            font-weight: 600;
+            color: #334155;
+            letter-spacing: 0.2px;
+            line-height: 1.4;
+            margin-bottom: 0;
             opacity: 0;
             transform: translateY(10px);
-            animation: modalContentFadeIn 0.5s var(--transition-spring) 0.3s forwards;
+            animation: lpContentFadeIn 0.5s var(--lp-spring) 0.3s forwards;
         }
 
-        @keyframes modalContentFadeIn {
+        /* Separator line */
+        .wpdm-lp__sep {
+            display: block;
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(var(--lp-accent-rgb), 0.3), transparent);
+            margin: 16px auto;
+            opacity: 0;
+            animation: lpContentFadeIn 0.5s var(--lp-smooth) 0.35s forwards;
+        }
+
+        @keyframes lpContentFadeIn {
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        /* Modal Icon - Floating Design */
-        .modal-icon {
-            width: var(--icon-size);
-            height: var(--icon-size);
+        /* Avatar - Floating with animated ring */
+        .wpdm-lp__avatar {
+            width: var(--lp-icon-size);
+            height: var(--lp-icon-size);
             padding: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
             top: 0;
             border-radius: 50%;
-            margin-top: calc(var(--icon-size) / -2);
-            left: calc(50% - var(--icon-size) / 2);
+            margin-top: calc(var(--lp-icon-size) / -2);
+            left: calc(50% - var(--lp-icon-size) / 2);
             position: absolute;
             z-index: 999999;
-            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
             box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.08),
-                0 8px 24px rgba(0, 0, 0, 0.12),
+                0 4px 12px rgba(var(--lp-accent-rgb), 0.15),
+                0 8px 32px rgba(0, 0, 0, 0.12),
                 inset 0 1px 0 rgba(255, 255, 255, 0.9);
             opacity: 0;
             transform: scale(0.5) translateY(20px);
-            animation: modalIconPop 0.6s var(--transition-spring) 0.1s forwards;
+            animation: lpIconPop 0.6s var(--lp-spring) 0.1s forwards;
         }
 
-        @keyframes modalIconPop {
+        @keyframes lpIconPop {
             to {
                 opacity: 1;
                 transform: scale(1) translateY(0);
             }
         }
 
-        /* Icon ring effect */
-        .modal-icon::before {
+        /* Animated gradient ring */
+        .wpdm-lp__avatar::before {
             content: '';
             position: absolute;
-            inset: -3px;
+            inset: -4px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--color-primary, #6366f1) 0%, var(--color-purple, #8557D3) 100%);
-            opacity: 0.15;
+            background: conic-gradient(
+                from 0deg,
+                var(--lp-accent),
+                var(--lp-accent2),
+                var(--color-info, #2CA8FF),
+                var(--lp-accent)
+            );
+            opacity: 0.2;
             z-index: -1;
+            animation: lpRingSpin 8s linear infinite;
         }
 
-        .modal-icon img,
-        .modal-icon .wp-post-image {
+        @keyframes lpRingSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Outer glow pulse */
+        .wpdm-lp__avatar::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(var(--lp-accent-rgb), 0.12) 0%, transparent 70%);
+            z-index: -2;
+            animation: lpGlowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes lpGlowPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        .wpdm-lp__avatar img,
+        .wpdm-lp__avatar .wp-post-image {
             border-radius: 50%;
             width: 100% !important;
             height: 100% !important;
             object-fit: cover;
         }
 
-        /* Close Button - Minimal Design */
-        .close {
+        /* Close Button */
+        .wpdm-lp__close {
             position: absolute;
             z-index: 999999;
-            top: 16px;
-            right: 16px;
-            width: 28px;
-            height: 28px;
+            top: 14px;
+            right: 14px;
+            width: 32px;
+            height: 32px;
             padding: 0;
             margin: 0;
+            display: flex;
             align-items: center;
             justify-content: center;
-            background: transparent;
-            border: none;
-            opacity: 0.4 !important;
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 10px;
+            opacity: 1;
             cursor: pointer;
+            transition: all 0.2s var(--lp-smooth);
         }
 
-        .close svg {
-            color: #64748b;
-            transition: all 0.2s var(--transition-smooth);
+        .wpdm-lp__close svg {
+            width: 16px;
+            height: 16px;
+            color: #94a3b8;
+            transition: color 0.2s var(--lp-smooth);
         }
 
-        .close:hover {
-            opacity: 1 !important;
+        .wpdm-lp__close:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
         }
 
-        .close:hover svg {
+        .wpdm-lp__close:hover svg {
             color: #ef4444;
         }
 
-        .close:active {
-            transform: scale(0.9);
+        .wpdm-lp__close:active {
+            transform: scale(0.92);
         }
 
-        /* Modal Body */
-        .w3eden .modal-body {
-            max-height: calc(100vh - 240px);
+        /* Panel Body */
+        .wpdm-lp__body {
+            max-height: calc(100vh - 260px);
             overflow-y: auto;
-            padding: 0 20px 20px !important;
+            padding: 0 24px 24px;
             opacity: 0;
             transform: translateY(15px);
-            animation: modalBodyFadeIn 0.5s var(--transition-spring) 0.35s forwards;
+            animation: lpBodyFadeIn 0.5s var(--lp-spring) 0.4s forwards;
         }
 
-        @keyframes modalBodyFadeIn {
+        @keyframes lpBodyFadeIn {
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -389,35 +492,40 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
         }
 
         /* Custom Scrollbar */
-        .w3eden .modal-body::-webkit-scrollbar {
-            width: 6px;
+        .wpdm-lp__body::-webkit-scrollbar {
+            width: 5px;
         }
 
-        .w3eden .modal-body::-webkit-scrollbar-track {
+        .wpdm-lp__body::-webkit-scrollbar-track {
             background: transparent;
         }
 
-        .w3eden .modal-body::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 3px;
+        .wpdm-lp__body::-webkit-scrollbar-thumb {
+            background: rgba(var(--lp-accent-rgb), 0.15);
+            border-radius: 10px;
         }
 
-        .w3eden .modal-body::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.2);
+        .wpdm-lp__body::-webkit-scrollbar-thumb:hover {
+            background: rgba(var(--lp-accent-rgb), 0.3);
         }
 
-        /* Cards inside modal */
+        /* ---- Inner Content Styling ---- */
+
+        /* Cards */
         .w3eden .card {
             margin-bottom: 0;
-            border-radius: 12px;
+            border-radius: 14px;
             border: 1px solid rgba(0, 0, 0, 0.06);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            transition: all 0.25s var(--transition-smooth);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s var(--lp-smooth);
+            overflow: hidden;
         }
 
         .w3eden .card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            border-color: rgba(0, 0, 0, 0.08);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.06),
+                0 1px 3px rgba(0, 0, 0, 0.04);
+            border-color: rgba(var(--lp-accent-rgb), 0.12);
         }
 
         .w3eden .card:last-child {
@@ -428,55 +536,20 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
             margin-top: 10px !important;
         }
 
+        .w3eden .card-header {
+            background: linear-gradient(135deg, rgba(var(--lp-accent-rgb), 0.04) 0%, rgba(var(--lp-accent-rgb), 0.01) 100%);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+
         .card-body {
-            line-height: 1.6;
-            letter-spacing: 0.3px;
-            font-size: 11pt;
+            line-height: 1.7;
+            letter-spacing: 0.2px;
+            font-size: 10.5pt;
             color: #334155;
         }
 
-        /* Form Elements */
-        .w3eden label {
-            font-weight: 500;
-            color: #475569;
-            margin-bottom: 6px;
-        }
-
-        .w3eden .form-control {
-            border-radius: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            padding: 10px 14px;
-            transition: all 0.25s var(--transition-smooth);
-        }
-
-        .w3eden .form-control:focus {
-            border-color: var(--color-primary, #6366f1);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-        }
-
-        .w3eden .input-group-lg .form-control {
-            font-size: 14pt !important;
-        }
-
-        .w3eden .input-group-lg .input-group-btn .btn {
-            border-top-right-radius: 10px !important;
-            border-bottom-right-radius: 10px !important;
-        }
-
-        .w3eden .input-group.input-group-lg .input-group-btn .btn {
-            font-size: 11pt !important;
-        }
-
-        .w3eden .wpforms-field-medium {
-            max-width: 100% !important;
-            width: 100% !important;
-        }
-
-        /* Buttons */
-        .btn {
-            outline: none !important;
-            text-decoration: none !important;
-        }
+         
 
         .btn-viewcart,
         #cart_submit {
@@ -486,19 +559,42 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
 
         /* Social Lock Buttons */
         .wpdm-social-lock.btn {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             width: 100%;
-            border-radius: 10px;
-            padding: 12px 16px;
+            border-radius: 12px !important;
+            padding: 13px 16px;
             margin-bottom: 8px;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px;
+            border: none !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wpdm-social-lock.btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .wpdm-social-lock.btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
         }
 
         /* Price Display */
         .w3eden h3.wpdmpp-product-price {
             text-align: center;
             margin-bottom: 24px !important;
-            font-size: 24pt;
+            font-size: 28pt;
+            font-weight: 800;
             color: #1e293b;
+            letter-spacing: -0.5px;
         }
 
         /* Spin Animation */
@@ -527,67 +623,180 @@ $color_scheme = get_option('__wpdm_color_scheme', 'light');
             max-width: 100% !important;
         }
 
+        /* Terms checkbox area */
+        .w3eden .wpdm-checkbox,
+        .w3eden .custom-control {
+            padding: 12px 14px;
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
         /* Reduced Motion Support */
         @media (prefers-reduced-motion: reduce) {
-            .modal.fade .modal-dialog,
-            .modal-backdrop,
-            .modal-icon,
-            h4.modal-title,
-            .modal-content .color-purple,
-            .w3eden .modal-body {
+            .wpdm-lp__dialog,
+            .wpdm-lp__backdrop,
+            .wpdm-lp__avatar,
+            .wpdm-lp__avatar::before,
+            .wpdm-lp__avatar::after,
+            .wpdm-lp__panel::after,
+            .wpdm-lp__header h4,
+            .wpdm-lp__header .wpdm-lp__title,
+            .wpdm-lp__sep,
+            .wpdm-lp__body {
                 animation: none !important;
                 transition-duration: 0.01ms !important;
                 opacity: 1 !important;
                 transform: none !important;
             }
-            .close {
-                opacity: 0.4 !important;
-            }
         }
 
-        /* Manual dark mode - always apply when .dark-mode class is present */
-        .w3eden.dark-mode .modal-content::before {
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%);
+        /* ---- Dark Mode ---- */
+
+        /* Manual dark mode */
+        .w3eden.dark-mode .wpdm-lp__panel {
+            background: var(--dm-bg-secondary, #1e293b);
+            border-color: rgba(255, 255, 255, 0.06);
         }
-        .w3eden.dark-mode h4.modal-title,
-        .w3eden.dark-mode .modal-content h4 {
-            color: var(--dm-text);
+        .w3eden.dark-mode .wpdm-lp__panel::before {
+            background: linear-gradient(175deg, rgba(var(--lp-accent-rgb), 0.1) 0%, transparent 100%);
         }
-        .w3eden.dark-mode .modal-content .color-purple {
-            color: #c4b5fd !important;
+        .w3eden.dark-mode .wpdm-lp__panel::after {
+            opacity: 0.5;
         }
-        .w3eden.dark-mode .modal-icon {
-            background: linear-gradient(145deg, var(--dm-bg-tertiary) 0%, var(--dm-bg-secondary) 100%);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        .w3eden.dark-mode .wpdm-lp__header h4 {
+            color: var(--dm-text, #f1f5f9);
+            background: rgba(var(--lp-accent-rgb), 0.15);
+            border-color: rgba(var(--lp-accent-rgb), 0.2);
         }
-        .w3eden.dark-mode .close svg {
-            color: var(--dm-text-muted);
+        .w3eden.dark-mode .wpdm-lp__header .wpdm-lp__title {
+            color: var(--dm-text-secondary, #cbd5e1);
         }
-        .w3eden.dark-mode .close:hover svg {
+        .w3eden.dark-mode .wpdm-lp__sep {
+            background: linear-gradient(90deg, transparent, rgba(var(--lp-accent-rgb), 0.4), transparent);
+        }
+        .w3eden.dark-mode .wpdm-lp__avatar {
+            background: linear-gradient(145deg, var(--dm-bg-tertiary, #334155) 0%, var(--dm-bg-secondary, #1e293b) 100%);
+            box-shadow:
+                0 4px 12px rgba(var(--lp-accent-rgb), 0.2),
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        .w3eden.dark-mode .wpdm-lp__close {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .w3eden.dark-mode .wpdm-lp__close svg {
+            color: var(--dm-text-muted, #94a3b8);
+        }
+        .w3eden.dark-mode .wpdm-lp__close:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .w3eden.dark-mode .wpdm-lp__close:hover svg {
             color: #f87171;
         }
+        .w3eden.dark-mode .form-control {
+            background: var(--dm-bg-tertiary, #334155);
+            border-color: rgba(255, 255, 255, 0.08);
+            color: var(--dm-text, #f1f5f9);
+        }
+        .w3eden.dark-mode .form-control:focus {
+            background: rgba(var(--lp-accent-rgb), 0.08);
+            border-color: var(--lp-accent);
+        }
+        .w3eden.dark-mode .card {
+            border-color: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .w3eden.dark-mode .card:hover {
+            border-color: rgba(var(--lp-accent-rgb), 0.15);
+        }
+        .w3eden.dark-mode .card-header {
+            background: rgba(var(--lp-accent-rgb), 0.08);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+        .w3eden.dark-mode h3.wpdmpp-product-price {
+            color: var(--dm-text, #f1f5f9);
+        }
+        .w3eden.dark-mode .wpdm-checkbox,
+        .w3eden.dark-mode .custom-control {
+            background: var(--dm-bg-tertiary, #334155);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
 
-        /* System preference dark mode - only when OS prefers dark AND no light-mode class */
+        /* System preference dark mode */
         @media (prefers-color-scheme: dark) {
-            .w3eden:not(.light-mode) .modal-content::before {
-                background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%);
+            .w3eden:not(.light-mode) .wpdm-lp__panel {
+                background: var(--dm-bg-secondary, #1e293b);
+                border-color: rgba(255, 255, 255, 0.06);
             }
-            .w3eden:not(.light-mode) h4.modal-title,
-            .w3eden:not(.light-mode) .modal-content h4 {
-                color: var(--dm-text);
+            .w3eden:not(.light-mode) .wpdm-lp__panel::before {
+                background: linear-gradient(175deg, rgba(var(--lp-accent-rgb), 0.1) 0%, transparent 100%);
             }
-            .w3eden:not(.light-mode) .modal-content .color-purple {
-                color: #c4b5fd !important;
+            .w3eden:not(.light-mode) .wpdm-lp__panel::after {
+                opacity: 0.5;
             }
-            .w3eden:not(.light-mode) .modal-icon {
-                background: linear-gradient(145deg, var(--dm-bg-tertiary) 0%, var(--dm-bg-secondary) 100%);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            .w3eden:not(.light-mode) .wpdm-lp__header h4 {
+                color: var(--dm-text, #f1f5f9);
+                background: rgba(var(--lp-accent-rgb), 0.15);
+                border-color: rgba(var(--lp-accent-rgb), 0.2);
             }
-            .w3eden:not(.light-mode) .close svg {
-                color: var(--dm-text-muted);
+            .w3eden:not(.light-mode) .wpdm-lp__header .wpdm-lp__title {
+                color: var(--dm-text-secondary, #cbd5e1);
             }
-            .w3eden:not(.light-mode) .close:hover svg {
+            .w3eden:not(.light-mode) .wpdm-lp__sep {
+                background: linear-gradient(90deg, transparent, rgba(var(--lp-accent-rgb), 0.4), transparent);
+            }
+            .w3eden:not(.light-mode) .wpdm-lp__avatar {
+                background: linear-gradient(145deg, var(--dm-bg-tertiary, #334155) 0%, var(--dm-bg-secondary, #1e293b) 100%);
+                box-shadow:
+                    0 4px 12px rgba(var(--lp-accent-rgb), 0.2),
+                    0 8px 32px rgba(0, 0, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            }
+            .w3eden:not(.light-mode) .wpdm-lp__close {
+                background: rgba(255, 255, 255, 0.06);
+                border-color: rgba(255, 255, 255, 0.08);
+            }
+            .w3eden:not(.light-mode) .wpdm-lp__close svg {
+                color: var(--dm-text-muted, #94a3b8);
+            }
+            .w3eden:not(.light-mode) .wpdm-lp__close:hover {
+                background: rgba(239, 68, 68, 0.15);
+                border-color: rgba(239, 68, 68, 0.2);
+            }
+            .w3eden:not(.light-mode) .wpdm-lp__close:hover svg {
                 color: #f87171;
+            }
+            .w3eden:not(.light-mode) .form-control {
+                background: var(--dm-bg-tertiary, #334155);
+                border-color: rgba(255, 255, 255, 0.08);
+                color: var(--dm-text, #f1f5f9);
+            }
+            .w3eden:not(.light-mode) .form-control:focus {
+                background: rgba(var(--lp-accent-rgb), 0.08);
+                border-color: var(--lp-accent);
+            }
+            .w3eden:not(.light-mode) .card {
+                border-color: rgba(255, 255, 255, 0.06);
+                background: rgba(255, 255, 255, 0.03);
+            }
+            .w3eden:not(.light-mode) .card:hover {
+                border-color: rgba(var(--lp-accent-rgb), 0.15);
+            }
+            .w3eden:not(.light-mode) .card-header {
+                background: rgba(var(--lp-accent-rgb), 0.08);
+                border-bottom-color: rgba(255, 255, 255, 0.05);
+            }
+            .w3eden:not(.light-mode) h3.wpdmpp-product-price {
+                color: var(--dm-text, #f1f5f9);
+            }
+            .w3eden:not(.light-mode) .wpdm-checkbox,
+            .w3eden:not(.light-mode) .custom-control {
+                background: var(--dm-bg-tertiary, #334155);
+                border-color: rgba(255, 255, 255, 0.06);
             }
         }
 
@@ -610,32 +819,29 @@ if ($color_scheme === 'light') {
 ?>
 <body class="<?php echo esc_attr($body_classes); ?>" style="background: transparent">
 
-<div class="modal fade" id="wpdm-locks" tabindex="-1" role="dialog" aria-labelledby="wpdm-optinmagicLabel">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="width: <?php echo $terms_lock === 1?395:365; ?>px;max-width: calc(100% - 20px);margin: 0 auto;">
-        <div class="modal-content">
-            <div class="modal-icon">
+<div class="wpdm-lp" id="wpdm-locks">
+    <div class="wpdm-lp__backdrop"></div>
+    <div class="wpdm-lp__dialog" style="width: <?php echo $terms_lock === 1?395:365; ?>px;max-width: calc(100% - 20px);">
+        <div class="wpdm-lp__panel">
+            <div class="wpdm-lp__avatar">
                 <?php if(has_post_thumbnail($ID)) echo get_the_post_thumbnail($ID, 'thumbnail'); else echo WPDM()->package::icon($ID, true, 'p-2'); ?>
             </div>
-            <div class="text-center mt-3 mb-3">
-                <button type="button" class="close btn btn-link p-0" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">
-                        <svg style="width: 24px" id="Outlined" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><title/><g id="Fill"><path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2Zm0,26A12,12,0,1,1,28,16,12,12,0,0,1,16,28Z"/><polygon points="19.54 11.05 16 14.59 12.46 11.05 11.05 12.46 14.59 16 11.05 19.54 12.46 20.95 16 17.41 19.54 20.95 20.95 19.54 17.41 16 20.95 12.46 19.54 11.05"/></g></svg>
-                    </span></button>
-                <h4 class="d-block"><?php echo ($base_price > 0)? __('Buy','download-manager'): __('Download','download-manager'); ?></h4>
-                <div style="letter-spacing: 1px;font-weight: 400;margin-top: 5px" class="color-purple d-block"><?php echo get_the_title($ID); ?></div>
+            <button type="button" class="wpdm-lp__close" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="wpdm-lp__header text-center" style="margin-top: 16px">
+                <h4><?php echo ($base_price > 0)? __('Buy','download-manager'): __('Download','download-manager'); ?></h4>
+                <span class="wpdm-lp__title"><?php echo get_the_title($ID); ?></span>
+                <span class="wpdm-lp__sep"></span>
             </div>
-            <div class="modal-body" id="wpdm-lock-options">
+            <div class="wpdm-lp__body" id="wpdm-lock-options">
                 <?php
                 $extras = isset($_REQUEST['__wpdmfl']) ? ['ind' => wpdm_query_var('__wpdmfl', 'txt')] : [];
                 echo WPDM()->package->downloadLink(wpdm_query_var('__wpdmlo', 'int'), 1, $extras);
                 ?>
             </div>
-
         </div>
-
     </div>
-    <?php
-
-    ?>
 </div>
 
 <script>
@@ -646,29 +852,29 @@ if ($color_scheme === 'light') {
                 $(this).attr('target', '_blank');
         });
 
-        /*$('body').on('click','a', function () {
-            if($(this).attr('href') !== '#')
-                $(this).attr('target', '_parent');
-        });*/
+        var $locks = $('#wpdm-locks');
 
-        /*$('body').on('click','a[data-downloadurl]', function () {
-            window.parent.location.href = $(this).data('downloadurl');
-        });*/
+        function closeLockPanel() {
+            $locks.addClass('wpdm-lp--closing');
+            $locks.removeClass('wpdm-lp--visible');
+            setTimeout(function () {
+                var parentWindow = document.createElement("a");
+                parentWindow.href = document.referrer.toString();
+                if(parentWindow.hostname === window.location.hostname)
+                    window.parent.hideLockFrame();
+                else
+                    window.parent.postMessage({'task': 'hideiframe'}, "*");
+            }, 300);
+        }
 
-        $('#wpdm-locks').on('hidden.bs.modal', function (e) {
-            var parentWindow = document.createElement("a");
-            parentWindow.href = document.referrer.toString();
-            if(parentWindow.hostname === window.location.hostname)
-                window.parent.hideLockFrame();
-            else
-                window.parent.postMessage({'task': 'hideiframe'}, "*");
-        });
+        $locks.on('click', '.wpdm-lp__close', closeLockPanel);
+        $locks.on('click', '.wpdm-lp__backdrop', closeLockPanel);
 
         showModal();
     });
 
     function showModal() {
-        jQuery('#wpdm-locks').modal('show');
+        jQuery('#wpdm-locks').addClass('wpdm-lp--visible');
     }
 
 </script>

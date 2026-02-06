@@ -5,7 +5,7 @@ Plugin URI: https://www.wpdownloadmanager.com/purchases/
 Description: Manage, Protect and Track file downloads, and sell digital products from your WordPress site. A complete digital asset management solution.
 Author: W3 Eden, Inc.
 Author URI: https://www.wpdownloadmanager.com/
-Version: 3.3.47
+Version: 3.3.48
 Text Domain: download-manager
 Domain Path: /languages
 */
@@ -40,7 +40,7 @@ use WPDM\Widgets\WidgetController;
 
 global $WPDM;
 
-define('WPDM_VERSION','3.3.47');
+define('WPDM_VERSION','3.3.48');
 
 define('WPDM_TEXT_DOMAIN','download-manager');
 
@@ -99,14 +99,19 @@ if(!defined('WPDM_TAG'))
 if(!defined('WPDM_FONTAWESOME_URL'))
     define('WPDM_FONTAWESOME_URL', WPDM_BASE_URL.'assets/fontawesome/css/all.min.css');
 
-if(!defined('NONCE_KEY') || !defined('NONCE_SALT')){
+if(!defined('NONCE_KEY')){
     //To avoid warning when not defined
     define('NONCE_KEY',       'Bm|_Ek@F|HdkA7)=alSJg5_<z-j-JmhK<l&*.d<J+/71?&7pL~XBXnF4jKz>{Apx');
-    define('NONCE_SALT',       'XffybIqfklKjegGdRp7EU4kprZX00NESOE8olZ2BZ8+BQTw3bXXSbzeGssgZ');
     /**
      * Generate WordPress Security Keys and Salts from https://api.wordpress.org/secret-key/1.1/salt/ and place them in your wp-config.php
      */
 }
+
+if(!defined('NONCE_SALT')){
+    //To avoid warning when not defined
+    define('NONCE_SALT',       'XffybIqfklKjegGdRp7EU4kprZX00NESOE8olZ2BZ8+BQTw3bXXSbzeGssgZ');
+}
+
 
 if(!defined('WPDM_PUB_NONCE'))
     define('WPDM_PUB_NONCE',        'o($Vb ^[@EH83o2gb=,lt1JtBY]%i91|xu+]jnW9{*nMK@_z-AWwsyKEVx)/|p,P');
