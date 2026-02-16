@@ -2,6 +2,8 @@
  * Version: 2.3.0
  */
 var allps, pss;
+let count = 0;
+let colors = [];
 var wpdm_pass_target = '#pps_z';
 String.prototype.wpdm_shuffle = function () {
     var a = this.split(""),
@@ -32,7 +34,7 @@ String.prototype.wpdm_hash = function () {
     return hash;
 }
 
-var WPDM = {
+const WPDM = {
 
     actions: {},
 
@@ -105,17 +107,22 @@ var WPDM = {
 
     fileTypeIcon: function (ext) {
         //let colors = color.split('|');
-
+        if(!colors[ext]) {
+            let color1 = "58"+ ("95BB".wpdm_shuffle());
+            let color2 = "56789A".wpdm_shuffle();
+            colors[ext] = [color1, color2];
+        }
+        count++;
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" style="margin: 4px">
                 <defs>
-                    <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop stop-color="#269def" offset="0"/>
-                        <stop stop-color="#26bdef" offset="1"/>
+                    <linearGradient id="gradient${count}" x1="0" y1="0" x2="0" y2="1">
+                        <stop stop-color="#${colors[ext][0]}" offset="0"/>
+                        <stop stop-color="var(--color-primary)" stop-opacity="0.7" offset="1"/>
                     </linearGradient>
                 </defs>
                 <g>
-                    <rect fill="url(#gradient)" x="0" y="0" width="40" height="40" rx="3" ry="3"/>
-                    <text x="5" y="19" font-family="Arial, Helvetica, sans-serif" font-size="10px" letter-spacing="1" fill="#FFFFFF">
+                    <rect fill="url(#gradient${count})" x="0" y="0" width="40" height="40" rx="3" ry="3"/>
+                    <text x="5" y="19" font-family="Arial, Helvetica, sans-serif" font-size="11px" letter-spacing="1" font-weight="600" text-rendering="geometricPrecision" fill="#FFFFFF">
                         <tspan>${ext}</tspan>
                         <tspan x="6" y="28">_</tspan>
                     </text>
@@ -162,47 +169,17 @@ var WPDM = {
             el.html(innerHTML);
         return el[0].outerHTML;
     },
-    card: function (header, body, footer, id, style) {
-        if (typeof id === 'undefined') id = 'card_' + WPDM.uniqueID();
-        if (typeof style === 'undefined') style = '';
-        header = header !== '' ? WPDM.el("div", {'class': 'card-header'}, header) : '';
-        body = WPDM.el("div", {'class': 'card-body'}, body);
-        footer = footer !== '' ? WPDM.el("div", {'class': 'card-footer'}, footer) : '';
-        return WPDM.el("div", {'class': 'card', id: id, style: style}, header + body + footer);
-    },
-    fa: function (icon) {
-        return WPDM.el("i", {'class': icon});
-    },
-    bootAlert: function (heading, content, width, backdrop) {
+
+    bootAlert: function (heading, content, width, backdrop, options) {
         let html, url = '';
-        let modal_id = '__bootModal_' + WPDM.uniqueID();
+        let modal_id = '__bootModal_' + this.uniqueID();
+        options = options || {};
+
+        // Handle URL-based content loading
         if (typeof content === 'object') {
-            url = content.url;
-            content = `<div id='${modal_id}_cont'><i class='fa fa-sun fa-spin'></i> Loading...</div>`;
+            return WPDM.dialog.ajax(heading, content.url, options);
         }
-        let hasBackdrop = typeof backdrop === 'undefined' ? 'static' : backdrop;
-        if (!width) width = 400;
-        html = `<div class="w3eden" id="w3eden${modal_id}"><div id="${modal_id}" class="modal fade" tabindex="-1" role="dialog">
-              <div class="modal-dialog" style="width: ${width}px;max-width: 96%;" role="document">
-                <div class="modal-content" style="border-radius: 4px;overflow: hidden">
-                  <div class="modal-header" style="padding: 12px 15px;background: rgba(0,0,0,0.02);line-height: 18px">
-                    <div style="display: flex;align-content: last;width:100%"><h4 class="modal-title" style="font-size: 10pt;font-weight: 600;padding: 0;margin: 0;letter-spacing: 0.5px;line-height: 18px">${heading}</h4><button style="line-height: 18px;font-size: 10pt;background: transparent;outline: none" type="button" class="close" data-target="#${modal_id}" data-dismiss="modal"><i class="fa fa-times-circle"></i></button></div>
-                  </div>
-                  <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">
-            ${content}
-                  </div>
-                </div>
-              </div>
-            </div></div>`;
-        jQuery('body').append(html);
-        jQuery("#" + modal_id).modal({show: true, backdrop: hasBackdrop});
-
-        if (url !== '') {
-            url = url.indexOf('?') > 0 ? url + '&__mdid=' + modal_id : url + '?__mdid=' + modal_id;
-            jQuery("#" + modal_id + "_cont").load(url);
-        }
-
-        return jQuery("#" + modal_id);
+        return WPDM.dialog.alert(heading, content, options);
     },
 
     /**
@@ -257,28 +234,7 @@ var WPDM = {
      * @param position
      */
     notify: function (message, type, position, autoclose) {
-        var $ = jQuery;
-        if (type === undefined || !type) type = 'info';
-        if (position === undefined || !position) position = 'top-right';
-        if (type === 'danger') type = 'error';
-        let notifycont = position.indexOf('#') >= 0 ? position : '#wpdm-notify-' + position;
-        if ($(notifycont).length == 0)
-            $('body').prepend("<div id='wpdm-notify-" + position + "'></div>");
-        var notif = $("<div class='wpdm-notify fetfont wpdm-notify-" + type + "' style='display: none'>" + message + "</div><div class='wpdm-clear'></div>");
-        $(notifycont).append(notif);
-        $(notif).fadeIn();
-        if (autoclose !== undefined) {
-            setTimeout(function () {
-
-                $(notif).animate({
-                    opacity: 0
-                }, 1000, function () {
-                    $(this).slideUp();
-                });
-
-            }, autoclose);
-        }
-        return $(notif);
+        WPDM.toast(message, type, position, autoclose);
     },
 
     /**
@@ -288,15 +244,53 @@ var WPDM = {
      * @param position
      */
     floatify: function (html, position) {
+        WPDM.toast(html, "info", position);
+    },
+
+    toast: function (message, type, position, autoclose) {
         var $ = jQuery;
-        if (position === undefined || !position) position = 'top-right';
-        var floatifycont = '#wpdm-floatify-' + position;
-        if ($(floatifycont).length == 0)
-            $('body').prepend("<div class='w3eden' id='wpdm-floatify-" + position + "'></div>");
-        var floatify = $("<div class='wpdm-floatify fetfont' style='margin-right: -500px'>" + html + "</div>");
-        $(floatifycont).append(floatify);
-        $(floatify).animate({marginRight: '0px'});
-        return $(floatify);
+        if (!type) type = 'info';
+        if (!position) position = 'bottom-right';
+        if (autoclose === undefined) autoclose = 4000;
+        if (type === 'danger') type = 'error';
+
+        var containerId = 'wpdm-toast-' + position;
+        if ($('#' + containerId).length === 0)
+            $('body').append("<div class='w3eden' id='" + containerId + "' class='wpdm-toast-container'></div>");
+
+        var icons = {
+            success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+            error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+            warning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+            info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+        };
+
+        var icon = icons[type] || icons.info;
+        var toast = $("<div class='wpdm-toast wpdm-toast-" + type + "'>" +
+            "<span class='wpdm-toast-icon'>" + icon + "</span>" +
+            "<span class='wpdm-toast-msg'>" + message + "</span>" +
+            "<button class='wpdm-toast-close'>&times;</button>" +
+            "</div>");
+
+        $('#' + containerId).append(toast);
+        setTimeout(function () { toast.addClass('wpdm-toast-show'); }, 10);
+
+        toast.find('.wpdm-toast-close').on('click', function () { dismiss(); });
+
+        var timer;
+        if (autoclose > 0) {
+            timer = setTimeout(dismiss, autoclose);
+            toast.on('mouseenter', function () { clearTimeout(timer); });
+            toast.on('mouseleave', function () { timer = setTimeout(dismiss, 1500); });
+        }
+
+        function dismiss() {
+            clearTimeout(timer);
+            toast.removeClass('wpdm-toast-show');
+            setTimeout(function () { toast.remove(); }, 300);
+        }
+
+        return toast;
     },
 
     blockUI: function (element, xhr) {
@@ -310,19 +304,6 @@ var WPDM = {
     unblockUI: function (element) {
         if (typeof element === 'undefined') element = '.blockui';
         jQuery(element).removeClass("blockui");
-    },
-
-    overlay: function (element, html) {
-        var $ = jQuery;
-        var overlaycontent = $("<div class='wpdm-overlay-content' style='display: none'>" + html + "<div class='wpdm-overlay-close' style='cursor: pointer'><i class='far fa-times-circle'></i> close</div></div>");
-        $(element).addClass('wpdm-overlay').append(overlaycontent);
-        $(overlaycontent).fadeIn();
-        $('body').on('click', '.wpdm-overlay-close', function () {
-            $(overlaycontent).fadeOut(function () {
-                $(this).remove();
-            });
-        });
-        return $(overlaycontent);
     },
 
 
@@ -720,8 +701,7 @@ jQuery(function ($) {
         file_frame.on('select', function () {
             /* We set multiple to false so only get one image from the uploader */
             attachment = file_frame.state().get('selection').first().toJSON();
-            dfield.val(attachment.url);
-
+            dfield.val(attachment.url).trigger('change');
         });
 
         /* Finally, open the modal */
@@ -778,6 +758,88 @@ jQuery(function ($) {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
         });
     });
+
+    /* ========================================
+       FILE LIST GRID - Layout Toggle & Search
+       ======================================== */
+
+    // Layout toggle (Grid/List view)
+    $(document).on('click', '.wpdm-filelist-toggle__btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var $toggle = $btn.closest('.wpdm-filelist-toggle');
+        var targetSelector = $toggle.data('target');
+        var $grid = $(targetSelector);
+        var layout = $btn.data('layout');
+
+        // Update active button
+        $toggle.find('.wpdm-filelist-toggle__btn').removeClass('active');
+        $btn.addClass('active');
+
+        // Toggle layout class
+        if (layout === 'list') {
+            $grid.addClass('wpdm-filelist-grid--list');
+        } else {
+            $grid.removeClass('wpdm-filelist-grid--list');
+        }
+
+        // Remember preference in localStorage
+        try {
+            localStorage.setItem('wpdm_filelist_layout', layout);
+        } catch (e) {}
+    });
+
+    // Restore layout preference on page load
+    $(function() {
+        try {
+            var savedLayout = localStorage.getItem('wpdm_filelist_layout');
+            if (savedLayout === 'list') {
+                $('.wpdm-filelist-toggle').each(function() {
+                    var $toggle = $(this);
+                    var targetSelector = $toggle.data('target');
+                    var $grid = $(targetSelector);
+
+                    $toggle.find('.wpdm-filelist-toggle__btn').removeClass('active');
+                    $toggle.find('[data-layout="list"]').addClass('active');
+                    $grid.addClass('wpdm-filelist-grid--list');
+                });
+            }
+        } catch (e) {}
+    });
+
+    // Search for new grid-based file list and gallery
+    $(document).on('input', '.wpdm-filelist-search__input', function() {
+        var value = $(this).val().toLowerCase().trim();
+        var targetSelector = $(this).data('filelist');
+        var $items = $(targetSelector).find('.wpdm-filelist-item, .wpdm-gallery__item');
+
+        if (value === '') {
+            $items.removeClass('wpdm-filelist-hidden');
+            return;
+        }
+
+        $items.each(function() {
+            var $item = $(this);
+            var filename = $item.data('filename') || '';
+            var titleText = $item.find('.wpdm-filelist-item__title, .wpdm-gallery__title').text().toLowerCase();
+            var matches = filename.indexOf(value) > -1 || titleText.indexOf(value) > -1;
+
+            if (matches) {
+                $item.removeClass('wpdm-filelist-hidden');
+            } else {
+                $item.addClass('wpdm-filelist-hidden');
+            }
+        });
+    });
+
+    // Clear search on Escape key
+    $body.on('keydown', '.wpdm-filelist-search__input', function(e) {
+        if (e.key === 'Escape') {
+            $(this).val('').trigger('input');
+        }
+    });
+
+    /* FILE LIST GRID ENDS */
 
     $('.__wpdm_submit_async').on('submit', function (e) {
         e.preventDefault();
@@ -862,26 +924,7 @@ function hideLockFrame() {
 }
 
 function wpdm_bootModal(heading, content, width) {
-    var html;
-    if (!width) width = 400;
-    jQuery("#w3eden__bootModal").remove();
-    html = `<div class="w3eden" id="w3eden__bootModal"><div id="__bootModal" class="modal fade" tabindex="-1" role="dialog">
-      <div class="modal-dialog" style="width: ${width}px;max-width: 96%;" role="document">
-        <div class="modal-content" style="border-radius: 3px;overflow: hidden">
-          <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">
-            <h4 class="modal-title" style="font-size: 9pt;font-weight: 500;padding: 0;margin: 0;letter-spacing: 0.5px">${heading} </h4>
-          </div>
-          <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">
-             ${content}
-          </div>
-          <div class="modal-footer" style="padding: 10px 15px">
-            <button type="button" class="btn btn-secondary btn-xs" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div></div>`;
-    jQuery('body').append(html);
-    jQuery("#__bootModal").modal('show');
+    return WPDM.bootAlert(heading, content, width);
 }
 
 function wpdm_boot_popup(heading, content, buttons) {

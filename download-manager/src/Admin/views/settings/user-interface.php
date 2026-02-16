@@ -58,10 +58,10 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
                 </div>
             </div>
             <?php
-            $saved_font = get_option('__wpdm_google_font', 'Sen');
-            $font_family = preg_replace('/:.*$/', '', $saved_font);
-            $font_family = str_replace('+', ' ', $font_family);
-            ?>
+$saved_font = get_option('__wpdm_google_font', 'Sen');
+$font_family = preg_replace('/:.*$/', '', $saved_font); // Remove :wght@... part
+$font_family = str_replace('+', ' ', $font_family); // Replace + with space
+?>
             <div class="wpdm-font-preview" id="fontpreview" style="font-family: '<?php echo esc_attr($font_family); ?>'">
                 <div class="wpdm-font-preview-main" contenteditable="true" data-placeholder="<?= esc_attr__('Type to preview...', WPDM_TEXT_DOMAIN); ?>">The quick brown fox jumps over the lazy dog</div>
                 <div class="wpdm-font-preview-samples">
@@ -97,13 +97,13 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
                 <td><?php echo __("Primary:", "download-manager") ?></td>
                 <td><input type="text" data-css-var="--color-primary" class="color-control" name="__wpdm_ui_colors[primary]" value="<?php echo isset($uicolors['primary'])?$uicolors['primary']:'#4a8eff'; ?>" /></td>
                 <td><input type="text" data-css-var="--color-primary-hover" class="color-control" name="__wpdm_ui_colors[primary_hover]" value="<?php echo isset($uicolors['primary_hover'])?$uicolors['primary_hover']:'#4a8eff'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-primary-acitve" class="color-control" name="__wpdm_ui_colors[primary_active]" value="<?php echo isset($uicolors['primary_active'])?$uicolors['primary_active']:'#4a8eff'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-primary-active" class="color-control" name="__wpdm_ui_colors[primary_active]" value="<?php echo isset($uicolors['primary_active'])?$uicolors['primary_active']:'#4a8eff'; ?>" /></td>
             </tr>
             <tr>
                 <td><?php echo __("Secondary:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-secondary" class="color-control" name="__wpdm_ui_colors[secondary]" value="<?php echo isset($uicolors['secondary'])?$uicolors['secondary']:'#6c757d'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-secondary-hover" class="color-control" name="__wpdm_ui_colors[secondary_hover]" value="<?php echo isset($uicolors['secondary_hover'])?$uicolors['secondary_hover']:'#6c757d'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-secondary-active" class="color-control" name="__wpdm_ui_colors[secondary_active]" value="<?php echo isset($uicolors['secondary_active'])?$uicolors['secondary_active']:'#6c757d'; ?>" /></td>
+                <td><input type="text" data-css-var="--clr-sec" class="color-control" name="__wpdm_ui_colors[secondary]" value="<?php echo isset($uicolors['secondary'])?$uicolors['secondary']:'#6c757d'; ?>" /></td>
+                <td><input type="text" data-css-var="--clr-sec-hover" class="color-control" name="__wpdm_ui_colors[secondary_hover]" value="<?php echo isset($uicolors['secondary_hover'])?$uicolors['secondary_hover']:'#6c757d'; ?>" /></td>
+                <td><input type="text" data-css-var="--clr-sec-active" class="color-control" name="__wpdm_ui_colors[secondary_active]" value="<?php echo isset($uicolors['secondary_active'])?$uicolors['secondary_active']:'#6c757d'; ?>" /></td>
             </tr>
             <tr>
                 <td><?php echo __("Info:", "download-manager") ?></td>
@@ -113,21 +113,21 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
             </tr>
             <tr>
                 <td><?php echo __("Success:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-success" class="color-control" name="__wpdm_ui_colors[success]" value="<?php echo isset($uicolors['success'])?esc_attr($uicolors['success']):'#18ce0f'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-success-hover" class="color-control" name="__wpdm_ui_colors[success_hover]" value="<?php echo isset($uicolors['success_hover'])?esc_attr($uicolors['success_hover']):'#18ce0f'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-success-acitve" class="color-control" name="__wpdm_ui_colors[success_active]" value="<?php echo isset($uicolors['success_active'])?esc_attr($uicolors['success_active']):'#18ce0f'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-success" class="color-control" name="__wpdm_ui_colors[success]" value="<?php echo isset($uicolors['success'])?$uicolors['success']:'#18ce0f'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-success-hover" class="color-control" name="__wpdm_ui_colors[success_hover]" value="<?php echo isset($uicolors['success_hover'])?$uicolors['success_hover']:'#18ce0f'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-success-active" class="color-control" name="__wpdm_ui_colors[success_active]" value="<?php echo isset($uicolors['success_active'])?$uicolors['success_active']:'#18ce0f'; ?>" /></td>
             </tr>
             <tr>
                 <td><?php echo __("Warning:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-warning" class="color-control" name="__wpdm_ui_colors[warning]" value="<?php echo isset($uicolors['warning'])?esc_attr($uicolors['warning']):'#FFB236'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-warning-hover" class="color-control" name="__wpdm_ui_colors[warning_hover]" value="<?php echo isset($uicolors['warning_hover'])?esc_attr($uicolors['warning_hover']):'#FFB236'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-warning-acitve" class="color-control" name="__wpdm_ui_colors[warning_active]" value="<?php echo isset($uicolors['warning_active'])?esc_attr($uicolors['warning_active']):'#FFB236'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-warning" class="color-control" name="__wpdm_ui_colors[warning]" value="<?php echo isset($uicolors['warning'])?$uicolors['warning']:'#FFB236'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-warning-hover" class="color-control" name="__wpdm_ui_colors[warning_hover]" value="<?php echo isset($uicolors['warning_hover'])?$uicolors['warning_hover']:'#FFB236'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-warning-active" class="color-control" name="__wpdm_ui_colors[warning_active]" value="<?php echo isset($uicolors['warning_active'])?$uicolors['warning_active']:'#FFB236'; ?>" /></td>
             </tr>
             <tr>
                 <td><?php echo __("Danger:", "download-manager") ?></td>
-                <td><input type="text" data-css-var="--color-danger" class="color-control" name="__wpdm_ui_colors[danger]" value="<?php echo isset($uicolors['danger'])?esc_attr($uicolors['danger']):'#ff5062'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-danger-hover" class="color-control" name="__wpdm_ui_colors[danger_hover]" value="<?php echo isset($uicolors['danger_hover'])?esc_attr($uicolors['danger_hover']):'#ff5062'; ?>" /></td>
-                <td><input type="text" data-css-var="--color-danger-active" class="color-control" name="__wpdm_ui_colors[danger_active]" value="<?php echo isset($uicolors['danger_active'])?esc_attr($uicolors['danger_active']):'#ff5062'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-danger" class="color-control" name="__wpdm_ui_colors[danger]" value="<?php echo isset($uicolors['danger'])?$uicolors['danger']:'#ff5062'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-danger-hover" class="color-control" name="__wpdm_ui_colors[danger_hover]" value="<?php echo isset($uicolors['danger_hover'])?$uicolors['danger_hover']:'#ff5062'; ?>" /></td>
+                <td><input type="text" data-css-var="--color-danger-active" class="color-control" name="__wpdm_ui_colors[danger_active]" value="<?php echo isset($uicolors['danger_active'])?$uicolors['danger_active']:'#ff5062'; ?>" /></td>
             </tr>
             </tbody>
         </table>
@@ -240,7 +240,15 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         </table>
 
 </div>
+<div class="panel panel-default">
+    <div class="panel-heading"><?php _e("Front-end UI",'download-manager'); ?></div>
+    <div class="panel-body">
 
+        <input type="hidden" name="__wpdm_disable_frontend_css" value="0">
+        <label><input type="checkbox" name="__wpdm_disable_frontend_css" value="1" <?php checked(1, get_option('__wpdm_disable_frontend_css', 0)); ?> /> <?php echo __( "Disable front-end stylesheet", "download-manager" ) ?></label>
+        <p class="text-muted" style="margin: 5px 0 0 24px; font-size: 12px;"><?php _e("For advanced users who want to use custom CSS. This will disable all WPDM front-end styles.", "download-manager"); ?></p>
+    </div>
+</div>
 <div class="panel panel-default">
     <div class="panel-heading"><?php _e("Image and Previews",'download-manager'); ?></div>
     <div class="panel-body"><input type="hidden" name="__wpdm_crop_thumbs" value="0">
@@ -271,6 +279,9 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         align-items: center;
         gap: 10px;
         font-weight: 600;
+    }
+    .wpdm-font-icon {
+        color: var(--admin-color, #4a8eff);
     }
 
     /* Toggle Switch */
@@ -307,7 +318,7 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     .wpdm-font-toggle input:checked + .wpdm-font-toggle-slider {
-        background: var(--color-primary, #4a8eff);
+        background: var(--admin-color, #4a8eff);
     }
     .wpdm-font-toggle input:checked + .wpdm-font-toggle-slider::before {
         transform: translateX(20px);
@@ -365,7 +376,7 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         width: 16px;
         height: 16px;
         border: 2px solid #e2e8f0;
-        border-top-color: var(--color-primary, #4a8eff);
+        border-top-color: var(--admin-color, #4a8eff);
         border-radius: 50%;
         animation: wpdm-font-spin 0.8s linear infinite;
     }
@@ -453,8 +464,8 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         color: #1e293b;
     }
     .wpdm-font-size-btn.active {
-        background: var(--color-primary, #4a8eff);
-        border-color: var(--color-primary, #4a8eff);
+        background: var(--admin-color, #4a8eff);
+        border-color: var(--admin-color, #4a8eff);
         color: #fff;
     }
 
@@ -476,7 +487,7 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         transition: border-color 150ms ease, box-shadow 150ms ease;
     }
     .wpdm-font-preview-main:focus {
-        border-color: var(--color-primary, #4a8eff);
+        border-color: var(--admin-color, #4a8eff);
         box-shadow: 0 0 0 3px rgba(74, 142, 255, 0.1);
     }
     .wpdm-font-preview-main:empty::before {
@@ -547,7 +558,7 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         background: #f1f5f9;
     }
     .wpdm-scheme-option.active {
-        border-color: var(--color-primary, #4a8eff);
+        border-color: var(--admin-color, #4a8eff);
         background: rgba(74, 142, 255, 0.05);
     }
     .wpdm-scheme-option input[type="radio"] {
@@ -567,7 +578,7 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         flex-shrink: 0;
     }
     .wpdm-scheme-option.active .wpdm-scheme-icon {
-        background: var(--color-primary, #4a8eff);
+        background: var(--admin-color, #4a8eff);
         color: #fff;
         box-shadow: 0 4px 12px rgba(74, 142, 255, 0.3);
     }
@@ -589,7 +600,7 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         line-height: 1.3;
     }
     .wpdm-scheme-option.active .wpdm-scheme-label {
-        color: var(--color-primary, #4a8eff);
+        color: var(--admin-color, #4a8eff);
     }
 
     .color-control{
@@ -598,10 +609,10 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
         text-align: center;
     }
     .wp-picker-container .wp-color-result.button{
-        width: 28px;
+        width: 30px;
         float: right;
         padding: 2px !important;
-        height: 28px;
+        height: 30px;
         margin: 0 !important;
         border: 0 !important;
         border-radius: 500px;
@@ -645,6 +656,14 @@ $gappsk = $gappsk ?: 'AIzaSyCgvNB-55xoUiz1zKIJgFPQbqyn4lCCB_E';
     }
     #__wpdm_google_font{
         width: 400px !important;
+    }
+    #__wpdm_ui_download_button_sc.btn-primary,
+    #__wpdm_ui_download_button.btn-primary{
+        background: var(--color-primary) !important;
+    }
+    #__wpdm_ui_download_button_sc.btn-link,
+    #__wpdm_ui_download_button.btn-link {
+        color: var(--color-primary) !important;
     }
 </style>
 <link rel="stylesheet" id="gfont" href="https://fonts.googleapis.com/css2?family=<?php echo get_option('__wpdm_google_font', 'Sen'); ?>" />

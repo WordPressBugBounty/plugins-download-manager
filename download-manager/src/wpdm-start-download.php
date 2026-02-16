@@ -9,6 +9,7 @@ if(!defined("ABSPATH")) die('!');
 
 
 global $current_user, $dfiles;
+$current_user = wp_get_current_user();
 
 //Check for blocked IPs
 if(wpdm_ip_blocked()) {
@@ -19,7 +20,7 @@ if(wpdm_ip_blocked()) {
 }
 
 //Check for blocked users by email
-if(is_user_logged_in() && !wpdm_verify_email($current_user->user_email)) {
+if(is_user_logged_in() && $current_user->user_email && !wpdm_verify_email($current_user->user_email)) {
     $emsg =  get_option('__wpdm_blocked_domain_msg');
     if(trim($emsg) === '') $emsg = __('Your email address is blocked!', 'download-manager');
     Messages::fullPage('Error!', $emsg, 'error');
