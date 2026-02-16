@@ -79,7 +79,7 @@ class UserController
 					$status = '<i class="fa-solid fa-times-circle"></i> '.__('Declined', WPDM_TEXT_DOMAIN);
 				else
 					$status = '<i class="fa-solid fa-ban"></i> Suspended';
-				$url = admin_url('admin-ajax.php?action=wpdmdz_user_status&user='.$user_id);
+				$url = admin_url('admin-ajax.php?action=wpdmdz_user_status&user='.$user_id."&wpdmusnonce=".wp_create_nonce(WPDM_PRI_NONCE));
 				return "<div class='w3eden' id='usts-{$user_id}'><span onclick='WPDM.bootAlert(\"Review User Status\", {url: \"$url\"}, 500);' class='c-pointer text-{$colors[$_status]}'>".$status."</span></div>";
 			default:
 		}
@@ -107,6 +107,7 @@ class UserController
 
 	function reviewUserStatus()
 	{
+        __::isAuthentic('wpdmusnonce',  WPDM_PRI_NONCE, 'manage_options', true);
 		$id = __::query_var('user', 'int');
 		$user = get_user_by('id', $id);
 		$status = get_user_meta($id, '__wpdm_user_status', true);
@@ -126,7 +127,7 @@ class UserController
 			$status = '<i class="fa-solid fa-times-circle"></i> '.__('Declined', WPDM_TEXT_DOMAIN);
 		else
 			$status = '<i class="fa-solid fa-ban"></i> Suspended';
-		$url = admin_url('admin-ajax.php?action=wpdmdz_user_status&user='.$user->ID);
+		$url = admin_url('admin-ajax.php?action=wpdmdz_user_status&user='.$user->ID."&wpdmusnonce=".wp_create_nonce(WPDM_PRI_NONCE));
 
 		?>
 		<div class="w3eden">
@@ -144,7 +145,7 @@ class UserController
 
 	function updateUserStatus()
 	{
-		__::isAuthentic('__uscnonce', WPDM_PRI_NONCE, WPDM_ADMIN_CAP);
+		__::isAuthentic('__uscnonce', WPDM_PRI_NONCE, 'manage_options');
 		$id = __::query_var('user', 'int');
 		$user = get_user_by('id', $id);
 		$params = [ 'to_email' => $user->user_email, 'name' => $user->display_name, 'username' => $user->user_login, 'display_name' => $user->display_name, 'first_name' => $user->first_name, 'last_name' => $user->last_name, 'email' => $user->user_email ];

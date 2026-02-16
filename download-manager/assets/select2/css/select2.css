@@ -435,11 +435,11 @@
 }
 
 .select2-results__option--selected {
-    background-color: var(--s2-bg-selected);
-    font-weight: 500;
+    background-color: var(--s2-bg-selected) !important;
+    font-weight: 700 !important;
 }
 
-.select2-results__option--highlighted.select2-results__option--selectable {
+.select2-results__option--highlighted {
     background-color: var(--s2-primary);
     color: white;
 }

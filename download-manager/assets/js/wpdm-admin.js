@@ -128,20 +128,24 @@ var WPDM = {
             content = `<div id='${modal_id}_cont'><div  style="padding: 40px;text-align: center"><i class='fa fa-sun fa-spin'></i> Loading...</div></div>`;
         }
         if (!width) width = 400;
-        html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" class="modal fade" tabindex="-1" role="dialog">\n' +
+        html = `<div class="w3eden" id="w3eden__${modal_id}"><div id="${modal_id}" class="modal fade" tabindex="-1" role="dialog">\n` +
             '  <div class="modal-dialog" style="width: ' + width + 'px" role="document">\n' +
-            '    <div class="modal-content" style="border-radius: 4px;overflow: hidden">\n' +
-            '      <div class="modal-header" style="padding: 12px 15px;background: rgba(0,0,0,0.02);line-height: 18px">\n' +
-            '        <h4 class="modal-title" style="font-size: 10pt;font-weight: 600;padding: 0;margin: 0;letter-spacing: 0.5px;line-height: 18px">' + heading + '</h4><button style="line-height: 18px;font-size: 10pt;background: transparent;outline: none;position: absolute;right: 14px;top: 14px;" type="button" class="close" data-target="#' + modal_id + '" data-dismiss="modal"><i class="fa fa-times-circle"></i></button>\n' +
+            '    <div class="modal-content">\n' +
+            '      <div class="modal-header">\n' +
+            '        <h4 class="modal-title">' + heading + '</h4>\n' +
+            '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
             '      </div>\n' +
-            '      <div class="modal-body fetfont" style="line-height: 1.5;text-transform: unset;font-weight:400;letter-spacing:0.5px;font-size: 12px">\n' +
+            '      <div class="modal-body">\n' +
             '        ' + content + '\n' +
+            '      </div>\n' +
+            '      <div class="modal-footer">\n' +
+            '        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>\n' +
             '      </div>\n' +
             '    </div>\n' +
             '  </div>\n' +
             '</div></div>';
         jQuery('body').append(html);
-        jQuery("#" + modal_id).modal({show: true, backdrop: 'static'});
+        jQuery("#" + modal_id).modal('show');
         jQuery("#" + modal_id).on('hidden.bs.modal', function (event) {
             jQuery("#" + modal_id).remove()
         })
@@ -285,14 +289,29 @@ var WPDM = {
         var _buttons = '';
         var id =  WPDM.uniqueID('btx_');
         if (buttons) {
-            _buttons = '<div class="modal-footer" style="padding: 8px 15px;">\n';
+            _buttons = '<div class="modal-footer text-center">\n';
             $.each(buttons, function (i, button) {
-                _buttons += "<button id='" + id + '_' + i + "' class='" + button.class + " btn-xs' style='font-size: 10px;padding: 3px 20px;'>" + button.label + "</button> ";
+                _buttons += "<button id='" + id + '_' + i + "' class='" + button.class + " btn-sm'>" + button.label + "</button> ";
             });
             _buttons += '</div>\n';
         }
 
-        html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog">\n' +
+        html = `<div class="w3eden" id="w3eden__${modal_id}"><div id="${modal_id}" class="modal fade" tabindex="-1" role="dialog">\n` +
+            '  <div class="modal-dialog" style="width: 350px" role="document">\n' +
+            '    <div class="modal-content">\n' +
+            '      <div class="modal-header">\n' +
+            '        <h4 class="modal-title">' + heading + '</h4>\n' +
+            '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
+            '      </div>\n' +
+            '      <div class="modal-body">\n' +
+            '        ' + content + '\n' +
+            '      </div>\n' +
+                    _buttons +
+            '    </div>\n' +
+            '  </div>\n' +
+            '</div></div>';
+
+        /*html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog">\n' +
             '  <div class="modal-dialog" role="document" style="max-width: 100%;width: 350px">\n' +
             '    <div class="modal-content" style="border-radius: 3px;overflow: hidden">\n' +
             '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
@@ -303,7 +322,7 @@ var WPDM = {
             '      </div>\n' + _buttons +
             '    </div>\n' +
             '  </div>\n' +
-            '</div></div>';
+            '</div></div>';*/
         $('body').append(html);
         $("#" + modal_id).modal('show');
         $.each(buttons, function (i, button) {
@@ -724,8 +743,8 @@ function __bootModal(heading, content, width) {
         '  <div class="modal-dialog" style="width: ' + width + 'px" role="document">\n' +
         '    <div class="modal-content">\n' +
         '      <div class="modal-header">\n' +
-        '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
         '        <h4 class="modal-title">' + heading + '</h4>\n' +
+        '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
         '      </div>\n' +
         '      <div class="modal-body">\n' +
         '        <p>' + content + '</p>\n' +

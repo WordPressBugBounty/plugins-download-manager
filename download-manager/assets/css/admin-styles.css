@@ -2637,6 +2637,10 @@ body.rtl .w3eden .chosen-container.chosen-with-drop .chosen-drop {
     display: block;
 }
 
+.block-editor-page.post-type-wpdmpro .postbox:not(.closed) .postbox-header{
+    border-bottom: 1px solid #dddddd !important;
+}
+
 /* Custom scrollbar for template variables */
 .w3eden div {
     scrollbar-width: thin;
