@@ -39,8 +39,7 @@
     <div class="col-md-7">
         <h1 class="mt-0">[title]</h1>
         [description]
-        <h3>Attached Files</h3>
-        [file_list]
+
         <div class="wel">
             [tags]
         </div>

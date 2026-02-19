@@ -289,12 +289,6 @@
             <div class="wpdm-folio__description">[description]</div>
         </div>
 
-        <!-- Attached Files -->
-        <div class="wpdm-folio__section [hide_empty:file_list]">
-            <h3 class="wpdm-folio__heading">[txt=Attached Files]</h3>
-            [file_list]
-        </div>
-
         <!-- Changelog -->
         <div class="wpdm-folio__section [hide_empty:changelog]">
             [changelog]

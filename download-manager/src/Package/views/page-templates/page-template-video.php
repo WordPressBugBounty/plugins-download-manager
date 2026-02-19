@@ -291,12 +291,6 @@
         <div class="wpdm-screen__description">[description]</div>
     </div>
 
-    <!-- ── Attached Files ── -->
-    <div class="wpdm-screen__section [hide_empty:file_list]">
-        <h3 class="wpdm-screen__heading">[txt=Attached Files]</h3>
-        [file_list]
-    </div>
-
     <!-- ── Changelog ── -->
     <div class="wpdm-screen__section [hide_empty:changelog]">
         [changelog]

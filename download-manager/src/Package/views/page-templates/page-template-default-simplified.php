@@ -53,9 +53,9 @@
     .w3eden .wpdm-compact__card form .btn,
     .w3eden .wpdm-compact__card .wpdm-download-link .btn {
         width: 100%;
-        font-size: 14px;
-        padding: 10px 20px;
-        border-radius: var(--cp-radius);
+        font-size: 16px !important;
+        padding: 14px 20px !important;
+
     }
     .w3eden .wpdm-compact__free {
         margin-top: 8px;
@@ -109,7 +109,10 @@
     }
     .w3eden .wpdm-compact__row-value {
         font-weight: 600;
-        color: var(--cp-text);
+        color: #ffffff;
+        background-color: var(--color-primary);
+        padding: 0 6px;
+        border-radius: 3px;
     }
 
     /* ── Main content ── */

@@ -228,12 +228,6 @@
         <div class="wpdm-slate__description">[description]</div>
     </div>
 
-    <!-- ── Attached Files ── -->
-    <div class="wpdm-slate__section [hide_empty:file_list]">
-        <h3 class="wpdm-slate__heading">[txt=Attached Files]</h3>
-        [file_list]
-    </div>
-
     <!-- ── Changelog ── -->
     <div class="wpdm-slate__section [hide_empty:changelog]">
         [changelog]

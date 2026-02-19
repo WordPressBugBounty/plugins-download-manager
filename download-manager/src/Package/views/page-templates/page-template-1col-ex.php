@@ -219,11 +219,6 @@
     <!-- ── Description ── -->
     <div class="wpdm-exhibit__description">[description]</div>
 
-    <!-- ── Extended file list ── -->
-    <div class="wpdm-exhibit__files">
-        [file_list_extended_256x256x4]
-    </div>
-
     <!-- ── CTA ── -->
     <div class="wpdm-exhibit__cta">
         [download_link_extended]
