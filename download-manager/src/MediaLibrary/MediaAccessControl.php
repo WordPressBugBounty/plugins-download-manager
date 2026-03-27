@@ -239,6 +239,13 @@ class MediaAccessControl {
 
 		__::isAuthentic( "mmpnonce", WPDM_PRI_NONCE, 'edit_posts' );
 		$id = wpdm_query_var( 'mediaid' );
+        // Verify user can edit this media
+        if (!current_user_can('edit_post', $id)) {
+            wp_send_json([
+                    'success' => false,
+                    'message' => __('You are not allowed to edit this media.', 'download-manager')
+            ]);
+        }
 		//$meta = wp_get_attachment_metadata($id);
 		//wpdmdd($meta);
 		update_post_meta( $id, '__wpdm_media_access', wpdm_query_var( 'media_access' ) );
@@ -258,7 +265,17 @@ class MediaAccessControl {
 	function makeMediaPublic() {
 
 		__::isAuthentic( "mmpnonce", WPDM_PRI_NONCE, 'edit_posts' );
+
 		$id = wpdm_query_var( 'mediaid' );
+
+        // Verify user can edit this media
+        if (!current_user_can('edit_post', $id)) {
+            wp_send_json([
+                    'success' => false,
+                    'message' => __('You are not allowed to edit this media.', 'download-manager')
+            ]);
+        }
+
 		delete_post_meta( $id, '__wpdm_media_access' );
 		delete_post_meta( $id, '__wpdm_media_pass' );
 		delete_post_meta( $id, '__wpdm_private' );

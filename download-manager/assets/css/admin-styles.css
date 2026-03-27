@@ -1243,14 +1243,23 @@ body[class*=" wpdmpro_page_"] #wpcontent {
 .w3eden .btn.btn-xs {
     padding: 7px 10px;
     font-size: 10px;
-    border-radius: 2px;
+    border-radius: 4px;
 }
 
 .w3eden .btn.btn-xs {
-    border-radius: 1.5px;
+    border-radius: 3px;
     padding: 5px 8px;
     font-size: 9px;
 }
+
+/* Icon + text alignment inside buttons */
+.w3eden .btn svg {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+}
+
 
 .w3eden .btn-lg {
     font-size: 1em;

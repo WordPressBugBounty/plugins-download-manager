@@ -37,6 +37,9 @@ var WPDMDialog = (function($) {
      * @returns {string} 'light-mode', 'dark-mode', or '' (system preference)
      */
     function detectDarkMode() {
+
+        if($('body').hasClass('wp-admin')) return 'light-mode';
+
         // Check WPDM color scheme setting first (from wpdm_js localized script)
         if (typeof wpdm_js !== 'undefined' && wpdm_js.color_scheme) {
             if (wpdm_js.color_scheme === 'light') return 'light-mode';
@@ -86,6 +89,7 @@ var WPDMDialog = (function($) {
      * @returns {string} HTML string
      */
     function createDialogHtml(options) {
+
         var id = options.id || uniqueId();
         var darkModeClass = detectDarkMode();
         var sizeClass = options.size ? 'wpdm-dialog--' + options.size : '';
@@ -237,10 +241,13 @@ var WPDMDialog = (function($) {
          * @param {string} title Dialog title
          * @param {string} message Dialog message
          * @param {Object} options Additional options
-         * @returns {Promise<boolean>}
+         * @returns {Promise<string>}
          */
         alert: function(title, message, options) {
             options = options || {};
+            options.buttons = options.buttons || [
+                { text: options.buttonText || 'OK', type: 'primary', action: 'ok' }
+            ];
             return show({
                 title: title,
                 message: message,
@@ -249,13 +256,11 @@ var WPDMDialog = (function($) {
                 size: options.size || 'sm',
                 html: options.html,
                 compactFooter: true,
-                buttons: [
-                    { text: options.buttonText || 'OK', type: 'primary', action: 'ok' }
-                ],
+                buttons: options.buttons,
                 backdrop: 'static',
                 keyboard: true
             }).then(function(result) {
-                return result.action === 'ok';
+                return result.action;
             });
         },
 
@@ -264,7 +269,7 @@ var WPDMDialog = (function($) {
          * @param {string} title Dialog title
          * @param {string} message Dialog message
          * @param {Object} options Additional options
-         * @returns {Promise<boolean>}
+         * @returns {Promise<string>}
          */
         success: function(title, message, options) {
             options = options || {};
@@ -307,6 +312,10 @@ var WPDMDialog = (function($) {
          */
         confirm: function(title, message, options) {
             options = options || {};
+            options.buttons = options.buttons || [
+                { text: options.cancelText || 'Cancel', type: 'secondary', action: 'cancel' },
+                { text: options.confirmText || 'Confirm', type: options.confirmType || 'primary', action: 'confirm' }
+            ];
             return show({
                 title: title,
                 message: message,
@@ -314,10 +323,7 @@ var WPDMDialog = (function($) {
                 icon: options.icon,
                 size: options.size || 'sm',
                 html: options.html,
-                buttons: [
-                    { text: options.cancelText || 'Cancel', type: 'secondary', action: 'cancel' },
-                    { text: options.confirmText || 'Confirm', type: options.confirmType || 'primary', action: 'confirm' }
-                ],
+                buttons: options.buttons,
                 backdrop: options.backdrop || 'static',
                 keyboard: options.keyboard !== false
             }).then(function(result) {

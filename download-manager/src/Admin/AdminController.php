@@ -110,6 +110,9 @@ class AdminController {
             wp_enqueue_style( 'wp-color-picker' );
             wp_enqueue_script( 'wp-color-picker' );
 
+	        wp_enqueue_script('wpdm-modal');
+	        wp_enqueue_style('wpdm-modal');
+
 
         }
 
