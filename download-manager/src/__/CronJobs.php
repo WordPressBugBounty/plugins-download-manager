@@ -37,6 +37,7 @@ class CronJobs
 
 	function cronCheck() {
 		if(wpdm_query_var('wpdm_cron', 'int')) {
+			if(!isset($_REQUEST['cronkey']) || $_REQUEST['cronkey'] !== WPDM()->cronJob->cronKey()) return;
 			$cronJob = new CronJob();
 			$cronJob->executeAll();
 			do_action('wpdm_cron_job');
