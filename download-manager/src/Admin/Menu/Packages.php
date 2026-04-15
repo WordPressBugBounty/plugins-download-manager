@@ -269,7 +269,7 @@ class Packages {
 			} else {
 				$icon = get_post_meta( $post_ID, '__wpdm_icon', true );
 				if ( $icon != '' ) {
-					$icon = $icon;
+					$icon = esc_url($icon);
 					echo "<img src='$icon' class='img60px' alt='Icon' />";
 				}
 			}

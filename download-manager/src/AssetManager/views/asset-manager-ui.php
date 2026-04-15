@@ -663,8 +663,8 @@ if(is_admin()){
                                     <div class="modal-dialog modal-sm" role="document">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i class="fa fa-times-circle"></i></span></button>
                                                 <strong class="modal-title" id="myModalLabel"><?php echo  esc_attr__( 'Rename', "download-manager" ); ?></strong>
+                                                <button type="button" class="close pull-right p-0" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i class="fa fa-times-circle"></i></span></button>
                                             </div>
                                             <div id="upload" class="modal-body">
                                                 <input type="text" v-bind:value="asset.name" placeholder="<?php echo  esc_attr__( 'New Name', "download-manager" ); ?>" id="newname" class="form-control form-control-lg" style="margin: 0px;border: 1px dashed #d4d4d4;">
