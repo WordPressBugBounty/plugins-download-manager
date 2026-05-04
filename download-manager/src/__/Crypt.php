@@ -72,7 +72,7 @@ class Crypt
      */
     public static function encrypt($text)
     {
-        if ($text === '') return '';
+	    if ($text === '' || $text === null) return '';
 
         $text = is_array($text) || is_object($text) ? json_encode($text) : $text;
         $encKey = self::getKey();
@@ -101,7 +101,7 @@ class Crypt
      */
     public static function decrypt($ciphertext, $ARRAY = false)
     {
-        if ($ciphertext === '') return $ciphertext;
+	    if ($ciphertext === '' || $ciphertext === null) return $ciphertext;
 
         $encKey = self::getKey();
         if (!$encKey) return '';

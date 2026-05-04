@@ -282,7 +282,7 @@ class __ {
 
 				case 'double':
 				case 'float':
-					return (double) ( $value );
+					return (float) ( $value );
 
 				case 'esc_html':
 					$value = esc_sql( esc_html( $value ) );
@@ -347,8 +347,11 @@ class __ {
 
 				default:
 					$value = esc_sql( esc_attr( $value ) );
-					if($sanitize !== '' && @preg_match($sanitize, '') !== false) {
-						$value = preg_replace($sanitize, '', $value);
+					if ( $sanitize !== '' && self::isRegexPattern( $sanitize ) ) {
+						$result = @preg_replace( $sanitize, '', $value );
+						if ( $result !== null ) {
+							$value = $result;
+						}
 					}
 					break;
 			}
@@ -356,6 +359,29 @@ class __ {
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Check whether a string looks like a valid PCRE pattern.
+	 *
+	 * A PCRE pattern must start with a delimiter that is not alphanumeric
+	 * or backslash, and the same delimiter (or its bracket pair) must close
+	 * the pattern. Without this guard, calling preg_match() on bare strings
+	 * like "array" emits a PHP warning that monitoring tools still capture
+	 * even when prefixed with @.
+	 */
+	static function isRegexPattern( $pattern ) {
+		if ( ! is_string( $pattern ) || strlen( $pattern ) < 2 ) {
+			return false;
+		}
+		$delim = $pattern[0];
+		if ( ctype_alnum( $delim ) || $delim === '\\' ) {
+			return false;
+		}
+		$pairs   = [ '(' => ')', '[' => ']', '{' => '}', '<' => '>' ];
+		$closing = $pairs[ $delim ] ?? $delim;
+		$end     = strrpos( $pattern, $closing );
+		return $end !== false && $end > 0;
 	}
 
 	/**
@@ -414,6 +440,15 @@ class __ {
 
 		return $url;
 	}
+
+    /**
+     * @param $file
+     *
+     * @return bool
+     */
+    static function isMediaLibFile($file) {
+        return substr_count($file, 'wp-content/uploads/') > 0;
+    }
 
 	static function is_url( $url ) {
 		$isValid = false;
