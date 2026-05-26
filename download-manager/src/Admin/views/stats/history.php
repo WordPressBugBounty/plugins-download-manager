@@ -225,7 +225,7 @@ $pagination           = array(
                             unset($get_params_xu['user_ids']);
                             $reset_url = add_query_arg($get_params_xu, 'edit.php');
                             ?>
-                            <a href="<?php echo $reset_url; ?>" class="clear-btn" title="<?php _e('Clear user filter', 'download-manager'); ?>">
+                            <a href="<?php echo esc_url($reset_url); ?>" class="clear-btn" title="<?php _e('Clear user filter', 'download-manager'); ?>">
                                 <i class="fas fa-times"></i>
                             </a>
                         </div>
@@ -268,7 +268,7 @@ $pagination           = array(
                             unset($get_params_xc['cats']);
                             $reset_url = add_query_arg($get_params_xc, 'edit.php');
                             ?>
-                            <a href="<?php echo $reset_url; ?>" class="clear-btn" title="<?php _e('Clear category filter', 'download-manager'); ?>">
+                            <a href="<?php echo esc_url($reset_url); ?>" class="clear-btn" title="<?php _e('Clear category filter', 'download-manager'); ?>">
                                 <i class="fas fa-times"></i>
                             </a>
                         </div>
@@ -296,7 +296,7 @@ $pagination           = array(
                             unset($get_params_xp['package_ids']);
                             $reset_url = add_query_arg($get_params_xp, 'edit.php');
                             ?>
-                            <a href="<?php echo $reset_url; ?>" class="clear-btn" title="<?php _e('Clear package filter', 'download-manager'); ?>">
+                            <a href="<?php echo esc_url($reset_url); ?>" class="clear-btn" title="<?php _e('Clear package filter', 'download-manager'); ?>">
                                 <i class="fas fa-times"></i>
                             </a>
                         </div>
