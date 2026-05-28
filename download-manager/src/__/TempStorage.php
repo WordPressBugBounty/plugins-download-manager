@@ -49,7 +49,7 @@ class TempStorage
         return $value;*/
         global $wpdb;
         $now = time();
-        $value = $wpdb->get_var("select `value` from {$wpdb->prefix}ahm_sessions where `expire` > $now and `name` = '{$name}'");
+        $value = $wpdb->get_var($wpdb->prepare("select `value` from {$wpdb->prefix}ahm_sessions where `expire` > %d and `name` = %s", $now, $name));
         return maybe_unserialize($value);
     }
 
