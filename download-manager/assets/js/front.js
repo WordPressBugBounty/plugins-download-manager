@@ -491,7 +491,10 @@ jQuery(function ($) {
         if (wpdm_url.home.indexOf('?') > 0) __sep = '&';
         let extras = '';
         if ($(this).data('file') !== undefined) extras += '__wpdmfl=' + $(this).data('file');
-        extras += '&REFERRER=' + encodeURI(location.href);
+        // Encode for a query value AND escape the single quote (which
+        // encodeURIComponent leaves intact) so it can't break out of the
+        // single-quoted iframe src attribute below. Prevents reflected XSS.
+        extras += '&REFERRER=' + encodeURIComponent(location.href).replace(/'/g, '%27');
         if (parentWindow.hostname === window.location.hostname || 1)
             $(window.parent.document.body).append("<iframe id='wpdm-lock-frame' style='left:0;top:0;width: 100%;height: 100%;z-index: 999999999;position: fixed;background: rgba(255,255,255,0.4) url(" + wpdm_url.home + "wp-content/plugins/download-manager/assets/images/loader.svg) center center no-repeat;background-size: 80px 80px;border: 0;' src='" + wpdm_url.home + __sep + "__wpdmlo=" + $(this).data('package') + "&" + extras + "'></iframe>");
         else

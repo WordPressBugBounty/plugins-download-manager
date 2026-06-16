@@ -34,6 +34,15 @@ class Packages {
 		add_filter( 'request', array( $this, 'orderbyDownloads' ) );
 		add_filter( 'manage_edit-wpdmpro_sortable_columns', array( $this, 'sortableDownloads' ) );
 
+		add_action( 'restrict_manage_posts', array( $this, 'categoryFilter' ) );
+		add_filter( 'parse_query', array( $this, 'filterByCategory' ) );
+
+		add_filter( 'display_post_states', array( $this, 'postStates' ), 10, 2 );
+
+		add_filter( 'bulk_actions-edit-wpdmpro', array( $this, 'bulkActions' ) );
+		add_filter( 'handle_bulk_actions-edit-wpdmpro', array( $this, 'handleBulkActions' ), 10, 3 );
+		add_action( 'admin_notices', array( $this, 'bulkActionNotices' ) );
+
 		add_filter( 'post_row_actions', array( $this, 'rowActions' ), 10, 2 );
 
 		add_action( 'admin_footer', array( $this, 'footerScripts' ) );
@@ -240,7 +249,8 @@ class Packages {
 		}
 		$img['image'] = "<span class='wpdm-th-icon ttip' style='font-size: 0.8em'><i  style='font-size: 80%' class='far fa-image'></i></span>";
 		__::array_splice_assoc( $defaults, 1, 0, $img );
-		$otf['download_count'] = "<span class='wpdm-th-icon ttip' style='font-size: 0.8em'><i  style='font-size: 80%' class='fas fa-arrow-down'></i></span>";
+		$otf['download_count'] = "<span class='wpdm-th-icon ttip' title='" . esc_attr__( 'Downloads', 'download-manager' ) . "' style='font-size: 0.8em'><i  style='font-size: 80%' class='fas fa-arrow-down'></i></span>";
+		$otf['view_count']     = "<span class='wpdm-th-icon ttip' title='" . esc_attr__( 'Views', 'download-manager' ) . "' style='font-size: 0.8em'><i  style='font-size: 80%' class='far fa-eye'></i></span>";
 		$otf['wpdmembed']      = esc_attr__( 'Shortcode', 'download-manager' );
 		__::array_splice_assoc( $defaults, 3, 0, $otf );
 
@@ -255,6 +265,11 @@ class Packages {
 		if ( $column_name == 'download_count' ) {
 
 			echo current_user_can( WPDM_ADMIN_CAP ) || get_the_author_meta( 'ID' ) === get_current_user_id() ? (int) get_post_meta( $post_ID, '__wpdm_download_count', true ) : '&mdash;';
+
+		}
+		if ( $column_name == 'view_count' ) {
+
+			echo current_user_can( WPDM_ADMIN_CAP ) || get_the_author_meta( 'ID' ) === get_current_user_id() ? (int) get_post_meta( $post_ID, '__wpdm_view_count', true ) : '&mdash;';
 
 		}
 		if ( $column_name == 'wpdmembed' ) {
@@ -286,6 +301,13 @@ class Packages {
 			) );
 		}
 
+		if ( isset( $vars['orderby'] ) && 'view_count' == $vars['orderby'] ) {
+			$vars = array_merge( $vars, array(
+				'meta_key' => '__wpdm_view_count',
+				'orderby'  => 'meta_value_num'
+			) );
+		}
+
 		return $vars;
 	}
 
@@ -296,8 +318,160 @@ class Packages {
 		}
 
 		$columns['download_count'] = 'download_count';
+		$columns['view_count']     = 'view_count';
 
 		return $columns;
+	}
+
+
+	/**
+	 * Render a category filter dropdown above the package list table.
+	 *
+	 * @return void
+	 */
+	function categoryFilter() {
+		global $typenow;
+		if ( $typenow !== 'wpdmpro' ) {
+			return;
+		}
+		$taxonomy = 'wpdmcategory';
+		wp_dropdown_categories( array(
+			'show_option_all' => esc_attr__( 'All Categories', 'download-manager' ),
+			'taxonomy'        => $taxonomy,
+			'name'            => $taxonomy,
+			'value_field'     => 'slug',
+			'selected'        => wpdm_query_var( $taxonomy, 'txt' ),
+			'hierarchical'    => true,
+			'depth'           => 5,
+			'orderby'         => 'name',
+			'show_count'      => false,
+			'hide_empty'      => false,
+			'class'           => 'postform',
+		) );
+	}
+
+	/**
+	 * Drop the "All Categories" placeholder (value 0) so it doesn't filter to an empty list.
+	 *
+	 * @param \WP_Query $query
+	 *
+	 * @return void
+	 */
+	function filterByCategory( $query ) {
+		global $pagenow;
+		if ( ! is_admin() || $pagenow !== 'edit.php' ) {
+			return;
+		}
+		$qv = &$query->query_vars;
+		if ( isset( $qv['post_type'] ) && $qv['post_type'] === 'wpdmpro'
+		     && isset( $qv['wpdmcategory'] ) && ( $qv['wpdmcategory'] === '0' || $qv['wpdmcategory'] === 0 ) ) {
+			unset( $qv['wpdmcategory'] );
+		}
+	}
+
+	/**
+	 * Inline "needs attention" / state badges next to a package title in the list.
+	 *
+	 * @param array    $states
+	 * @param \WP_Post $post
+	 *
+	 * @return array
+	 */
+	function postStates( $states, $post ) {
+		if ( ! is_object( $post ) || $post->post_type !== 'wpdmpro' || ! current_user_can( WPDM_ADMIN_CAP ) ) {
+			return $states;
+		}
+		if ( ! WPDM()->package->hasAttachment( $post->ID ) ) {
+			$states['wpdm_nofile'] = esc_html__( 'No file attached', 'download-manager' );
+		}
+		$password_protected = (bool) WPDM()->package->isPasswordProtected( $post->ID );
+		if ( $password_protected ) {
+			$states['wpdm_password'] = esc_html__( 'Password', 'download-manager' );
+		}
+		if ( ! $password_protected && WPDM()->package->isLocked( $post->ID ) ) {
+			$states['wpdm_locked'] = esc_html__( 'Locked', 'download-manager' );
+		}
+
+		return $states;
+	}
+
+	/**
+	 * Add bulk actions: Duplicate & Reset download count.
+	 *
+	 * @param array $actions
+	 *
+	 * @return array
+	 */
+	function bulkActions( $actions ) {
+		if ( current_user_can( WPDM_ADMIN_CAP ) ) {
+			$actions['wpdm_duplicate'] = esc_attr__( 'Duplicate', 'download-manager' );
+			$actions['wpdm_reset_dlc'] = esc_attr__( 'Reset Download Count', 'download-manager' );
+		}
+
+		return $actions;
+	}
+
+	/**
+	 * Process the custom bulk actions. Nonce is verified by WP core before this fires.
+	 *
+	 * @param string $redirect_url
+	 * @param string $action
+	 * @param int[]  $post_ids
+	 *
+	 * @return string
+	 */
+	function handleBulkActions( $redirect_url, $action, $post_ids ) {
+		if ( ! current_user_can( WPDM_ADMIN_CAP ) ) {
+			return $redirect_url;
+		}
+
+		if ( $action === 'wpdm_duplicate' ) {
+			$count = 0;
+			foreach ( (array) $post_ids as $id ) {
+				if ( get_post_type( $id ) === 'wpdmpro' ) {
+					Package::copy( (int) $id );
+					$count ++;
+				}
+			}
+			$redirect_url = add_query_arg( 'wpdm_bulk_duplicated', $count, $redirect_url );
+		} elseif ( $action === 'wpdm_reset_dlc' ) {
+			$count = 0;
+			foreach ( (array) $post_ids as $id ) {
+				if ( get_post_type( $id ) === 'wpdmpro' ) {
+					update_post_meta( (int) $id, '__wpdm_download_count', 0 );
+					$count ++;
+				}
+			}
+			$redirect_url = add_query_arg( 'wpdm_bulk_dlc_reset', $count, $redirect_url );
+		}
+
+		return $redirect_url;
+	}
+
+	/**
+	 * Confirmation notices after a custom bulk action runs.
+	 *
+	 * @return void
+	 */
+	function bulkActionNotices() {
+		global $pagenow, $typenow;
+		if ( $pagenow !== 'edit.php' || $typenow !== 'wpdmpro' ) {
+			return;
+		}
+		if ( isset( $_REQUEST['wpdm_bulk_duplicated'] ) ) {
+			$n = (int) $_REQUEST['wpdm_bulk_duplicated'];
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>' . esc_html( _n( '%d package duplicated.', '%d packages duplicated.', $n, 'download-manager' ) ) . '</p></div>',
+				$n
+			);
+		}
+		if ( isset( $_REQUEST['wpdm_bulk_dlc_reset'] ) ) {
+			$n = (int) $_REQUEST['wpdm_bulk_dlc_reset'];
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>' . esc_html( _n( 'Download count reset for %d package.', 'Download count reset for %d packages.', $n, 'download-manager' ) ) . '</p></div>',
+				$n
+			);
+		}
 	}
 
 
@@ -320,11 +494,6 @@ class Packages {
 			?>
 
             <style>
-                .w3eden #edlModal .modal-content,
-                .w3eden #gdluModal .modal-content {
-                    padding: 20px;
-                    border-radius: 15px;
-                }
 
                 .w3eden #edlModal .modal-content .modal-header i,
                 .w3eden #gdluModal .modal-content .modal-header i {
@@ -420,10 +589,10 @@ class Packages {
                         <div class="modal-content">
 
                             <div class="modal-header">
-                                <div class="pull-right"><a href="#" data-dismiss="modal" style="margin-top: 4px;margin-right: -6px"><i class="fa fa-times-circle text-danger" style="font-size: 20px;"></i></a></div>
                                 <h4 class="modal-title"><i
                                             class="far fa-arrow-alt-circle-down color-purple"></i> <?php _e( "Generate Download Link", "download-manager" ); ?>
                                 </h4>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times m-0"></i></button>
                             </div>
                             <div class="modal-body">
 
@@ -435,10 +604,17 @@ class Packages {
                                             </a></div>
 										<?php _e( "Master Download Link:", "download-manager" ); ?>
                                     </div>
-                                    <div class="panel-body"><input readonly="readonly" onclick="this.select()"
-                                                                   type="text" class="form-control color-purple"
-                                                                   style="background: #fdfdfd;font-size: 10px;text-align: center;font-family: monospace;font-weight: bold;"
-                                                                   id="mdl"/></div>
+                                    <div class="panel-body">
+                                        <div class="input-group">
+                                            <input readonly="readonly" onclick="this.select()"
+                                                   type="text" class="form-control color-purple"
+                                                   style="background: #fdfdfd;min-height: 34px;text-align: center;font-family: monospace;font-weight: bold;font-size: 10px;"
+                                                   id="mdl"/>
+                                            <div class="input-group-btn">
+                                                <button type="button" onclick="WPDM.copy('mdl')" class="btn btn-secondary"><i class="fa fa-copy"></i> <?php echo esc_attr__( 'Copy', 'download-manager' ); ?></button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="panel panel-default ttip" style="opacity: 0.3"
