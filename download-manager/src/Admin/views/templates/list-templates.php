@@ -81,7 +81,7 @@ if(!isset($_GET['_type']) || $_GET['_type'] !== 'email'){ ?>
                     </div>
                 </td>
                 <td style="text-align: right">
-                    <a data-toggle="modal" href="#" data-href="admin-ajax.php?action=template_preview&_type=<?php echo $ttype; ?>&template=<?php echo $ctpl; ?>&_tplnonce=<?php echo  wp_create_nonce(WPDM_PUB_NONCE) ?>" data-target="#preview-modal" rel="<?php echo $ctpl; ?>" class="template_preview btn btn-sm btn-success"><i class="fa fa-desktop"></i> Preview</a>
+                    <a href="#" data-href="admin-ajax.php?action=template_preview&_type=<?php echo $ttype; ?>&template=<?php echo $ctpl; ?>&_tplnonce=<?php echo  wp_create_nonce(WPDM_PUB_NONCE) ?>" rel="<?php echo $ctpl; ?>" class="template_preview btn btn-sm btn-success"><i class="fa fa-desktop"></i> Preview</a>
 
                 </td>
 
@@ -124,21 +124,4 @@ if(!isset($_GET['_type']) || $_GET['_type'] !== 'email'){ ?>
     ?>
     </tbody>
 </table>
-</div>
-
-<div class="modal fade" id="preview-modal" tabindex="-1" role="dialog" aria-labelledby="preview" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel"><?php _e( "Template Preview" , "download-manager" ); ?></h4>
-            </div>
-            <div class="modal-body" id="preview-area">
-
-            </div>
-            <div class="modal-footer text-left" style="text-align: left">
-                <div class='alert alert-info'><?php _e( "This is a preview, original template color scheme may look little different, but structure will be same" , "download-manager" ); ?></div>
-            </div>
-        </div>
-    </div>
 </div>

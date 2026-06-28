@@ -195,20 +195,14 @@ $pagination           = array(
                 </div>
                 <div class="date-inputs">
                     <div class="date-input-group">
-                        <label class="elegant-label">
-                            <i class="fas fa-calendar-plus"></i>
-                            <?php _e('From Date', 'download-manager'); ?>
-                        </label>
                         <input type="text" name="from_date" value="<?php echo $selected_from_date->format( 'Y-m-d' ) ?>"
-                               class="datepicker form-control" readonly="readonly"/>
+                               class="datepicker form-control" readonly="readonly"
+                               aria-label="<?php esc_attr_e('From date', 'download-manager'); ?>"/>
                     </div>
                     <div class="date-input-group">
-                        <label class="elegant-label">
-                            <i class="fas fa-calendar-minus"></i>
-                            <?php _e('To Date', 'download-manager'); ?>
-                        </label>
                         <input type="text" name="to_date" value="<?php echo $selected_to_date->format( 'Y-m-d' ) ?>"
-                               class="datepicker form-control" readonly="readonly"/>
+                               class="datepicker form-control" readonly="readonly"
+                               aria-label="<?php esc_attr_e('To date', 'download-manager'); ?>"/>
                     </div>
                 </div>
             </div>
@@ -321,7 +315,7 @@ $pagination           = array(
                 <?php _e('Apply Filters', 'download-manager'); ?>
             </button>
             <a href="edit.php?post_type=wpdmpro&page=wpdm-stats&task=export&__xnonce=<?php echo wp_create_nonce( NONCE_KEY ); ?>&hash=<?php echo $hash; ?>"
-               class="btn btn-success">
+               class="btn btn-secondary">
                 <i class="fas fa-file-export"></i>
                 <?php _e('Export Results', 'download-manager'); ?>
             </a>
@@ -333,11 +327,7 @@ $pagination           = array(
         </div>
     </form>
 </div>
-
-
-<br/>
-
-
+<hr/>
 <?php if ( $count_downloads_without_paging ) : ?>
 
     <!-- Results Header -->
@@ -476,6 +466,26 @@ $pagination           = array(
                     }
                 }
 
+                if (!function_exists('wpdm_stats_browser_icon')) {
+                    function wpdm_stats_browser_icon($name) {
+                        $name = strtolower($name);
+                        $map = [
+                            'edge'              => ['fab', 'fa-edge'],
+                            'chrome'            => ['fab', 'fa-chrome'],
+                            'firefox'           => ['fab', 'fa-firefox-browser'],
+                            'safari'            => ['fab', 'fa-safari'],
+                            'opera'             => ['fab', 'fa-opera'],
+                            'internet explorer' => ['fab', 'fa-internet-explorer'],
+                        ];
+                        foreach ($map as $needle => $icon) {
+                            if (strpos($name, $needle) !== false) {
+                                return $icon;
+                            }
+                        }
+                        return ['fas', 'fa-globe'];
+                    }
+                }
+
                 foreach ( $filtered_result_rows as $stat ) {
                     $agent = WPDM()->userAgent->set( $stat->agent )->parse();
                     $display_name = 'Guest';
@@ -541,17 +551,8 @@ $pagination           = array(
                         <!-- Date & Time -->
                         <td class="datetime-cell">
                             <div class="datetime-info">
-                                <div class="date-part">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    <?php echo wp_date( get_option( 'date_format' ), $stat->timestamp ); ?>
-                                </div>
-                                <div class="time-part">
-                                    <i class="fas fa-clock"></i>
-                                    <?php echo wp_date( get_option( 'time_format' ), $stat->timestamp ); ?>
-                                </div>
-                                <div class="relative-time">
-                                    <?php echo human_time_diff($stat->timestamp, current_time('timestamp')) . ' ' . __('ago', 'download-manager'); ?>
-                                </div>
+                                <span class="dt-date"><?php echo wp_date( get_option( 'date_format' ), $stat->timestamp ); ?></span>
+                                <span class="dt-meta"><?php echo wp_date( get_option( 'time_format' ), $stat->timestamp ); ?> &middot; <?php echo human_time_diff($stat->timestamp, current_time('timestamp')) . ' ' . __('ago', 'download-manager'); ?></span>
                             </div>
                         </td>
 
@@ -559,29 +560,27 @@ $pagination           = array(
                         <td class="user-cell">
                             <div class="user-info <?php echo $user_class; ?>">
                                 <?php if ( $stat->uid > 0 ): ?>
-                                    <div class="user-avatar">
-                                        <i class="fas fa-user-circle"></i>
-                                    </div>
-                                    <div class="user-details">
+                                    <span class="user-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <span class="user-main">
                                         <a title="<?php _e('Filter by this user', 'download-manager'); ?>"
                                            class="user-link"
                                            href="edit.php?post_type=wpdmpro&page=wpdm-stats&type=history&filter=1&user_ids[0]=<?php echo $stat->uid; ?>">
                                             <span class="user-name"><?php echo esc_html($display_name); ?></span>
                                         </a>
-                                        <div class="user-actions">
-                                            <a target="_blank" title="<?php _e('Edit User', 'download-manager'); ?>"
-                                               class="action-link" href="user-edit.php?user_id=<?php echo $stat->uid; ?>">
-                                                <i class="fas fa-user-edit"></i>
-                                            </a>
-                                        </div>
-                                    </div>
+                                        <a target="_blank" title="<?php _e('Edit User', 'download-manager'); ?>"
+                                           class="user-edit" href="user-edit.php?user_id=<?php echo $stat->uid; ?>">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                    </span>
                                 <?php else: ?>
-                                    <div class="user-avatar guest-avatar">
+                                    <span class="user-avatar guest-avatar">
                                         <i class="fas fa-user-slash"></i>
-                                    </div>
-                                    <div class="user-details">
+                                    </span>
+                                    <span class="user-main">
                                         <span class="user-name guest-name"><?php _e('Guest', 'download-manager'); ?></span>
-                                    </div>
+                                    </span>
                                 <?php endif; ?>
                             </div>
                         </td>
@@ -590,17 +589,14 @@ $pagination           = array(
                         <td class="location-cell">
                             <?php if ( get_option( '__wpdm_noip' ) == 0 && !empty($stat->ip) ): ?>
                                 <div class="location-info">
-                                    <div class="country-info">
+                                    <span class="country-info">
                                         <i class="fas fa-flag"></i>
                                         <span class="country-name"><?php echo esc_html($country_name); ?></span>
-                                    </div>
-                                    <div class="ip-info">
-                                        <a target="_blank" href="https://ip-api.com/#<?php echo $stat->ip; ?>"
-                                           class="ip-link" title="<?php _e('View IP location details', 'download-manager'); ?>">
-                                            <i class="fas fa-globe"></i>
-                                            <span class="ip-address"><?php echo esc_html($stat->ip); ?></span>
-                                        </a>
-                                    </div>
+                                    </span>
+                                    <a target="_blank" href="https://ip-api.com/#<?php echo $stat->ip; ?>"
+                                       class="ip-link" title="<?php _e('View IP location details', 'download-manager'); ?>">
+                                        <span class="ip-address"><?php echo esc_html($stat->ip); ?></span>
+                                    </a>
                                 </div>
                             <?php else: ?>
                                 <div class="location-unknown">
@@ -612,15 +608,13 @@ $pagination           = array(
 
                         <!-- System -->
                         <td class="system-cell">
+                            <?php $bicon = wpdm_stats_browser_icon($agent->browserName); ?>
                             <div class="system-info">
-                                <div class="browser-info">
-                                    <i class="fab fa-<?php echo strtolower(str_replace(' ', '-', $agent->browserName)); ?> browser-icon"></i>
+                                <span class="browser-info">
+                                    <i class="<?php echo $bicon[0]; ?> <?php echo $bicon[1]; ?> browser-icon"></i>
                                     <span class="browser-name"><?php echo esc_html($agent->browserName); ?></span>
-                                </div>
-                                <div class="os-info">
-                                    <i class="fas fa-desktop os-icon"></i>
-                                    <span class="os-name"><?php echo esc_html($agent->OS); ?></span>
-                                </div>
+                                </span>
+                                <span class="os-info"><?php echo esc_html($agent->OS); ?></span>
                             </div>
                         </td>
 
@@ -787,9 +781,10 @@ $pagination           = array(
                                 <?php _e('System', 'download-manager'); ?>
                             </div>
                             <div class="card-field-value">
+                                <?php $bicon = wpdm_stats_browser_icon($agent->browserName); ?>
                                 <div class="card-system-info">
                                     <div class="card-browser">
-                                        <i class="fab fa-<?php echo strtolower(str_replace(' ', '-', $agent->browserName)); ?>"></i>
+                                        <i class="<?php echo $bicon[0]; ?> <?php echo $bicon[1]; ?>"></i>
                                         <span><?php echo esc_html($agent->browserName); ?></span>
                                     </div>
                                     <div class="card-os">
@@ -893,152 +888,17 @@ $pagination           = array(
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
 <script>
     jQuery(function ($) {
-        var currentDatepickerInput = null;
-        var originalValue = '';
-
-        // Initialize datepicker in modal
-        function createDatepickerModal($input) {
-            // Store reference and original value
-            currentDatepickerInput = $input;
-            originalValue = $input.val();
-
-            // Create modal HTML
-            var modalHtml = `
-                <div class="wpdm-datepicker-modal-overlay" id="wpdm-datepicker-modal">
-                    <div class="wpdm-datepicker-modal">
-                        <div class="wpdm-datepicker-modal-header">
-                            <h3>Select Date</h3>
-                            <button type="button" class="wpdm-modal-close">&times;</button>
-                        </div>
-                        <div class="wpdm-datepicker-modal-body">
-                            <div id="wpdm-modal-datepicker"></div>
-                        </div>
-                        <div class="wpdm-datepicker-modal-footer">
-                            <button type="button" class="wpdm-modal-btn wpdm-modal-today">Today</button>
-                            <button type="button" class="wpdm-modal-btn wpdm-modal-cancel">Cancel</button>
-                            <button type="button" class="wpdm-modal-btn wpdm-modal-apply">Apply</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Remove any existing modal
-            //$('#wpdm-datepicker-modal').remove();
-
-            // Add modal to body
-            $('body').append(modalHtml);
-
-            // Initialize the datepicker inside the modal
-            $('#wpdm-modal-datepicker').datepicker({
-                dateFormat: 'yy-mm-dd',
-                minDate: new Date(<?= intval( $min_timestamp ) * 1000 ?>),
-                maxDate: new Date(),
-                changeMonth: true,
-                changeYear: true,
-                yearRange: "-20:+0", // Allow 20 years back
-                showOtherMonths: true,
-                selectOtherMonths: true,
-                defaultDate: originalValue || null,
-                onSelect: function(dateText, inst) {
-                    // Just update the input value, don't close
-                    // The modal will stay open until Apply/Cancel is clicked
-                }
-            });
-
-            // Set the current date if input has a value
-            if (originalValue) {
-                try {
-                    $('#wpdm-modal-datepicker').datepicker('setDate', originalValue);
-                } catch(e) {
-                    // If date parsing fails, ignore
-                }
-            }
-
-            // Show modal with proper animation
-            $('#wpdm-datepicker-modal').addClass('show');
-
-            // Bind modal events
-            bindModalEvents();
-        }
-
-        function bindModalEvents() {
-            var $modal = $('#wpdm-datepicker-modal');
-
-            // Apply button
-            $modal.find('.wpdm-modal-apply').off('click').on('click', function(e) {
-                e.preventDefault();
-                var selectedDate = $('#wpdm-modal-datepicker').datepicker('getDate');
-                if (selectedDate) {
-                    var formattedDate = $.datepicker.formatDate('yy-mm-dd', selectedDate);
-                    currentDatepickerInput.val(formattedDate);
-                }
-                closeModal();
-            });
-
-            // Cancel button
-            $modal.find('.wpdm-modal-cancel').off('click').on('click', function(e) {
-                e.preventDefault();
-                // Restore original value
-                currentDatepickerInput.val(originalValue);
-                closeModal();
-            });
-
-            // Today button
-            $modal.find('.wpdm-modal-today').off('click').on('click', function(e) {
-                e.preventDefault();
-                $('#wpdm-modal-datepicker').datepicker('setDate', new Date());
-            });
-
-            // Close button
-            $modal.find('.wpdm-modal-close').off('click').on('click', function(e) {
-                e.preventDefault();
-                // Restore original value when closing via X
-                currentDatepickerInput.val(originalValue);
-                closeModal();
-            });
-
-            // Click outside to close (optional - only on overlay)
-            $modal.off('click').on('click', function(e) {
-                if (e.target === this) {
-                    // Clicked on overlay background
-                    currentDatepickerInput.val(originalValue);
-                    closeModal();
-                }
-            });
-
-            // Prevent any clicks inside the modal from closing it
-            $modal.find('.wpdm-datepicker-modal').off('click').on('click', function(e) {
-                e.stopPropagation();
-            });
-
-            // ESC key to close
-            $(document).off('keydown.wpdm-modal').on('keydown.wpdm-modal', function(e) {
-                if (e.keyCode === 27) { // ESC key
-                    currentDatepickerInput.val(originalValue);
-                    closeModal();
-                }
-            });
-        }
-
-        function closeModal() {
-            $('#wpdm-datepicker-modal').removeClass('show');
-            setTimeout(function() {
-                $('#wpdm-datepicker-modal').remove();
-            }, 200);
-            $(document).off('keydown.wpdm-modal');
-            currentDatepickerInput = null;
-            originalValue = '';
-        }
-
-        // Bind click events to datepicker inputs
-        $(".datepicker").off('click focus').on('click focus', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            createDatepickerModal($(this));
+        // Standard jQuery UI datepicker (default style)
+        $(".datepicker").datepicker({
+            dateFormat: 'yy-mm-dd',
+            minDate: new Date(<?= intval( $min_timestamp ) * 1000 ?>),
+            maxDate: new Date(),
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-20:+0",
+            showOtherMonths: true,
+            selectOtherMonths: true
         });
-
-        // Prevent default datepicker from showing
-        $(".datepicker").datepicker('destroy');
 
         // Initialize Select2 components
         function initializeSelect2() {
@@ -1261,295 +1121,3 @@ $pagination           = array(
         });
     });
 </script>
-<style>
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove{
-        position: relative !important;
-    }
-    .w3eden .input-group * {
-        border-radius: 0 !important;
-    }
-
-    .w3eden .panel th.bg-white {
-        background: #ffffff !important;
-    }
-
-    .select2-container--classic .select2-selection--multiple {
-        padding-bottom: 10px;
-    }
-
-    .w3eden .select2-selection {
-        border: 1px solid #ccc;
-        min-height: 46px;
-        margin: 0;
-        padding: 0 10px;
-    }
-
-    .select2-selection textarea {
-        min-height: 32px;
-        line-height: 32px;
-        padding: 0;
-        margin: 0;
-    }
-
-    /* Modal datepicker styling */
-    .wpdm-datepicker-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.2s ease, visibility 0.2s ease;
-    }
-
-    .wpdm-datepicker-modal-overlay.show {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .wpdm-datepicker-modal {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        width: 246px;
-        max-width: 95vw;
-        animation: modalSlideIn 0.2s ease-out;
-        overflow: hidden;
-    }
-
-    @keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-50px) scale(0.9);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    .wpdm-datepicker-modal-header {
-        background: var(--color-primary);
-        color: white;
-        padding: 12px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .wpdm-datepicker-modal-header h3 {
-        margin: 0;
-        color: white;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .wpdm-modal-close {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        padding: 0;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: background-color 0.2s ease;
-    }
-
-    .wpdm-modal-close:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .wpdm-datepicker-modal-body {
-        padding: 0;
-        display: flex;
-        justify-content: center;
-    }
-
-    .wpdm-datepicker-modal-footer {
-        background: #f8f9fa;
-        padding: 8px 12px;
-        text-align: center;
-        border-top: 1px solid #dee2e6;
-    }
-
-    .wpdm-modal-btn {
-        margin: 0 4px;
-        padding: 6px 12px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        min-width: 60px;
-    }
-
-    .wpdm-modal-apply {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        color: white;
-        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-    }
-
-    .wpdm-modal-apply:hover {
-        background: linear-gradient(135deg, #218838, #1a9f7a);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-    }
-
-    .wpdm-modal-cancel {
-        background: linear-gradient(135deg, #6c757d, #5a6268);
-        color: white;
-        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-    }
-
-    .wpdm-modal-cancel:hover {
-        background: linear-gradient(135deg, #5a6268, #495057);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
-    }
-
-    .wpdm-modal-today {
-        background: #007bff;
-        color: white;
-        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
-    }
-
-    .wpdm-modal-today:hover {
-        background: linear-gradient(135deg, #0056b3, #004085);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
-    }
-
-    /* Enhanced datepicker styling inside modal */
-    #wpdm-modal-datepicker.ui-datepicker {
-        position: relative !important;
-        display: block !important;
-        top: 0 !important;
-        left: 0 !important;
-        box-shadow: none !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        overflow: hidden;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-header {
-        background: #747680 !important;
-        color: white !important;
-        border: none !important;
-        text-align: center;
-        padding: 8px;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-title {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-title select {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        border-radius: 4px !important;
-        color: #333 !important;
-        padding: 3px 6px;
-        font-weight: 500;
-        font-size: 12px;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-prev,
-    #wpdm-modal-datepicker .ui-datepicker-next {
-        background: rgba(255, 255, 255, 0.2) !important;
-        border: none !important;
-        border-radius: 6px;
-        color: white !important;
-        cursor: pointer;
-        margin: 0px 3px;
-        padding: 8px !important;
-        background: #777 !important;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-prev:hover,
-    #wpdm-modal-datepicker .ui-datepicker-next:hover {
-        background: rgba(255, 255, 255, 0.3) !important;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-calendar {
-        width: 100%;
-    }
-
-    #wpdm-modal-datepicker .ui-datepicker-calendar td {
-        padding: 2px;
-        height: 30px;
-    }
-    .ui-datepicker{
-        box-shadow: none !important;
-    }
-    .ui-datepicker tr:first-child {
-        border: 0 !important;
-    }
-
-    #wpdm-modal-datepicker .ui-state-default {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        color: #495057;
-        text-align: center;
-        padding: 6px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-size: 13px;
-    }
-
-    #wpdm-modal-datepicker .ui-state-default:hover {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-
-    #wpdm-modal-datepicker .ui-state-active {
-        background: #007bff !important;
-        color: white !important;
-        border-color: #007bff !important;
-    }
-
-    #wpdm-modal-datepicker .ui-state-highlight {
-        background: #ffc107;
-        color: #212529;
-        border-color: #ffc107;
-    }
-
-    /* Responsive modal */
-    @media (max-width: 480px) {
-        .wpdm-datepicker-modal {
-            width: 95vw;
-            margin: 10px;
-        }
-
-        .wpdm-datepicker-modal-header {
-            padding: 10px;
-        }
-
-        .wpdm-datepicker-modal-body {
-            padding: 10px;
-        }
-
-        .wpdm-modal-btn {
-            margin: 2px;
-            padding: 5px 10px;
-            min-width: 50px;
-            font-size: 11px;
-        }
-    }
-</style>

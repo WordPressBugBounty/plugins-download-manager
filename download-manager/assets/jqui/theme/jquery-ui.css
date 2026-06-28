@@ -62,7 +62,7 @@
 .ui-widget-content { border: 1px solid #D5D5D5; background: #ffffff; color: #222222; }
 .ui-widget-content a { color: #222222; }
 .ui-widget-header { border: 1px solid #D5D5D5; background: #cccccc; color: #222222; font-weight: bold; }
-.ui-widget-header { 
+.ui-widget-header {
 	border: 1px solid #d9d9d9;
 	color: #1b1d1f;
 	font-size: 14px;
@@ -362,7 +362,7 @@
  *
  * http://docs.jquery.com/UI/Autocomplete#theming
  */
-.ui-autocomplete { position: absolute; cursor: default; }	
+.ui-autocomplete { position: absolute; cursor: default; }
 
 /* workarounds */
 * html .ui-autocomplete { width:1px; } /* without this, the menu expands to 100% in IE6 */
@@ -417,7 +417,7 @@
 	background: #14A4FF;
 	color: #FFF;
 	text-shadow: 0 -1px 0 #0988d9;
-	
+
 }
 .ui-menu .ui-menu-item a.ui-state-hover,
 .ui-menu .ui-menu-item a.ui-state-active {
@@ -435,8 +435,8 @@
 .ui-button { display: inline-block; position: relative; padding: 0; margin-right: .1em; text-decoration: none !important; font-weight: bold; cursor: pointer; text-align: center; zoom: 1; overflow: visible; *display: inline; *zoom: 1; } /* the overflow property removes extra width in IE */
 .ui-button-icon-only { width: 2.2em; } /* to make room for the icon, a width needs to be set here */
 button.ui-button-icon-only { width: 2.4em; } /* button elements seem to need a little more width */
-.ui-button-icons-only { width: 3.4em; } 
-button.ui-button-icons-only { width: 3.7em; } 
+.ui-button-icons-only { width: 3.4em; }
+button.ui-button-icons-only { width: 3.7em; }
 
 /*button text element */
 .ui-button .ui-button-text { display: block; line-height: 1.4;  }
@@ -461,7 +461,7 @@ input.ui-button { height: 30px !important; padding: .4em 1em; }
 .ui-buttonset { margin-right: 7px; }
 .ui-buttonset .ui-button { margin-left: 0; margin-right: -.325em; }
 .ui-buttonset .ui-button.ui-state-active { border-color: #144c71; background: #0a54a5 none; top: 0; }
-.ui-buttonset .ui-button.ui-state-active { 
+.ui-buttonset .ui-button.ui-state-active {
 	-webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) inset, 0 2px 2px rgba(12, 106, 106, 0.5) inset !important;
 	-moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) inset, 0 2px 2px rgba(12, 106, 106, 0.5) inset !important;
 	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) inset, 0 2px 2px rgba(12, 106, 106, 0.5) inset !important;
@@ -561,7 +561,7 @@ ui-button.ui-dialog-titlebar-close,.ui-dialog .ui-dialog-titlebar-close { positi
 		border-radius: 0;
 }
 .ui-datepicker .ui-datepicker-header { position: relative; padding:.4em 0; border: 1px solid #3b3e40; }
-.ui-datepicker .ui-datepicker-header { 
+.ui-datepicker .ui-datepicker-header {
 	background: #595c5d; /* Old browsers */
 	background: -moz-linear-gradient(top,  #595c5d 0%, #474a4b 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#595c5d), color-stop(100%,#474a4b)); /* Chrome,Safari4+ */
@@ -602,15 +602,19 @@ ui-button.ui-dialog-titlebar-close,.ui-dialog .ui-dialog-titlebar-close { positi
 .ui-datepicker .ui-datepicker-next-hover { right: 2px; }
 .ui-datepicker .ui-datepicker-prev span, .ui-datepicker .ui-datepicker-next span { display: block; position: absolute; left: 50%; margin-left: -8px; top: 50%; margin-top: -8px;  }
 .ui-datepicker .ui-datepicker-title { margin: 0 2.3em; line-height: 1.8em; text-align: center; color: #e8e9ea; text-shadow: 0 -1px 0 rgba(0,0,0,0.4); }
-.ui-datepicker .ui-datepicker-title select { font-size:1em; margin:1px 0; }
+.ui-datepicker .ui-datepicker-title select { margin:1px 0; min-height: 24px !important;
+	height: 24px !important;
+	line-height: 22px !important;
+	font-weight: normal;
+	font-size: 12px; }
 .ui-datepicker select.ui-datepicker-month-year {width: 100%;}
-.ui-datepicker select.ui-datepicker-month, 
+.ui-datepicker select.ui-datepicker-month,
 .ui-datepicker select.ui-datepicker-year { width: 49%;}
 .ui-datepicker table {width: 1px; font-size: .9em; border-collapse: collapse; margin: -1px 0 0 0; }
 .ui-datepicker th { padding: .7em 0; text-align: center; font-weight: bold; border: 0; font-size: 10px; color: #acacac; border-bottom: 1px solid #cdcdcd !important; }
 .ui-datepicker td { border: 0; padding: 0; border: 1px solid #cdcdcd; }
 .ui-datepicker td a { display: block; padding: 0 !important; width: 30px; height: 30px; border: 0 none !important;/*border: 1px solid #cdcdcd !important;*/ line-height: 30px; text-align: center; font-size: 12px; text-decoration: none; font-weight: bold !important; }
-.ui-datepicker td a.ui-state-default { 
+.ui-datepicker td a.ui-state-default {
 	color: #5d5d5d;
 	text-shadow: 0 1px 0 rgba(255,255,255,0.5);
 	background: #e8e9ea; /* Old browsers */
@@ -820,8 +824,8 @@ button.ui-button span {
 @media
 only screen and (-webkit-min-device-pixel-ratio: 2),
 only screen and (   min--moz-device-pixel-ratio: 2),
-only screen and (     -o-min-device-pixel-ratio: 2/1) { 
-  
+only screen and (     -o-min-device-pixel-ratio: 2/1) {
+
   .ui-dialog .ui-dialog-titlebar-close {
   	background-image: url(images/modalClose@2x.png);
   	background-size: 30px 30px;

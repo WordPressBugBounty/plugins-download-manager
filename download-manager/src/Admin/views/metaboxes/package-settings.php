@@ -377,7 +377,18 @@
 
     function generatepass(id){
         wpdm_pass_target = '#'+id;
-        jQuery('#generatepass').modal('show');
+        var tpl = document.getElementById('generatepass-tpl');
+        if (typeof WPDM !== 'undefined' && WPDM.dialog && tpl) {
+            WPDM.dialog.show({
+                title: '<?php echo esc_js(__("Generate Password", "download-manager")); ?>',
+                content: tpl.innerHTML,
+                size: 'md',
+                icon: false,
+                backdrop: 'static'
+            });
+        } else {
+            jQuery('#generatepass').modal('show');
+        }
     }
 
     function wpdm_view_package(){

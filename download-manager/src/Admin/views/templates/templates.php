@@ -145,8 +145,9 @@ require_once __DIR__.'/header.php';
             $('#banner-url').val(this.src);
         });
         <?php if(isset($ttype)) { ?>
-        $('.template_preview').click(function(){
-            $('#preview-area').html("<i class='fa fa-spin fa-spinner'></i> Loading Preview...").load($(this).attr('data-href'));
+        $('body').on('click', '.template_preview', function(e){
+            e.preventDefault();
+            WPDM.dialog.ajax('<?php echo esc_js(__( "Template Preview" , "download-manager" )); ?>', $(this).attr('data-href'), { size: 'lg', icon: false });
         });
         $('#etmpl').on('change', function () {
             $('#preview').attr('src', 'edit.php?action=email_template_preview&id=user-signup&etmpl='+$(this).val()+"&__empnonce=<?php echo wp_create_nonce(WPDM_PRI_NONCE); ?>");
@@ -182,11 +183,29 @@ require_once __DIR__.'/header.php';
 
 
         <?php } ?>
-        $('#newtagform').submit(function (e) {
+        // Open the New/Edit Tag form inside a WPDM dialog
+        function wpdmOpenTagDialog(){
+            var tpl = document.getElementById('newtagmodal-tpl');
+            WPDM.dialog.show({
+                title: '<?php echo esc_js(__( "New Tag" , "download-manager" )); ?>',
+                content: tpl.innerHTML,
+                size: 'md',
+                icon: false,
+                backdrop: 'static'
+            });
+        }
+
+        $('body').on('click', '.add-new-tag', function (e) {
             e.preventDefault();
+            wpdmOpenTagDialog();
+        });
+
+        $('body').on('submit', '#newtagform', function (e) {
+            e.preventDefault();
+            var $form = $(this);
             var obtnlbl = $('#newtagformsubmit').html();
             $('#newtagformsubmit').html("<i class='fa fa-sun fa-spin'></i>").attr('disabled', 'disabled');
-            $(this).ajaxSubmit({
+            $form.ajaxSubmit({
                 url: ajaxurl,
                 resetForm: true,
                 success: function (response) {
@@ -202,14 +221,15 @@ require_once __DIR__.'/header.php';
                         '                    </td>\n' +
                         '                </tr>'
                     );
-                    $('#newtagmodal').modal('hide');
+                    $form.closest('.wpdm-dialog-wrapper').find('.wpdm-dialog__close').trigger('click');
                 }
             });
         });
         $('body').on('click', '.tag-edit', function () {
-            $('#newtagmodal').modal('show');
+            var tag = $(this).data('tag');
+            wpdmOpenTagDialog();
             WPDM.blockUI('#newtagform');
-            $.get(ajaxurl, {tag: $(this).data('tag'), action: 'wpdm_edit_custom_tag'}, function (response) {
+            $.get(ajaxurl, {tag: tag, action: 'wpdm_edit_custom_tag'}, function (response) {
                 $('#tag_name').val(response.name);
                 $('#tag_value').val(response.value);
                 WPDM.unblockUI('#newtagform');

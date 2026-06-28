@@ -5,7 +5,7 @@ Plugin URI: https://www.wpdownloadmanager.com/purchases/
 Description: Manage, Protect and Track file downloads, and sell digital products from your WordPress site. A complete digital asset management solution.
 Author: W3 Eden, Inc.
 Author URI: https://www.wpdownloadmanager.com/
-Version: 3.3.58
+Version: 3.3.59
 Text Domain: download-manager
 Domain Path: /languages
 */
@@ -40,7 +40,7 @@ use WPDM\Widgets\WidgetController;
 
 global $WPDM;
 
-define('WPDM_VERSION','3.3.58');
+define('WPDM_VERSION','3.3.59');
 
 define('WPDM_TEXT_DOMAIN','download-manager');
 
@@ -424,6 +424,9 @@ final class WordPressDownloadManager{
 
     function registerScripts(){
 
+        wp_register_style('wpdm-modal', plugins_url() . '/download-manager/assets/modal/wpdm-modal.min.css', [], WPDM_VERSION);
+        wp_register_script('wpdm-modal', plugins_url() . '/download-manager/assets/modal/wpdm-modal.min.js', [], WPDM_VERSION);
+
         if(is_admin()) return;
 
         wp_register_style('wpdm-front', plugins_url('/assets/css/front.min.css', __FILE__), [], WPDM_VERSION);
@@ -466,6 +469,9 @@ final class WordPressDownloadManager{
         }
 
         wp_register_script('wpdm-frontjs', plugins_url('/assets/js/front.min.js', __FILE__), array('jquery'), WPDM_VERSION);
+
+        wp_enqueue_script('wpdm-modal');
+        wp_enqueue_style('wpdm-modal');
 
         if((int)get_option('__wpdm_adblocked_off', 0) === 1)
             wp_enqueue_script('wpdm-ad', plugins_url('/download-manager/assets/js/blocker.js'));

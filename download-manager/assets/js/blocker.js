@@ -77,12 +77,39 @@ jQuery(function($) {
     detectAdblock().then(({ isAdblock, details }) => {
         console.log('Adblock?', isAdblock, details);
         if (isAdblock) {
-            const alldlbtns = jQuery('.wpdm-download-link.download-on-click');
-            alldlbtns.removeAttr('data-downloadurl');
-            alldlbtns.on('click', function (e) {
+            const body = $('body');
+
+            // Remove from existing elements
+            $('.wpdm-download-link.download-on-click').removeAttr('data-downloadurl');
+
+            // Handle click on dynamic elements via delegation
+            body.on('click', '.wpdm-download-link.download-on-click', function (e) {
+                $(this).removeAttr('data-downloadurl');
                 WPDM.bootAlert("Ad blocker detected", abmsg);
                 return false;
             });
+
+            // MutationObserver to handle dynamically added elements
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            // Check if the added node itself matches
+                            if ($(node).hasClass('wpdm-download-link') && $(node).hasClass('download-on-click')) {
+                                $(node).removeAttr('data-downloadurl');
+                            }
+                            // Check descendants of the added node
+                            $(node).find('.wpdm-download-link.download-on-click').removeAttr('data-downloadurl');
+                        }
+                    });
+                });
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
             if( abmsgd === "site" || ( abmsgd === "package" && iswpdmpropage ))
                 WPDM.bootAlert("Ad blocker detected", abmsg)
         }

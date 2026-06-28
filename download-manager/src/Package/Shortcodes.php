@@ -265,7 +265,7 @@ class Shortcodes
 
         }
 
-		$not_found_msg = wpdm_valueof($scparams, 'not_found') ?: __('No downloads found!', WPDM_TEXT_DOMAIN);
+		$not_found_msg = wp_kses_post(wpdm_valueof($scparams, 'not_found')) ?: __('No downloads found!', WPDM_TEXT_DOMAIN);
 		if($total === 0) $html = "<div class='col-md-12'>{$not_found_msg}</div>";
 
         $html = "<div class='row'>{$html}</div>";

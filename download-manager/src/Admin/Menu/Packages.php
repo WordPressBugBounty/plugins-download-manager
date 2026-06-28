@@ -480,7 +480,7 @@ class Packages {
 			$actions['duplicate']  = '<a title="' . __( "Duplicate", "download-manager" ) . '" href="' . admin_url( "/?wpdm_duplicate={$post->ID}&__copynonce=" . wp_create_nonce( NONCE_KEY ) ) . '" class="wpdm_duplicate w3eden">' . esc_attr__( 'Duplicate', 'download-manager' ) . '</a>';
 			$actions['view_stats'] = '<a title="' . __( "Stats", "download-manager" ) . '" href="edit.php?post_type=wpdmpro&page=wpdm-stats&pid=' . $post->ID . '" class="view_stats w3eden"><i class="fas fa-chart-pie color-blue"></i></a>';
 			if ( $post->post_status == 'publish' ) {
-				$actions['download_link'] = '<a title="' . __( "Master Download URL", "download-manager" ) . '" href="#" class="gdl_action w3eden" data-mdlu="' . WPDM()->package->getMasterDownloadURL( $post->ID ) . '" data-toggle="modal" data-target="#gdluModal" data-pid="' . $post->ID . '"><i class="far fa-arrow-alt-circle-down color-purple"></i></a>';
+				$actions['download_link'] = '<a title="' . __( "Master Download URL", "download-manager" ) . '" href="#" class="gdl_action w3eden" data-mdlu="' . WPDM()->package->getMasterDownloadURL( $post->ID ) . '" data-pid="' . $post->ID . '"><i class="far fa-arrow-alt-circle-down color-purple"></i></a>';
 			}
 		}
 
@@ -509,15 +509,7 @@ class Packages {
             </style>
 
             <div class="w3eden">
-                <div class="modal fade" tabindex="-1" role="dialog" id="embModal" style="display: none">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-
-                            <div class="modal-header">
-                                <h4 class="modal-title"><i
-                                            class="fa fa-paste color-green"></i> <?php _e( "Embed Package", "download-manager" ); ?>
-                                </h4>
-                            </div>
+                <script type="text/template" id="embModal-tpl">
                             <div class="modal-body">
 
                                 <div class="input-group input-group-lg">
@@ -576,24 +568,9 @@ class Packages {
 
 
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary"
-                                        data-dismiss="modal"><?php _e( "Close", "download-manager" ); ?></button>
-                            </div>
-                        </div><!-- /.modal-content -->
-                    </div><!-- /.modal-dialog -->
-                </div><!-- /.modal -->
+                </script>
 
-                <div class="modal fade" tabindex="-1" role="dialog" id="gdluModal" style="display: none">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-
-                            <div class="modal-header">
-                                <h4 class="modal-title"><i
-                                            class="far fa-arrow-alt-circle-down color-purple"></i> <?php _e( "Generate Download Link", "download-manager" ); ?>
-                                </h4>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="fa fa-times m-0"></i></button>
-                            </div>
+                <script type="text/template" id="gdluModal-tpl">
                             <div class="modal-body">
 
 
@@ -678,10 +655,7 @@ class Packages {
 
 
                             </div>
-
-                        </div><!-- /.modal-content -->
-                    </div><!-- /.modal-dialog -->
-                </div><!-- /.modal -->
+                </script>
 
             </div>
             <script>
@@ -689,19 +663,28 @@ class Packages {
 
 
                     var tdlpid;
-                    $('.gdl_action').on('click', function () {
+                    $('body').on('click', '.gdl_action', function () {
                         tdlpid = $(this).attr('data-pid');
-                        $('#mdl').val($(this).attr('data-mdlu'));
-                        $('#mdlx').attr('href', $(this).attr('data-mdlu'));
+                        var mdlu = $(this).attr('data-mdlu');
+                        WPDM.dialog.show({
+                            title: '<?php echo esc_js(__( "Generate Download Link", "download-manager" )); ?>',
+                            content: document.getElementById('gdluModal-tpl').innerHTML,
+                            size: 'md', icon: false
+                        });
+                        $('#mdl').val(mdlu);
+                        $('#mdlx').attr('href', mdlu);
                         $('#tmpgdl').val('');
                         $('#tmpgdlp').val('');
                     });
 
                     $('body').on('click', '.btn-embed', function () {
-                        var sc = "[wpdm_package id='{{ID}}']";
-                        sc = sc.replace("{{ID}}", $(this).data('pid'));
-                        console.log(sc);
-                        $('#cpsc').val(sc);
+                        var pid = $(this).data('pid');
+                        WPDM.dialog.show({
+                            title: '<?php echo esc_js(__( "Embed Package", "download-manager" )); ?>',
+                            content: document.getElementById('embModal-tpl').innerHTML,
+                            size: 'md', icon: false
+                        });
+                        $('#cpsc').val("[wpdm_package id='" + pid + "']");
                     });
 
 

@@ -1,343 +1,679 @@
+<?php
+/**
+ * Admin → Add-Ons marketplace view.
+ *
+ * Renders a centered hero in .wpdm-admin-page-content. The framework's fixed
+ * #wpdm-admin-page-header is kept (empty/invisible) ONLY as a paint anchor:
+ * Pro's admin defers this view's first paint unless a fixed, painted element
+ * exists on the page. Data prep is separated from presentation below.
+ */
+if (!defined('ABSPATH')) die();
+
+if (!function_exists('is_plugin_active')) {
+    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+
+$items = [];
+$installed_count = 0;
+
+if (is_array($data)) {
+    foreach ($data as $package) {
+        $files = (array) $package->files;
+        $file  = str_replace('.zip', '', array_shift($files));
+        $file  = explode('/', $file);
+        $file  = end($file);
+
+        $plugininfo = wpdm_plugin_data($file);
+
+        $installed         = (bool) $plugininfo;
+        $installed_version = $installed && isset($plugininfo['Version']) ? $plugininfo['Version'] : '';
+        $active            = $installed && isset($plugininfo['plugin_index_file']) && is_plugin_active($plugininfo['plugin_index_file']);
+        $update            = $installed && $installed_version && version_compare($installed_version, $package->version, '<');
+
+        if ($installed) $installed_count++;
+
+        $items[] = (object) [
+            'ID'         => $package->ID,
+            'title'      => $package->post_title,
+            'excerpt'    => $package->excerpt,
+            'link'       => $package->link,
+            'version'    => $package->version,
+            'price'      => $package->price,
+            'currency'   => $package->currency,
+            'file'       => $file,
+            'categories' => implode(' ', array_map('sanitize_html_class', (array) $package->categories)),
+            'installed'  => $installed,
+            'active'     => $active,
+            'update'     => $update,
+        ];
+    }
+}
+
+$total      = count($items);
+$cat_count  = is_array($cats) ? count($cats) : 0;
+
+$cat_counts = [];
+foreach ($items as $countItem) {
+    foreach (array_filter(explode(' ', $countItem->categories)) as $catSlug) {
+        $cat_counts[$catSlug] = isset($cat_counts[$catSlug]) ? $cat_counts[$catSlug] + 1 : 1;
+    }
+}
+?>
 <style>
+    #screen-meta-links { display: none; }
+    .wrap.w3eden .updated,
+    .wrap.w3eden #screen-meta { display: none; }
 
-    .note{
-        color: #888888;
+    /* The fixed header is kept only as a paint anchor (Pro defers this view's
+       first paint without a fixed, painted element). Rendered slim + invisible;
+       the real title is the centered hero in the content below. */
+    #wpdm-admin-page-header { pointer-events: none; }
+    #wpdm-admin-page-header #wpdm-admin-main-header { height: 40px; border: 0; box-shadow: none; }
+    #wpdm-admin-page-header h3 { visibility: hidden; }
 
+    .wpda {
+        --wpda-surface: #ffffff;
+        --wpda-bg: #f6f7fb;
+        --wpda-border: #e6e8ef;
+        --wpda-border-strong: #d3d7e3;
+        --wpda-text: #1e2433;
+        --wpda-text-muted: #6b7280;
+        --wpda-text-soft: #9aa1ad;
+        --wpda-primary: var(--color-primary, #4a8eff);
+        --wpda-primary-rgb: var(--color-primary-rgb, 74, 142, 255);
+        --wpda-success: var(--color-success, #10b981);
+        --wpda-success-rgb: var(--color-success-rgb, 16, 185, 129);
+        --wpda-warning: var(--color-warning, #f59e0b);
+        --wpda-warning-rgb: 245, 158, 11;
+        --wpda-danger: var(--color-danger, #ef4444);
+        --wpda-radius: 12px;
+        --wpda-radius-sm: 8px;
+        --wpda-radius-pill: 999px;
+        --wpda-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 3px rgba(16, 24, 40, .06);
+        --wpda-shadow-hover: 0 6px 16px rgba(16, 24, 40, .08), 0 14px 32px rgba(16, 24, 40, .10);
+        --wpda-transition: 180ms cubic-bezier(.4, 0, .2, 1);
+        font-family: var(--wpdm-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+        color: var(--wpda-text);
     }
-    input{
-        padding: 7px;
+    .wpda * { box-sizing: border-box; }
+
+    /* slim invisible anchor (~40px) sits at the top; clear it, no big void */
+    .wpdm-admin-page-content.wpda { padding-top: 48px; }
+
+    /* ---- Hero ---- */
+    .wpda-hero { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 0; }
+    .wpda-hero__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        margin-bottom: 18px;
+        color: var(--wpda-primary);
+        background: rgba(var(--wpda-primary-rgb), .1);
+        border-radius: 14px;
     }
-    #wphead{
-        border-bottom:0px;
-    }
-    #screen-meta-links{
-        display: none;
-    }
-    .wrap{
-        margin: 0px;
-        padding: 0px;
-    }
-    #wpbody{
-        margin-left: -19px;
-    }
-    select{
-        min-width: 150px;
-    }
-
-
-
-    .w3eden .panel-footer{
-        line-height: 22px;
-    }
-    .w3eden .btn-group.btn-group-xs .btn{
-        font-size: 9px;
-        padding: 2px 7px;
-        line-height: 18px;
-        height: 22px;
-    }
-    .well{ box-shadow: none !important; background: #FFFFFF !important; }
-
-    .w3eden .nav-pills a{
-        background: #f5f5f5;
-    }
-
-    #addonmodal{ background: rgba(0,0,0,0.7); z-index: 9999; }
-
-    #addonmodal .modal-dialog{
-        margin-top: 100px;
-
-    }
-
-    .w3eden .form-control,
-    .w3eden .nav-pills a{
-        border-radius: 0.2em !important;
-        box-shadow: none !important;
-        font-size: 9pt !important;
-    }
-
-    .wpdm-spin{
-        -webkit-animation: spin 2s infinite linear;
-        -moz-animation: spin 2s infinite linear;
-        -ms-animation: spin 2s infinite linear;
-        -o-animation: spin 2s infinite linear;
-        animation: spin 2s infinite linear;
-    }
-
-    @keyframes "spin" {
-        from {
-            -webkit-transform: rotate(0deg);
-            -moz-transform: rotate(0deg);
-            -o-transform: rotate(0deg);
-            -ms-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        to {
-            -webkit-transform: rotate(359deg);
-            -moz-transform: rotate(359deg);
-            -o-transform: rotate(359deg);
-            -ms-transform: rotate(359deg);
-            transform: rotate(359deg);
-        }
-
-    }
-
-    @-moz-keyframes spin {
-        from {
-            -moz-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        to {
-            -moz-transform: rotate(359deg);
-            transform: rotate(359deg);
-        }
-
-    }
-
-    @-webkit-keyframes "spin" {
-        from {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        to {
-            -webkit-transform: rotate(359deg);
-            transform: rotate(359deg);
-        }
-
-    }
-
-    @-ms-keyframes "spin" {
-        from {
-            -ms-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        to {
-            -ms-transform: rotate(359deg);
-            transform: rotate(359deg);
-        }
-
-    }
-
-    @-o-keyframes "spin" {
-        from {
-            -o-transform: rotate(0deg);
-            transform: rotate(0deg);
-        }
-        to {
-            -o-transform: rotate(359deg);
-            transform: rotate(359deg);
-        }
-
-    }
-
-    .panel-heading h3.h{
-        font-size: 11pt;
-        font-weight: 700;
+    .wpda-hero__icon svg { width: 26px; height: 26px; }
+    .wpda .wpda-hero__title {
         margin: 0;
-        padding: 5px 10px;
-        font-family: 'Open Sans';
+        padding: 0;
+        font-size: clamp(22px, 2.4vw, 28px);
+        font-weight: 800;
+        letter-spacing: -.02em;
+        line-height: 1.15;
+        color: var(--wpda-text);
+    }
+    .wpda .wpda-hero__subtitle {
+        max-width: 56ch;
+        margin: 8px auto 20px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--wpda-text-muted);
+        text-align: center;
     }
 
-    .panel-heading .btn.btn-primary{
-        margin-top: -4px;
-        margin-right: -6px;
-        border-radius: 3px;
-        border:1px solid rgba(255,255,255,0.8);
-        -webkit-transition: all 400ms ease-in-out;
-        -moz-transition: all 400ms ease-in-out;
-        -o-transition: all 400ms ease-in-out;
-        transition: all 400ms ease-in-out;
+    .wpda-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 22px 0 0; padding: 0; }
+    .wpda-stat {
+        min-width: 92px;
+        padding: 12px 16px;
+        background: var(--wpda-surface);
+        border: 1px solid var(--wpda-border);
+        border-radius: var(--wpda-radius-sm);
+        text-align: center;
+    }
+    .wpda-stat dt {
+        margin: 0 0 2px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--wpda-text-soft);
+    }
+    .wpda-stat dd {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--wpda-text);
+        font-variant-numeric: tabular-nums;
     }
 
-    .panel-heading .btn.btn-primary:hover{
-        margin-top: -4px;
-        margin-right: -6px;
-        border-radius: 3px;
-        border:1px solid rgba(255,255,255,1);
+    .wpda-sep { height: 1px; background: var(--wpda-border); margin: 28px -32px; }
 
+    /* ---- Toolbar (search + scope) ---- */
+    .wpda-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
     }
-
-    .alert-info {
-        background-color: #DFECF7 !important;
-        border-color: #B0D1EC !important;
+    .wpda-search { position: relative; flex: 0 1 460px; min-width: 220px; max-width: 460px; }
+    .wpda-search__icon {
+        position: absolute;
+        left: 12px;
+        top: 0;
+        bottom: 0;
+        margin: auto 0;
+        width: 16px;
+        height: 16px;
+        color: var(--wpda-text-soft);
+        pointer-events: none;
     }
-
-    ul.nav li a:active,
-    ul.nav li a:focus,
-    ul.nav li a{
-        outline: none !important;
+    .wpda-search input {
+        width: 100%;
+        height: 38px;
+        margin: 0;
+        padding: 0 64px 0 36px;
+        font-size: 13px;
+        line-height: 38px;
+        color: var(--wpda-text);
+        background: var(--wpda-bg);
+        border: 1px solid var(--wpda-border);
+        border-radius: var(--wpda-radius-sm);
+        box-shadow: none;
+        transition: border-color var(--wpda-transition), box-shadow var(--wpda-transition), background var(--wpda-transition);
     }
-
-    #modalcontents .wrap h2{ display: none; }
-
-    .list-group-item:hover{
-        background: #fafafa;
+    .wpda-search input:focus {
+        outline: none;
+        background: var(--wpda-surface);
+        border-color: var(--wpda-primary);
+        box-shadow: 0 0 0 3px rgba(var(--wpda-primary-rgb), .15);
     }
-    .panel-default .panel-body{
-        font-size: 9pt;
+    .wpda-search input::placeholder { color: var(--wpda-text-soft); }
+    .wpda-search__kbd {
+        position: absolute;
+        right: 10px;
+        top: 0;
+        bottom: 0;
+        margin: auto 0;
+        height: 20px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 16px;
+        color: var(--wpda-text-soft);
+        background: var(--wpda-surface);
+        border: 1px solid var(--wpda-border);
+        border-radius: 5px;
+        pointer-events: none;
     }
-    .panel-default .panel-footer{
-        font-size: 8pt;
-    }
-    .addonlist.panel-default .panel-body a{
-        white-space: nowrap;
-        overflow: hidden;
-        display: inline-block;
-        max-width: 98%;
-        text-overflow: ellipsis;
-    }
-    .list-group-item{
-        border-radius: 3px !important;
-
-    }
-    .w3eden a:hover,
-    .w3eden a{
-        text-decoration: none !important;
-    }
-    #filter-mods a{
-        font-size: 8pt;
-        padding: 5px 15px;
-    }
-    .updated{
+    .wpda-search__clear {
+        position: absolute;
+        right: 8px;
+        top: 0;
+        bottom: 0;
+        margin: auto 0;
         display: none;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        color: var(--wpda-text-muted);
+        background: transparent;
+        border: 0;
+        border-radius: 50%;
+        cursor: pointer;
+        line-height: 1;
+        transition: background var(--wpda-transition), color var(--wpda-transition);
+    }
+    .wpda-search__clear:hover { background: var(--wpda-border); color: var(--wpda-text); }
+    .wpda-search.is-filled .wpda-search__kbd { display: none; }
+    .wpda-search.is-filled .wpda-search__clear { display: inline-flex; }
+
+    .wpda-scope {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        background: var(--wpda-bg);
+        border: 1px solid var(--wpda-border);
+        border-radius: var(--wpda-radius-sm);
+    }
+    .wpda-scope button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--wpda-text-muted);
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: color var(--wpda-transition), background var(--wpda-transition), box-shadow var(--wpda-transition);
+    }
+    .wpda-scope button:hover { color: var(--wpda-text); }
+    .wpda-scope button.is-active { color: var(--wpda-text); background: var(--wpda-surface); box-shadow: var(--wpda-shadow); }
+    .wpda-scope__count {
+        padding: 1px 7px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--wpda-text-muted);
+        background: var(--wpda-border);
+        border-radius: var(--wpda-radius-pill);
+        font-variant-numeric: tabular-nums;
+    }
+    .wpda-scope button.is-active .wpda-scope__count { color: #fff; background: var(--wpda-primary); }
+
+    /* ---- Filter bar (categories) ---- */
+    .wpda-filterbar { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 22px; }
+    .wpda-cats { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .wpda-cats li { margin: 0; }
+    .wpda-cats button {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--wpda-text-muted);
+        background: var(--wpda-surface);
+        border: 1px solid var(--wpda-border);
+        border-radius: var(--wpda-radius-pill);
+        cursor: pointer;
+        transition: color var(--wpda-transition), background var(--wpda-transition), border-color var(--wpda-transition);
+    }
+    .wpda-cats button:hover { color: var(--wpda-text); border-color: var(--wpda-border-strong); }
+    .wpda-cats button.is-active {
+        color: #fff;
+        background: var(--wpda-primary);
+        border-color: var(--wpda-primary);
+        box-shadow: 0 1px 2px rgba(var(--wpda-primary-rgb), .35);
+    }
+    .wpda-cats button .wpda-cats__n { margin-left: 6px; font-weight: 600; opacity: .5; font-variant-numeric: tabular-nums; }
+    .wpda-cats button.is-active .wpda-cats__n { opacity: .72; }
+
+    /* ---- Grid ---- */
+    .wpda-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 18px;
+    }
+
+    .wpda-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background: var(--wpda-surface);
+        border: 1px solid var(--wpda-border);
+        border-radius: 14px;
+        box-shadow: var(--wpda-shadow);
+        overflow: hidden;
+        transition: transform var(--wpda-transition), box-shadow var(--wpda-transition), border-color var(--wpda-transition);
+    }
+    .wpda-card:hover { transform: translateY(-4px); border-color: rgba(var(--wpda-primary-rgb), .4); box-shadow: var(--wpda-shadow-hover); }
+    .wpda-card.wpda-hide { display: none; }
+
+    /* ---- Cover band ---- */
+    .wpda-card__cover {
+        position: relative;
+        height: 64px;
+        background:
+            radial-gradient(130% 140% at 85% -20%, rgba(255, 255, 255, .55), transparent 60%),
+            linear-gradient(135deg, hsl(var(--h, 220), 46%, 93%), hsl(calc(var(--h, 220) + 24), 42%, 89%));
+    }
+    .wpda-card__cover::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 62%, rgba(15, 23, 42, .035));
+    }
+    .wpda-card__cover-status {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 11px;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .01em;
+        border-radius: var(--wpda-radius-pill);
+        background: #fff;
+        border: 1px solid var(--wpda-border);
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .08);
+        white-space: nowrap;
+    }
+    .wpda-card__cover-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .wpda-card__cover-status.wpda-status--active { color: var(--wpda-success); }
+    .wpda-card__cover-status.wpda-status--installed { color: var(--wpda-primary); }
+    .wpda-card__cover-status.wpda-status--update { color: var(--wpda-warning); }
+
+    /* ---- Body ---- */
+    .wpda-card__body { position: relative; padding: 0 18px 16px; flex: 1; }
+    .wpda-card__icon {
+        position: relative;
+        z-index: 1;
+        margin: -26px 0 12px;
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        font-size: 21px;
+        font-weight: 800;
+        line-height: 1;
+        background: #fff;
+        color: hsl(var(--h, 220), 58%, 46%);
+        box-shadow: 0 4px 10px rgba(16, 24, 40, .14), 0 0 0 4px var(--wpda-surface);
+    }
+    .wpda-card__icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 11px; }
+    .wpda-card__title { margin: 0 0 7px; font-size: 15px; font-weight: 700; line-height: 1.3; }
+    .wpda-card__title a { color: var(--wpda-text); text-decoration: none; transition: color var(--wpda-transition); }
+    .wpda-card:hover .wpda-card__title a { color: var(--wpda-primary); }
+    .wpda-card__title a:focus-visible { outline: 2px solid rgba(var(--wpda-primary-rgb), .5); outline-offset: 2px; border-radius: 3px; }
+    .wpda-card__excerpt {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--wpda-text-muted);
+        max-height: 60px;
+        overflow: hidden;
+    }
+
+    /* ---- Footer ---- */
+    .wpda-card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 13px 18px;
+        border-top: 1px solid var(--wpda-border);
+    }
+    .wpda-card__meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .wpda-card__price { font-size: 16px; font-weight: 800; line-height: 1.2; color: var(--wpda-text); font-variant-numeric: tabular-nums; }
+    .wpda-card__price--free { color: var(--wpda-success); }
+    .wpda-card__version {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--wpda-text-soft);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+    .wpda-card__cta { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+
+    .wpda-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.2;
+        border: 1px solid transparent;
+        border-radius: var(--wpda-radius-sm);
+        cursor: pointer;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background var(--wpda-transition), border-color var(--wpda-transition), color var(--wpda-transition), box-shadow var(--wpda-transition), filter var(--wpda-transition);
+    }
+    .wpda-btn .fa, .wpda-btn svg { font-size: 11px; }
+    .wpda a.wpda-btn--primary { color: #fff; background: var(--wpda-primary); box-shadow: 0 1px 2px rgba(var(--wpda-primary-rgb), .3); }
+    .wpda a.wpda-btn--primary:hover { color: #fff; filter: brightness(.93); box-shadow: 0 4px 12px rgba(var(--wpda-primary-rgb), .42); }
+    .wpda a.wpda-btn--update { color: #fff; background: var(--wpda-warning); box-shadow: 0 1px 2px rgba(var(--wpda-warning-rgb), .3); }
+    .wpda a.wpda-btn--update:hover { color: #fff; filter: brightness(.95); box-shadow: 0 4px 12px rgba(var(--wpda-warning-rgb), .42); }
+    .wpda a.wpda-btn--ghost { color: var(--wpda-text); background: var(--wpda-surface); border-color: var(--wpda-border-strong); }
+    .wpda a.wpda-btn--ghost:hover { color: var(--wpda-primary); border-color: var(--wpda-primary); background: rgba(var(--wpda-primary-rgb), .06); }
+    .wpda-btn:focus-visible { outline: 2px solid rgba(var(--wpda-primary-rgb), .5); outline-offset: 2px; }
+
+    /* ---- States ---- */
+    .wpda-state { max-width: 460px; margin: 40px auto; padding: 32px 24px; text-align: center; }
+    .wpda-state__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        margin-bottom: 18px;
+        color: var(--wpda-text-soft);
+        background: var(--wpda-bg);
+        border: 1px solid var(--wpda-border);
+        border-radius: 50%;
+    }
+    .wpda-state__icon svg { width: 26px; height: 26px; }
+    .wpda-state--error .wpda-state__icon { color: var(--wpda-danger); background: rgba(239, 68, 68, .08); border-color: rgba(239, 68, 68, .2); }
+    .wpda-state__title { margin: 0 0 6px; font-size: 16px; font-weight: 700; color: var(--wpda-text); }
+    .wpda-state__text { margin: 0; font-size: 13px; line-height: 1.6; color: var(--wpda-text-muted); }
+    .wpda-empty-filter { grid-column: 1 / -1; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .wpda-card, .wpda-card__title a, .wpda-btn,
+        .wpda-cats button, .wpda-scope button, .wpda-search input { transition: none; }
+        .wpda-card:hover { transform: none; }
     }
 </style>
+
 <div class="wrap w3eden">
-    <div id="wpdm-admin-page-header">
+    <div id="wpdm-admin-page-header" aria-hidden="true">
         <div id="wpdm-admin-main-header">
             <div class="media">
-                <!--<div class="pull-right">
-                    <button class="btn btn-primary btn-simple btn-sm ttip" title="" id="reload" data-original-title="Reload"><i class="fa fa-sync"></i></button>
-                </div>-->
                 <div class="media-body">
                     <div class="media">
                         <div class="media-body">
-                            <h3>
-                                <i class="fa fa-plug color-purple"></i> WordPress Download Manager Add-ons
-                            </h3>
+                            <h3><i class="fa fa-plug"></i> <?php _e('Add-Ons', 'download-manager'); ?></h3>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div id="wpdm-admin-sub-header" class="text-center">
-            <?php if(is_array($cats)){ ?>
-            <ul class="nav nav-pills" id="filter-mods"><li class="active"><a href="#all" rel="all">All Add-Ons</a></li>
-
-                <?php
-                foreach($cats as $cat){
-                    echo "<li><a href='#' rel='{$cat->slug}'>{$cat->name}</a></li>";
-                }
-                ?>
-            </ul>
-            <?php } ?>
-        </div>
     </div>
 
-    <div class="container-fluid wpdm-admin-page-content">
-        <div class="row" id="addonlist">
+    <div class="wpdm-admin-page-content wpda">
+        <?php if ($total > 0) { ?>
+            <header class="wpda-hero">
+                <span class="wpda-hero__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v3.5M21 17.5h-3.5M17.5 21v-3.5M14 17.5h3.5"/></svg>
+                </span>
+                <h1 class="wpda-hero__title"><?php _e('Add-Ons', 'download-manager'); ?></h1>
+                <p class="wpda-hero__subtitle"><?php _e('Extend WordPress Download Manager with official integrations — cloud storage, payment gateways, page builders, and more.', 'download-manager'); ?></p>
+            </header>
 
-            <div class="container">
-            <div  class="row">
-            <?php
-            if(is_array($data)) {
-                foreach ($data as $package) {
-                    //wppmdd($package);
-                    $files = (array)$package->files;
-                    $file = str_replace(".zip", "", array_shift($files));
-                    $file = explode("/", $file);
-                    $file = end($file);
-                    $plugininfo = wpdm_plugin_data($file);
+            <dl class="wpda-stats">
+                <div class="wpda-stat"><dt><?php _e('Add-ons', 'download-manager'); ?></dt><dd><?php echo (int) $total; ?></dd></div>
+                <div class="wpda-stat"><dt><?php _e('Installed', 'download-manager'); ?></dt><dd><?php echo (int) $installed_count; ?></dd></div>
+                <div class="wpda-stat"><dt><?php _e('Categories', 'download-manager'); ?></dt><dd><?php echo (int) $cat_count; ?></dd></div>
+            </dl>
 
-                    $linklabel = ($plugininfo) ? '<i class="fa fa-sync"></i> Re-Install' : '<i class="fa fa-plus-circle"></i> Install';
+            <div class="wpda-sep"></div>
+
+            <div class="wpda-toolbar">
+                <div class="wpda-search" id="wpda-search-wrap">
+                    <span class="wpda-search__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                    <input type="search" id="wpda-search" autocomplete="off" aria-label="<?php esc_attr_e('Search add-ons', 'download-manager'); ?>" placeholder="<?php esc_attr_e('Search add-ons…', 'download-manager'); ?>">
+                    <span class="wpda-search__kbd" aria-hidden="true">/</span>
+                    <button type="button" class="wpda-search__clear" id="wpda-search-clear" aria-label="<?php esc_attr_e('Clear search', 'download-manager'); ?>">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="wpda-scope" role="tablist" aria-label="<?php esc_attr_e('Filter by install state', 'download-manager'); ?>">
+                    <button type="button" class="is-active" data-scope="all" role="tab" aria-selected="true"><?php _e('All', 'download-manager'); ?></button>
+                    <button type="button" data-scope="installed" role="tab" aria-selected="false">
+                        <?php _e('Installed', 'download-manager'); ?>
+                        <span class="wpda-scope__count"><?php echo (int) $installed_count; ?></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="wpda-filterbar">
+                <ul class="wpda-cats" id="filter-mods" role="tablist" aria-label="<?php esc_attr_e('Filter by category', 'download-manager'); ?>">
+                    <li><button type="button" class="is-active" data-cat="all"><?php _e('All Add-Ons', 'download-manager'); ?><span class="wpda-cats__n"><?php echo (int) $total; ?></span></button></li>
+                    <?php if (is_array($cats)) { foreach ($cats as $cat) { $c_n = isset($cat_counts[$cat->slug]) ? (int) $cat_counts[$cat->slug] : 0; ?>
+                        <li><button type="button" data-cat="<?php echo esc_attr($cat->slug); ?>"><?php echo esc_html($cat->name); ?><span class="wpda-cats__n"><?php echo $c_n; ?></span></button></li>
+                    <?php } } ?>
+                </ul>
+            </div>
+
+            <div class="wpda-grid" id="addonlist">
+                <?php foreach ($items as $item) {
+                    $search_index = strtolower(wp_strip_all_tags($item->title . ' ' . $item->excerpt));
+
+                    $clean_title  = trim(wp_strip_all_tags($item->title));
+                    $mono         = strtoupper(mb_substr($clean_title, 0, 1));
+                    if ($mono === '') $mono = 'W';
+                    $hue          = abs(crc32($item->title)) % 360;
+
+                    if ($item->update)         { $status_class = 'update';    $status_label = __('Update available', 'download-manager'); }
+                    elseif ($item->active)     { $status_class = 'active';    $status_label = __('Active', 'download-manager'); }
+                    elseif ($item->installed)  { $status_class = 'installed'; $status_label = __('Installed', 'download-manager'); }
+                    else                       { $status_class = '';          $status_label = ''; }
+
+                    if ($item->update)            $linklabel = '<i class="fa fa-sync"></i> ' . esc_html__('Update', 'download-manager');
+                    elseif ($item->installed)     $linklabel = '<i class="fa fa-sync"></i> ' . esc_html__('Re-Install', 'download-manager');
+                    else                          $linklabel = '<i class="fa fa-plus-circle"></i> ' . esc_html__('Install', 'download-manager');
                     ?>
-                    <div class="col-xl-3 col-md-4 col-sm-6 col-xs-12 all <?php echo implode(" ", (array)$package->categories); ?>">
-
-                        <div class="addonlist panel panel-default">
-                            <div class="panel-body" style="height: 90px">
-                                <div class="media">
-                                    <!--div class="pull-left">
-                                        <img style="width: 64px" src="<?php //echo $package->thumbnail; ?>" alt="Thumb"/>
-                                    </div-->
-                                    <div class="media-body">
-                                        <b><a target="_blank" title="<?php echo $package->post_title; ?>" class="ttip"
-                                              href="<?php echo $package->link; ?>"><?php echo $package->post_title; ?></a></b><br/>
-                                        <?php echo $package->excerpt; ?>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="panel-footer text-right">
-                                <?php if ($package->price > 0) { ?>
-                                    <div class="btn-group btn-group-xs">
-                                        <a class="btn btn-info btn-purchase" href="<?php echo $package->link; ?>" target="_blank" style="border: 0;border-radius: 2px;"><i class="fa fa-shopping-cart"></i>&nbsp;Buy Now</a><span class="btn btn-secondary"><?php echo $package->currency . $package->price; ?></span>
-                                    </div>
+                    <article class="wpda-card all <?php echo esc_attr($item->categories); ?>"
+                             style="--h: <?php echo (int) $hue; ?>"
+                             data-search="<?php echo esc_attr($search_index); ?>"
+                             data-installed="<?php echo $item->installed ? '1' : '0'; ?>">
+                        <div class="wpda-card__cover">
+                            <?php if ($status_label) { ?>
+                                <span class="wpda-card__cover-status wpda-status--<?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_label); ?></span>
+                            <?php } ?>
+                        </div>
+                        <div class="wpda-card__body">
+                            <span class="wpda-card__icon" aria-hidden="true"><?php echo esc_html($mono); ?></span>
+                            <h3 class="wpda-card__title">
+                                <a target="_blank" rel="noopener" title="<?php echo esc_attr($item->title); ?>"
+                                   href="<?php echo esc_url($item->link); ?>"><?php echo esc_html($item->title); ?></a>
+                            </h3>
+                            <p class="wpda-card__excerpt"><?php echo wp_kses_post($item->excerpt); ?></p>
+                        </div>
+                        <div class="wpda-card__footer">
+                            <div class="wpda-card__meta">
+                                <?php if ($item->price > 0) { ?>
+                                    <span class="wpda-card__price"><?php echo esc_html($item->currency . $item->price); ?></span>
                                 <?php } else { ?>
-                                    <div class="btn-group btn-group-xs">
-                                        <a class="btn btn-success" target="_blank" href="<?php echo $package->link; ?>"><?php echo $linklabel; ?></a><span
-                                                class="btn btn-secondary">Free</span>
-                                    </div>
+                                    <span class="wpda-card__price wpda-card__price--free"><?php _e('Free', 'download-manager'); ?></span>
                                 <?php } ?>
-                                <span class="note pull-left"><i class="fa fa-server"
-                                                                aria-hidden="true"></i> &nbsp;<?php echo $package->version; ?></span>
+                                <?php if ($item->version) { ?>
+                                    <span class="wpda-card__version"><?php echo esc_html('v' . $item->version); ?></span>
+                                <?php } ?>
+                            </div>
+                            <div class="wpda-card__cta">
+                                <?php if ($item->price > 0) { ?>
+                                    <a class="wpda-btn wpda-btn--primary" target="_blank" rel="noopener"
+                                       href="<?php echo esc_url('https://www.wpdownloadmanager.com/cart/?addtocart=' . $item->ID); ?>">
+                                        <i class="fa fa-shopping-cart"></i> <?php _e('Buy Now', 'download-manager'); ?>
+                                    </a>
+                                <?php } else { ?>
+                                    <a class="wpda-btn <?php echo $item->update ? 'wpda-btn--update' : ($item->installed ? 'wpda-btn--ghost' : 'wpda-btn--primary'); ?>"
+                                       target="_blank" rel="noopener"
+                                       href="<?php echo esc_url($item->link); ?>"><?php echo $linklabel; ?></a>
+                                <?php } ?>
                             </div>
                         </div>
+                    </article>
+                <?php } ?>
 
-
+                <div class="wpda-state wpda-empty-filter" id="wpda-empty-filter" style="display:none">
+                    <div class="wpda-state__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     </div>
-                    <?php
-                }
-            if(is_array($data)) {
-            } else {
-                \WPDM\__\Session::clear('wpdm_addon_store_data');
-                \WPDM\__\Session::clear('wpdm_addon_store_cats');
-            }
+                    <h3 class="wpda-state__title"><?php _e('No add-ons match your filters', 'download-manager'); ?></h3>
+                    <p class="wpda-state__text"><?php _e('Try a different search term or category, or reset to view all add-ons.', 'download-manager'); ?></p>
+                </div>
+            </div>
+        <?php } else {
+            \WPDM\__\Session::clear('wpdm_addon_store_data');
+            \WPDM\__\Session::clear('wpdm_addon_store_cats');
             ?>
-
-        </div>
+            <div class="wpda-state wpda-state--error">
+                <div class="wpda-state__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <h3 class="wpda-state__title"><?php _e('Could not reach the add-on store', 'download-manager'); ?></h3>
+                <p class="wpda-state__text"><?php _e('We couldn\'t connect to the server. Please check your connection and reload the page to try again.', 'download-manager'); ?></p>
             </div>
+        <?php } ?>
     </div>
-
-</div>
-<?php } else {
-    \WPDM\__\Session::clear('wpdm_addon_store_data');
-    \WPDM\__\Session::clear('wpdm_addon_store_cats');
-    ?>
-
-    <div class="alert alert-danger" style="margin: 20px"><?php _e('Failed to connect with server!','download-manager'); ?></div>
-
-<?php } ?>
-<div class="modal fade" id="addonmodal" tabindex="-1" role="dialog" aria-labelledby="addonmodalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="myModalLabel">Add-On Installer</h4>
-            </div>
-            <div class="modal-body" id="modalcontents">
-                <i class="fas fa-sun  fa-spin"></i> Please Wait...
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                <a type="button" id="prcbtn" target="_blank" href="https://www.wpdownloadmanager.com/cart/" class="btn btn-success" style="display: none" onclick="jQuery('#addonmodal').modal('hide')">Checkout</a>
-            </div>
-        </div>
-    </div>
-</div>
 </div>
 
 <script>
-    jQuery(function(){
-        jQuery('.nav-pills a').click(function(){
-            jQuery('#addonlist .all').fadeOut();
-            jQuery('.'+this.rel).fadeIn();
-            jQuery('#prcbtn').hide();
-            jQuery('.nav-pills li').removeClass('active');
-            jQuery(this).parent().addClass('active');
+    jQuery(function ($) {
+        var $grid       = $('#addonlist');
+        var $cards      = $grid.find('.wpda-card');
+        var $emptyState = $('#wpda-empty-filter');
+        var $searchWrap = $('#wpda-search-wrap');
+        var $search     = $('#wpda-search');
+
+        var state = { q: '', cat: 'all', scope: 'all' };
+
+        function render() {
+            var q = state.q.toLowerCase().trim();
+            var visible = 0;
+
+            $cards.each(function () {
+                var $c = $(this);
+                var matchQ     = !q || ($c.data('search') + '').indexOf(q) > -1;
+                var matchCat   = state.cat === 'all' || $c.hasClass(state.cat);
+                var matchScope = state.scope === 'all' || String($c.data('installed')) === '1';
+                var show = matchQ && matchCat && matchScope;
+                $c.toggleClass('wpda-hide', !show);
+                if (show) visible++;
+            });
+
+            $emptyState.toggle(visible === 0);
+        }
+
+        $search.on('input', function () {
+            state.q = this.value;
+            $searchWrap.toggleClass('is-filled', this.value.length > 0);
+            render();
         });
 
-        jQuery(".btn-install, .btn-purchase").click(function(){
-            jQuery('#modalcontents').html('<i class="fas fa-sun  fa-spin"></i> Please Wait...');
+        $('#wpda-search-clear').on('click', function () {
+            state.q = '';
+            $search.val('').focus();
+            $searchWrap.removeClass('is-filled');
+            render();
         });
 
+        $('#filter-mods button').on('click', function () {
+            state.cat = $(this).data('cat');
+            $('#filter-mods button').removeClass('is-active').attr('aria-selected', 'false');
+            $(this).addClass('is-active').attr('aria-selected', 'true');
+            render();
+        });
+
+        $('.wpda-scope button').on('click', function () {
+            state.scope = $(this).data('scope');
+            $('.wpda-scope button').removeClass('is-active').attr('aria-selected', 'false');
+            $(this).addClass('is-active').attr('aria-selected', 'true');
+            render();
+        });
+
+        $(document).on('keydown', function (e) {
+            if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+            var tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+            e.preventDefault();
+            $search.focus();
+        });
     });
 </script>
-

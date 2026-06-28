@@ -9,7 +9,7 @@
    ========================================================================== */
 
 body[class*=" wpdmpro_page_"]{
-    background: #f8fbfd;
+    background: var(--wpdm-page-bg, #f8fbfd);
 }
 body[class*=" wpdmpro_page_"] #wpcontent {
     padding-left: 0px !important;
@@ -44,10 +44,10 @@ body[class*=" wpdmpro_page_"] #wpcontent {
 }
 
 #wpdm-admin-main-header {
-    background: #f8fbfd;
+    background: var(--wpdm-page-bg, #f8fbfd);
     padding: 0 32px;
     line-height: 64px;
-    border-bottom: 1px solid #e1e3ee;
+    border-bottom: 1px solid var(--wpdm-border, #e1e3ee);
     position: relative;
     z-index: 991;
     box-shadow: 0 2px 4px rgba(var(--admin-color-rgb), 0.1);
@@ -272,35 +272,32 @@ body[class*=" wpdmpro_page_"] #wpcontent {
 
 /* Modern Panel Base Styles */
 .w3eden .panel {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    background: var(--wpdm-surface, #ffffff);
+    border: 1px solid var(--wpdm-border, #e5e7eb);
+    border-radius: var(--wpdm-radius, 8px);
+    box-shadow: var(--wpdm-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02));
     margin-bottom: 20px;
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.w3eden .panel:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
-}
 
 .w3eden .panel.panel-default {
-    border-color: #e5e7eb;
+    border-color: var(--wpdm-border, #e5e7eb);
 }
 
 .w3eden .panel > .panel-heading {
-    background: linear-gradient(180deg, #fafbfc 0%, #f4f6f8 100%);
-    border-bottom: 1px solid #e5e7eb;
-    border-radius: 7px 7px 0 0;
+    background: var(--wpdm-surface-muted, #FCFCFC);
+    border-bottom: 1px solid var(--wpdm-border, #e5e7eb);
+    border-radius: var(--wpdm-radius, 8px) var(--wpdm-radius, 8px) 0 0;
     padding: 16px 20px;
     font-size: 10pt;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--wpdm-text, #1e293b);
     letter-spacing: 0.01em;
 }
 
 .w3eden .panel > .panel-heading:first-child {
-    border-radius: 7px 7px 0 0;
+    border-radius: var(--wpdm-radius, 8px) var(--wpdm-radius, 8px) 0 0;
 }
 
 .w3eden .panel > .panel-body {
@@ -310,21 +307,21 @@ body[class*=" wpdmpro_page_"] #wpcontent {
 }
 
 .w3eden .panel > .panel-body:last-child {
-    border-radius: 0 0 7px 7px;
+    border-radius: 0 0 var(--wpdm-radius, 8px) var(--wpdm-radius, 8px);
 }
 
 .w3eden .panel > .panel-footer {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border-top: 1px solid #e5e7eb;
-    border-radius: 0 0 7px 7px;
+    background: var(--wpdm-surface-muted, #FCFCFC);
+    border-top: 1px solid var(--wpdm-border, #e5e7eb);
+    border-radius: 0 0 var(--wpdm-radius, 8px) var(--wpdm-radius, 8px);
     padding: 16px 20px;
-    color: #64748b;
+    color: var(--wpdm-text-muted, #64748b);
     font-size: 13px;
 }
 
 /* Panel with only body (no heading) */
 .w3eden .panel > .panel-body:first-child {
-    border-radius: 7px;
+    border-radius: var(--wpdm-radius, 8px);
 }
 
 /* Panel heading icon alignment */
@@ -1002,7 +999,7 @@ body[class*=" wpdmpro_page_"] #wpcontent {
 
 .form-control,
 .btn {
-    border-radius: 3px;
+    border-radius: var(--wpdm-radius-control, 6px);
 }
 
 .w3eden input {
@@ -1076,6 +1073,7 @@ body[class*=" wpdmpro_page_"] #wpcontent {
     box-shadow: none;
     position: relative !important;
     display: inline-grid;
+    background: transparent;
 }
 
 .w3eden input[type="checkbox"]:after {
@@ -1172,7 +1170,6 @@ body[class*=" wpdmpro_page_"] #wpcontent {
     font-weight: 600;
     letter-spacing: 1px;
     font-size: 0.8571em;
-    line-height: 1.1em;
     border: none;
     border-radius: 4px;
     padding: 11px 22px;
@@ -1239,16 +1236,15 @@ body[class*=" wpdmpro_page_"] #wpcontent {
     font-size: 14px;
 }
 
-.w3eden .btn.btn-sm,
-.w3eden .btn.btn-xs {
-    padding: 7px 10px;
+.w3eden .btn.btn-sm{
     font-size: 10px;
+    padding: 0 10px;
     border-radius: 4px;
 }
 
 .w3eden .btn.btn-xs {
     border-radius: 3px;
-    padding: 5px 8px;
+    padding: 0 8px;
     font-size: 9px;
 }
 

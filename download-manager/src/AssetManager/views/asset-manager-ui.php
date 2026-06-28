@@ -580,8 +580,8 @@ if(is_admin()){
                     <span id="__file_search"><input  v-on:keyup.enter="searchAsset.execute()" type="search" v-model="keyword" placeholder="Search File..." class="form-control input-sm" style="font-family: 'Overpass Mono', monospace;width: 140px;display: inline-block;padding: 0 10px;min-height: 20px;height: 27px;"></span>
                     <button class="btn btn-primary btn-simple btn-sm ttip" title="Reload" id="reload"><i class="fa fa-sync"></i></button>
                     <div class="btn-group">
-                        <button class="btn btn-simple btn-sm" data-toggle="modal" data-target="#newfol"><i class="fa fa-folder-open"></i> <?php echo __( "New Folder", "download-manager" ) ?></button>
-                        <button class="btn btn-simple btn-sm" data-toggle="modal" data-target="#newfile"><i class="far fa-file"></i> <?php echo  esc_attr__( 'New File', "download-manager" ); ?></button>
+                        <button class="btn btn-simple btn-sm wpdm-am-newfol" type="button"><i class="fa fa-folder-open"></i> <?php echo __( "New Folder", "download-manager" ) ?></button>
+                        <button class="btn btn-simple btn-sm wpdm-am-newfile" type="button"><i class="far fa-file"></i> <?php echo  esc_attr__( 'New File', "download-manager" ); ?></button>
                         <button class="btn btn-simple btn-sm" id="btn-upload-file" ><i class="fa fa-cloud-upload-alt"></i> <?php echo __( "Upload File", "download-manager" ) ?></button>
                     </div>
                     <button class="btn btn-info btn-simple btn-sm ttip" id="btn-paste" disabled="disabled" title="Paste"><i class="fa fa-clipboard"></i></button>
@@ -775,16 +775,6 @@ if(is_admin()){
 
     </div>
 
-    <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" id="__upfile">
-        <div class="modal-dialog modal-sm" role="document">
-            <div class="modal-content">
-
-
-
-            </div>
-        </div>
-    </div>
-
     <div id="upfile" style="position: fixed;z-index: 999999;bottom: 0px;right: 40px;display: none">
     <div class="panel panel-default">
         <div class="panel-heading">
@@ -854,41 +844,25 @@ if(is_admin()){
         <div  style="clear: both"></div>
     </div>
 
-    <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" id="newfol">
-        <div class="modal-dialog modal-sm" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i class="fa fa-times-circle"></i></span></button>
-                    <strong class="modal-title" id="myModalLabel"><?php echo  esc_attr__( 'New Folder', "download-manager" ); ?></strong>
-                </div>
-                <div id="upload" class="modal-body">
-                    <input type="text" placeholder="Folder Name" id="folname" class="form-control form-control-lg" style="margin: 0">
-                </div>
-                <div class="modal-footer text-right">
-                    <button type="button" id="createfol" class="btn btn-info"><?php echo  esc_attr__( 'Create Folder', "download-manager" ); ?></button>
-                    <div style="float:left;display: none;" id="fcd" class="text-success"><i class="fa fa-check-circle"></i> <?php echo  esc_attr__( 'Folder Created', "download-manager" ); ?></div>
-                </div>
-            </div>
+    <script type="text/template" id="newfol-tpl">
+        <div id="upload" class="modal-body">
+            <input type="text" placeholder="Folder Name" id="folname" class="form-control form-control-lg" style="margin: 0">
         </div>
-    </div>
+        <div class="text-right" style="margin-top: 12px">
+            <div style="float:left;display: none;" id="fcd" class="text-success"><i class="fa fa-check-circle"></i> <?php echo  esc_attr__( 'Folder Created', "download-manager" ); ?></div>
+            <button type="button" id="createfol" class="btn btn-info"><?php echo  esc_attr__( 'Create Folder', "download-manager" ); ?></button>
+        </div>
+    </script>
 
-    <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" id="newfile">
-        <div class="modal-dialog modal-sm" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i class="fa fa-times-circle"></i></span></button>
-                    <strong class="modal-title" id="myModalLabel"><?php echo  esc_attr__( 'New File', "download-manager" ); ?></strong>
-                </div>
-                <div id="upload" class="modal-body">
-                    <input type="text" placeholder="File Name" id="filename" class="form-control form-control-lg" style="margin: 0">
-                </div>
-                <div class="modal-footer text-right">
-                    <button type="button" id="createfile" class="btn btn-info"><?php echo  esc_attr__( 'Create File', "download-manager" ); ?></button>
-                    <div style="float:left;display: none;" id="fcd" class="text-success"><i class="fa fa-check-circle"></i> <?php echo  esc_attr__( 'File Created', "download-manager" ); ?></div>
-                </div>
-            </div>
+    <script type="text/template" id="newfile-tpl">
+        <div id="upload" class="modal-body">
+            <input type="text" placeholder="File Name" id="filename" class="form-control form-control-lg" style="margin: 0">
         </div>
-    </div>
+        <div class="text-right" style="margin-top: 12px">
+            <div style="float:left;display: none;" id="fcd" class="text-success"><i class="fa fa-check-circle"></i> <?php echo  esc_attr__( 'File Created', "download-manager" ); ?></div>
+            <button type="button" id="createfile" class="btn btn-info"><?php echo  esc_attr__( 'Create File', "download-manager" ); ?></button>
+        </div>
+    </script>
 
     <div class="modal fade" tabindex="-1" role="dialog" id="__link_settings">
         <div class="modal-dialog" role="document">
@@ -1456,28 +1430,41 @@ if(is_admin()){
             refresh_scandir(current_path);
         });
 
-        $('#createfol').on('click', function () {
+        $('body').on('click', '.wpdm-am-newfol', function () {
+            WPDM.dialog.show({
+                title: '<?php echo esc_js(__( "New Folder", "download-manager" )); ?>',
+                content: document.getElementById('newfol-tpl').innerHTML,
+                size: 'sm', icon: false
+            });
+        });
+        $('body').on('click', '.wpdm-am-newfile', function () {
+            WPDM.dialog.show({
+                title: '<?php echo esc_js(esc_attr__( "New File", "download-manager" )); ?>',
+                content: document.getElementById('newfile-tpl').innerHTML,
+                size: 'sm', icon: false
+            });
+        });
+
+        $('body').on('click', '#createfol', function () {
+            var $btn = $(this);
             var folname = $('#folname').val();
             if(folname !=''){
-                $('#createfol').html('<i class="fa fa-refresh fa-spin"></i> &nbsp; Creating...');
+                $btn.html('<i class="fa fa-refresh fa-spin"></i> &nbsp; Creating...');
                 $.get(ajaxurl, {__wpdm_mkdir:'<?php echo wp_create_nonce(WPDMAM_NONCE_KEY); ?>', action: 'wpdm_mkdir', path: current_path, name: folname}, function (data) {
-                    $('#folname').val('');
-                    $('#createfol').html('Create Folder');
-                    $('#fcd').fadeIn();
                     refresh_scandir(current_path);
+                    $btn.closest('.wpdm-dialog-wrapper').find('.wpdm-dialog__close').trigger('click');
                 });
             }
         });
 
-        $('#createfile').on('click', function () {
+        $('body').on('click', '#createfile', function () {
+            var $btn = $(this);
             var filename = $('#filename').val();
             if(filename !=''){
-                $('#createfile').html('<i class="fa fa-refresh fa-spin"></i> &nbsp; Creating...');
+                $btn.html('<i class="fa fa-refresh fa-spin"></i> &nbsp; Creating...');
                 $.get(ajaxurl, {__wpdm_newfile:'<?php echo wp_create_nonce(WPDMAM_NONCE_KEY); ?>', action: 'wpdm_newfile', path: current_path, name: filename}, function (data) {
-                    $('#filename').val('');
-                    $('#createfile').html('Create File');
-                    $('#fcd').fadeIn();
                     refresh_scandir(current_path);
+                    $btn.closest('.wpdm-dialog-wrapper').find('.wpdm-dialog__close').trigger('click');
                 });
             }
         });

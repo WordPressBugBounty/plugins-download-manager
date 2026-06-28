@@ -77,59 +77,43 @@
     </div>
     <div class="clear"></div>
 </div>
-<!-- Generate password modal  -->
-<div class="modal fade" tabindex="-1" role="dialog" id="generatepass">
-    <div class="modal-dialog" role="document" style="max-width: 400px">
-        <div class="modal-content">
-            <div class="modal-header" style="border-bottom: 0">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"><i class="fa fa-key"></i> <?php echo __( "Generate Password", "download-manager" ) ?></h4>
-            </div>
-            <div class="modal-body-np">
-                <div class="pfs panel panel-default card card-default" style="border-radius:0;box-shadow: none;border: 0 !important;">
-                    <div class="panel-heading card-header" style="border-top: 1px solid #ddd !important;border-radius:0;"><b><?php _e( "Password Lenght & Count" , "download-manager" ); ?></b></div>
-                    <div class="panel-body card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-
-                                    <b><?php _e( "Number of passwords:" , "download-manager" ); ?></b><Br/>
-                                    <input class="form-control" type="number" id='pcnt' value="">
-
-                            </div>
-                            <div  class="col-md-6">
-
-                                    <b><?php _e( "Password length:" , "download-manager" ); ?></b><Br/>
-                                    <input  class="form-control" type="number" id='ncp' value="">
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-heading card-header" style="border-radius:0;border-top: 1px solid #ddd"><b><?php _e( "Password Strength" , "download-manager" ); ?></b></div>
-                    <div class="panel-body card-body">
-                        <div class="row">
-                            <div class="col-md-7">
-                                <input style="padding:0;" type="range" min="1" max="4" value="2" class="form-control" id="passtrn">
-                                <div class="row">
-                                    <div class="col-md-6" style="color: var(--color-danger);"><?php echo __( "Weak", "download-manager" ) ?></div>
-                                    <div class="col-md-6 text-right" style="color: var(--color-success);"><?php echo __( "Strong", "download-manager" ) ?></div>
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <input type="button" id="gpsc" class="btn btn-secondary btn-lg btn-block" value="Generate" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-heading card-header" style="border-radius:0;border-top: 1px solid #dddddd"><b><?php _e( "Generated Passwords" , "download-manager" ); ?></b></div>
-                    <div class="panel-body card-body">
-                        <textarea id="ps" class="form-control"></textarea>
-                    </div>
-
+<!-- Generate password dialog (rendered via WPDM.dialog) -->
+<script type="text/template" id="generatepass-tpl">
+    <div class="pfs panel panel-default card card-default" style="border-radius:0;box-shadow: none;border: 0 !important;margin: 0;">
+        <div class="panel-heading card-header" style="border-radius:0;"><b><?php _e( "Password Lenght & Count" , "download-manager" ); ?></b></div>
+        <div class="panel-body card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <b><?php _e( "Number of passwords:" , "download-manager" ); ?></b><Br/>
+                    <input class="form-control" type="number" id='pcnt' value="">
                 </div>
-
+                <div  class="col-md-6">
+                    <b><?php _e( "Password length:" , "download-manager" ); ?></b><Br/>
+                    <input  class="form-control" type="number" id='ncp' value="">
+                </div>
             </div>
-            <div class="modal-footer">
-                <input type="button" id="pins" class="btn btn-primary btn-lg btn-block" value="<?php _e( "Insert Password(s)" , "download-manager" ); ?>" />
+        </div>
+        <div class="panel-heading card-header" style="border-radius:0;border-top: 1px solid #ddd"><b><?php _e( "Password Strength" , "download-manager" ); ?></b></div>
+        <div class="panel-body card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <input style="padding:0;" type="range" min="1" max="4" value="2" class="form-control" id="passtrn">
+                    <div class="row">
+                        <div class="col-md-6" style="color: var(--color-danger);"><?php echo __( "Weak", "download-manager" ) ?></div>
+                        <div class="col-md-6 text-right" style="color: var(--color-success);"><?php echo __( "Strong", "download-manager" ) ?></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <input type="button" id="gpsc" class="btn btn-secondary btn-lg btn-block" value="Generate" />
+                </div>
             </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+        </div>
+        <div class="panel-heading card-header" style="border-radius:0;border-top: 1px solid #dddddd"><b><?php _e( "Generated Passwords" , "download-manager" ); ?></b></div>
+        <div class="panel-body card-body">
+            <textarea id="ps" class="form-control"></textarea>
+        </div>
+    </div>
+    <div class="text-right" style="margin-top: 12px">
+        <input type="button" id="pins" class="btn btn-primary btn-lg btn-block" value="<?php esc_attr_e( "Insert Password(s)" , "download-manager" ); ?>" />
+    </div>
+</script>

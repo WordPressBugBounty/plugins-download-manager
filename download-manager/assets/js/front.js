@@ -57,11 +57,11 @@ const WPDM = {
         copyText.select();
         copyText.setSelectionRange(0, 99999);
         document.execCommand("copy");
-        WPDM.notify('<i class="fa fa-check-double"></i> Copied', 'success', 'top-center', 1000);
+        WPDM.notify('Copied', 'success', 'top-center', 1000);
     },
 
     copyTxt: function (textToCopy) {
-        WPDM.notify('<i class="fa fa-check-double"></i> Copied', 'success', 'top-center', 1000);
+        WPDM.notify('Copied', 'success', 'top-center', 1000);
         // navigator clipboard api needs a secure context (https)
         if (navigator.clipboard && window.isSecureContext) {
             // navigator clipboard api method'
@@ -174,6 +174,7 @@ const WPDM = {
         let html, url = '';
         let modal_id = '__bootModal_' + this.uniqueID();
         options = options || {};
+        options['width'] = width;
 
         // Handle URL-based content loading
         if (typeof content === 'object') {
@@ -308,39 +309,7 @@ const WPDM = {
 
 
     confirm: function (heading, content, buttons, width) {
-        var html, $ = jQuery;
-        var modal_id = '__boot_popup_' + WPDM.uniqueID();
-        $("#w3eden__boot_popup").remove();
-        if (!width) width = 350;
-        var _buttons = '';
-        if (buttons) {
-            _buttons = '<div class="modal-footer text-center" style="padding: 8px 15px;justify-content: center;">\n';
-            $.each(buttons, function (i, button) {
-                var btnid = WPDM.uniqueID();
-                _buttons += "<button id='" + btnid + "' class='" + button.class + " btn-xs' style='font-size: 12px;padding: 4px 16px;border-radius: 4px'>" + button.label + "</button> ";
-                $('body').on('click', '#' + btnid, function () {
-                    button.callback.call($("#" + modal_id));
-                    return false;
-                });
-            });
-            _buttons += '</div>\n';
-        }
-
-        html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" tabindex="-1" role="dialog">\n' +
-            '  <div class="modal-dialog wpdm-modal-confirm modal-dialog-centered" role="document" style="max-width: 100%;width: ' + width + 'px">\n' +
-            '    <div class="modal-content" style="border-radius: 6px;overflow: hidden">\n' +
-            '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
-            '        <h4 class="modal-title" style="font-size: 12pt;font-weight: 500;padding: 0;margin: 0;font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px">' + heading + '</h4>\n' +
-            '      </div>\n' +
-            '      <div class="modal-body text-center" style="font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px;font-size: 10pt;font-weight: 300;padding: 25px;line-height: 1.5">\n' +
-            '        ' + content + '\n' +
-            '      </div>\n' + _buttons +
-            '    </div>\n' +
-            '  </div>\n' +
-            '</div></div>';
-        $('body').append(html);
-        $("#" + modal_id).modal('show');
-        return $("#" + modal_id);
+         WPDM.dialog.confirm(heading, content, {type: 'question'});
     },
     audioUI: function (audio) {
         var $ = jQuery, song_length, song_length_m, song_length_s;
@@ -844,7 +813,7 @@ jQuery(function ($) {
 
     /* FILE LIST GRID ENDS */
 
-    $('.__wpdm_submit_async').on('submit', function (e) {
+    $('body').on('submit', '.__wpdm_submit_async', function (e) {
         e.preventDefault();
         var _cont = $(this).data('container');
         $(_cont).addClass('blockui');

@@ -1,11 +1,67 @@
 :root {
+    /* Brand — follows the active WordPress admin color scheme */
     --admin-color: #3b74d5;
     --admin-color-hover: #4280ea;
     --admin-color-active: #2e5cab;
-    --admin-color-rgb: 14, 104, 255;
+    --admin-color-rgb: 59, 116, 213;
+
+    /* Primary alias (kept in sync with the admin brand color) */
+    --color-primary: var(--admin-color);
+    --color-primary-hover: var(--admin-color-hover);
+    --color-primary-active: var(--admin-color-active);
+    --color-primary-rgb: var(--admin-color-rgb);
+
+    /* Secondary (neutral / slate) */
+    --clr-sec: #94a3b8;
+    --clr-sec-hover: #64748b;
+    --color-secondary: var(--clr-sec);
+    --color-secondary-hover: var(--clr-sec-hover);
+
+    /* Semantic palette */
+    --color-info: #3b82f6;
+    --color-info-hover: #2563eb;
+    --color-info-rgb: 59, 130, 246;
+    --color-success: #10b981;
+    --color-success-hover: #059669;
+    --color-success-rgb: 16, 185, 129;
+    --color-warning: #f59e0b;
+    --color-warning-hover: #d97706;
+    --color-warning-rgb: 245, 158, 11;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-danger-rgb: 239, 68, 68;
+
+    /* Surfaces (legacy aliases) */
     --border-color: #dde6ee;
     --bg-light: #f7fafd;
     --bg-lighter: #fbfdff;
+
+    /* ===== WPDM structural design tokens ===== */
+    --wpdm-surface: #ffffff;
+    --wpdm-surface-muted: #f8fafc;
+    --wpdm-surface-sunken: #f1f5f9;
+    --wpdm-page-bg: #f8fbfd;
+
+    --wpdm-border: #e5e7eb;
+    --wpdm-border-strong: #cbd5e1;
+
+    --wpdm-text: #1e293b;
+    --wpdm-text-muted: #64748b;
+    --wpdm-text-subtle: #94a3b8;
+
+    --wpdm-radius-sm: 4px;
+    --wpdm-radius-control: 6px;
+    --wpdm-radius: 8px;
+    --wpdm-radius-lg: 12px;
+    --wpdm-radius-pill: 500px;
+
+    --wpdm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --wpdm-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --wpdm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+
+    --wpdm-transition-fast: all 0.15s ease;
+    --wpdm-transition: all 0.2s ease;
+    --wpdm-transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .w3eden html {
     font-family: sans-serif;
@@ -1490,8 +1546,7 @@
 .w3eden .form-control {
     display: block;
     width: 100%;
-    height: 34px;
-    padding: 6px 12px;
+    height: 40px;
     font-size: 14px;
     line-height: 1.42857143;
     color: #555;
@@ -1902,7 +1957,7 @@
 }
 .w3eden .btn {
     display: inline-block;
-    padding: 6px 12px;
+    height: 40px;
     margin-bottom: 0;
     font-size: 14px;
     font-weight: 400;
@@ -2264,23 +2319,26 @@
 }
 .w3eden .btn-group-lg > .btn,
 .w3eden .btn-lg {
-    padding: 10px 16px;
+    padding: 0 16px;
     font-size: 18px;
     line-height: 1.3333333;
     border-radius: 8px;
+    height: 48px;
 }
 .w3eden .btn-group-sm > .btn,
 .w3eden .btn-sm {
-    padding: 5px 10px;
+    padding: 0 10px;
+    height: 30px;
+    line-height: 28px;
     font-size: 12px;
-    line-height: 1.5;
     border-radius: 4px;
 }
 .w3eden .btn-group-xs > .btn,
 .w3eden .btn-xs {
-    padding: 1px 5px;
+    padding: 0 10px;
+    height: 24px;
+    line-height: 22px;
     font-size: 12px;
-    line-height: 1.5;
     border-radius: 3px;
 }
 .w3eden .btn-block {
@@ -5614,7 +5672,7 @@
 
 .w3eden .btn{
     background-image:-webkit-gradient(linear,left top,left bottom,from(rgba(0,0,0,0)),to(rgba(0,0,0,.05)));background-image:-webkit-linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.05));background-image:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.05));
-
+    text-decoration:none !important;
     /* border: 0;padding: 7px 13px; */
 }
 .w3eden .panel th{

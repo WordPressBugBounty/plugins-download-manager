@@ -330,6 +330,29 @@ class Email {
 
         $template['message'] = str_replace( "{{message}}", stripslashes( wpautop( $template['message'] ) ), $template_data );
         $tags                = self::tags();
+
+        // Drop any link whose href placeholder resolves to a blank value (e.g. a
+        // social profile URL the admin left empty) so the email never renders a
+        // dead/blank icon. Done before token replacement, keyed on the
+        // placeholder name, so it is immune to how an empty value renders.
+        $resolved_hrefs = $params;
+        foreach ( $tags as $tag_name => $tag_info ) {
+            $bare_tag = trim( $tag_name, '{}' );
+            if ( ! isset( $resolved_hrefs[ $bare_tag ] ) || $resolved_hrefs[ $bare_tag ] === '' ) {
+                $resolved_hrefs[ $bare_tag ] = $tag_info['value'];
+            }
+        }
+        if ( preg_match_all( '/href\s*=\s*([\'"])\{\{([a-z0-9_]+)\}\}\1/i', $template['message'], $href_matches ) ) {
+            foreach ( array_unique( $href_matches[2] ) as $href_key ) {
+                $href_value = isset( $resolved_hrefs[ $href_key ] ) && is_scalar( $resolved_hrefs[ $href_key ] )
+                    ? trim( (string) $resolved_hrefs[ $href_key ] )
+                    : '';
+                if ( $href_value === '' ) {
+                    $template['message'] = self::removeEmptyLink( $template['message'], $href_key );
+                }
+            }
+        }
+
         $new_pasrams         = array();
         foreach ( $params as $key => $val ) {
             $new_pasrams["{{{$key}}}"] = stripslashes($val);
@@ -508,6 +531,40 @@ class Email {
             return $meta_value;
         }
         return $matched[1];
+    }
+
+    /**
+     * Remove an anchor whose href is the given (empty) placeholder, together with
+     * its sole-content table cell and any adjacent separator cell, so an unset
+     * social/link URL leaves no blank icon or stray divider in the email.
+     *
+     * @param string $html The email markup, still containing {{tokens}}.
+     * @param string $key  The placeholder name, e.g. "facebook".
+     * @return string
+     */
+    protected static function removeEmptyLink( $html, $key ) {
+        if ( ! is_string( $html ) || $html === '' ) return $html;
+
+        $ph        = '\{\{' . preg_quote( $key, '~' ) . '\}\}';
+        $separator = '(?:<td\b[^>]*>(?:\s|&[a-z0-9#]+;|\|)*</td>\s*)?';
+
+        // 1) Anchor alone in its own <td> (icon tiles or text links), plus a
+        //    trailing separator cell when present, so no empty gap or stray
+        //    divider is left behind.
+        $html = preg_replace(
+            '~<td\b[^>]*>\s*<a\b[^>]*\bhref\s*=\s*([\'"])' . $ph . '\1[^>]*>.*?</a>\s*</td>\s*' . $separator . '~is',
+            '',
+            $html
+        );
+
+        // 2) Fallback: any remaining bare anchor pointing at the empty placeholder.
+        $html = preg_replace(
+            '~<a\b[^>]*\bhref\s*=\s*([\'"])' . $ph . '\1[^>]*>.*?</a>~is',
+            '',
+            $html
+        );
+
+        return $html;
     }
 
 

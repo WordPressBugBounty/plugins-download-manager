@@ -70,7 +70,10 @@ $iid = uniqid();
            e.preventDefault();
            WPDM.blockUI('#rst-<?= $iid ?>');
            $.post(ajaxurl, {action: 'wpdmdz_update_user_status', user: <?= $user->ID ?>, do: $(this).data('action'), __uscnonce: '<?= wp_create_nonce(WPDM_PRI_NONCE); ?>', reason: $('#reason').val()}, function (res){
-               $('#<?= __::query_var('__mdid', 'txt'); ?>').modal('hide');
+               var __mdid = '<?= esc_js(__::query_var('__mdid', 'txt')); ?>';
+               var $dlg = $('#rst-<?= $iid ?>').closest('.wpdm-dialog-wrapper');
+               if ($dlg.length) { $dlg.find('.wpdm-dialog__close').trigger('click'); }
+               else if (__mdid) { $('#' + __mdid).modal('hide'); }
                WPDM.notify(res.msg, 'info', "top-center", 4000);
                if(res.status === 'approved')
                    $('#usts-<?= $user->ID ?>').html('<span class="text-success"><i class="fa-solid fa-check-double"></i> <?php _e('Approved', WPDM_TEXT_DOMAIN); ?></span>');

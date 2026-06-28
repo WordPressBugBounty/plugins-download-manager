@@ -1943,3 +1943,321 @@
         padding: 40px 20px !important;
     }
 }
+
+/* ==========================================================================
+   24. Dark Mode
+   Note: .w3eden and .wpdm-dashboard are on the SAME element
+   (<div class="w3eden wpdm-dashboard dark-mode">)
+   so selectors must NOT use descendant combinator between them.
+   ========================================================================== */
+
+.wpdm-dashboard.dark-mode {
+    --main-bg: #0f172a;
+    --content-bg: #1e293b;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-light: rgba(255, 255, 255, 0.06);
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 40px rgba(0, 0, 0, 0.3);
+    --sidebar-bg: #0c1222;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-dashboard-frame {
+    background: var(--content-bg);
+    border-color: var(--border-color);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-card-header {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-input,
+.wpdm-dashboard.dark-mode .wpdm-textarea,
+.wpdm-dashboard.dark-mode .wpdm-select,
+.wpdm-dashboard.dark-mode .form-control {
+    background: #0f172a;
+    color: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-input--readonly {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-ip {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-badge {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-badge--success { color: #34d399; }
+.wpdm-dashboard.dark-mode .wpdm-badge--warning { color: #fbbf24; }
+.wpdm-dashboard.dark-mode .wpdm-badge--danger { color: #f87171; }
+.wpdm-dashboard.dark-mode .wpdm-badge--info { color: #38bdf8; }
+
+.wpdm-dashboard.dark-mode .wpdm-alert--success { background: rgba(16, 185, 129, 0.12); color: #a7f3d0; }
+.wpdm-dashboard.dark-mode .wpdm-alert--warning { background: rgba(245, 158, 11, 0.12); color: #fde68a; }
+.wpdm-dashboard.dark-mode .wpdm-alert--danger { background: rgba(239, 68, 68, 0.12); color: #fecaca; }
+.wpdm-dashboard.dark-mode .wpdm-alert--info { background: rgba(14, 165, 233, 0.12); color: #bae6fd; }
+
+.wpdm-dashboard.dark-mode .wpdm-btn--secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-btn--secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-btn--danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-pagination a,
+.wpdm-dashboard.dark-mode .wpdm-pagination span {
+    background: var(--content-bg);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-pagination a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-pagination .dots {
+    background: transparent;
+}
+
+.wpdm-dashboard.dark-mode .wpdm-user-status {
+    border-color: #0c1222;
+}
+
+.wpdm-dashboard.dark-mode .card-body select.form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+}
+
+.wpdm-dashboard.dark-mode .wpdm-empty-state svg {
+    color: rgba(255, 255, 255, 0.15);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-overlay {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.wpdm-dashboard.dark-mode .feature-card,
+.wpdm-dashboard.dark-mode .dz-stats-row .feature-card {
+    background: var(--content-bg) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.wpdm-dashboard.dark-mode #__myfiles .card {
+    background: var(--content-bg);
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.wpdm-dashboard.dark-mode #__myfiles .card img {
+    background: #0f172a;
+}
+
+.wpdm-dashboard.dark-mode #__myfiles ._fsettings .btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+}
+
+.wpdm-dashboard.dark-mode #drag-drop-area {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: var(--content-bg) !important;
+}
+
+.wpdm-dashboard.dark-mode #__nofiles {
+    background: var(--content-bg) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #94a3b8;
+}
+
+.wpdm-dashboard.dark-mode #filelist .card-header {
+    background: #0f172a;
+}
+
+.wpdm-dashboard.dark-mode #filelist .progress {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-recommended-thumb {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.wpdm-dashboard.dark-mode .wpdm-order-row__header {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* System preference dark mode */
+@media (prefers-color-scheme: dark) {
+    .wpdm-dashboard:not(.light-mode) {
+        --main-bg: #0f172a;
+        --content-bg: #1e293b;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --border-light: rgba(255, 255, 255, 0.06);
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+        --shadow-glow: 0 0 40px rgba(0, 0, 0, 0.3);
+        --sidebar-bg: #0c1222;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-dashboard-frame {
+        background: var(--content-bg);
+        border-color: var(--border-color);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-card-header {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-input,
+    .wpdm-dashboard:not(.light-mode) .wpdm-textarea,
+    .wpdm-dashboard:not(.light-mode) .wpdm-select,
+    .wpdm-dashboard:not(.light-mode) .form-control {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-input--readonly {
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-ip {
+        background: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-badge {
+        background: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-badge--success { color: #34d399; }
+    .wpdm-dashboard:not(.light-mode) .wpdm-badge--warning { color: #fbbf24; }
+    .wpdm-dashboard:not(.light-mode) .wpdm-badge--danger { color: #f87171; }
+    .wpdm-dashboard:not(.light-mode) .wpdm-badge--info { color: #38bdf8; }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-alert--success { background: rgba(16, 185, 129, 0.12); color: #a7f3d0; }
+    .wpdm-dashboard:not(.light-mode) .wpdm-alert--warning { background: rgba(245, 158, 11, 0.12); color: #fde68a; }
+    .wpdm-dashboard:not(.light-mode) .wpdm-alert--danger { background: rgba(239, 68, 68, 0.12); color: #fecaca; }
+    .wpdm-dashboard:not(.light-mode) .wpdm-alert--info { background: rgba(14, 165, 233, 0.12); color: #bae6fd; }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-btn--secondary {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #cbd5e1;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-btn--secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f1f5f9;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-btn--danger {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-pagination a,
+    .wpdm-dashboard:not(.light-mode) .wpdm-pagination span {
+        background: var(--content-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-pagination a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f1f5f9;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-pagination .dots {
+        background: transparent;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-user-status {
+        border-color: #0c1222;
+    }
+
+    .wpdm-dashboard:not(.light-mode) .card-body select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-empty-state svg {
+        color: rgba(255, 255, 255, 0.15);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-overlay {
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .feature-card,
+    .wpdm-dashboard:not(.light-mode) .dz-stats-row .feature-card {
+        background: var(--content-bg) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #__myfiles .card {
+        background: var(--content-bg);
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #__myfiles .card img {
+        background: #0f172a;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #__myfiles ._fsettings .btn-secondary {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #cbd5e1;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #drag-drop-area {
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        background: var(--content-bg) !important;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #__nofiles {
+        background: var(--content-bg) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        color: #94a3b8;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #filelist .card-header {
+        background: #0f172a;
+    }
+
+    .wpdm-dashboard:not(.light-mode) #filelist .progress {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-recommended-thumb {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .wpdm-dashboard:not(.light-mode) .wpdm-order-row__header {
+        background: rgba(255, 255, 255, 0.04);
+    }
+}

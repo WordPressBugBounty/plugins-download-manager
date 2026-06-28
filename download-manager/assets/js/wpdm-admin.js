@@ -121,41 +121,31 @@ var WPDM = {
     },
 
     bootAlert: function (heading, content, width) {
-        let html, url = '';
-        let modal_id = '__bootModal_' + WPDM.uniqueID();
-        if(typeof content === 'object') {
-            url = content.url;
-            content = `<div id='${modal_id}_cont'><div  style="padding: 40px;text-align: center"><i class='fa fa-sun fa-spin'></i> Loading...</div></div>`;
-        }
-        if (!width) width = 400;
-        html = `<div class="w3eden" id="w3eden__${modal_id}"><div id="${modal_id}" class="modal fade" tabindex="-1" role="dialog">\n` +
-            '  <div class="modal-dialog" style="width: ' + width + 'px" role="document">\n' +
-            '    <div class="modal-content">\n' +
-            '      <div class="modal-header">\n' +
-            '        <h4 class="modal-title">' + heading + '</h4>\n' +
-            '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
-            '      </div>\n' +
-            '      <div class="modal-body">\n' +
-            '        ' + content + '\n' +
-            '      </div>\n' +
-            '      <div class="modal-footer">\n' +
-            '        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>\n' +
-            '      </div>\n' +
-            '    </div>\n' +
-            '  </div>\n' +
-            '</div></div>';
-        jQuery('body').append(html);
-        jQuery("#" + modal_id).modal('show');
-        jQuery("#" + modal_id).on('hidden.bs.modal', function (event) {
-            jQuery("#" + modal_id).remove()
-        })
 
-        if(url !== '') {
-            url = url.indexOf('?') > 0 ? url+'&__mdid=' + modal_id : url+'?__mdid=' + modal_id;
-            jQuery("#" + modal_id + "_cont").load(url);
+        // Map the legacy pixel width to a WPDM dialog size token
+        var size = !width ? 'sm' : (width >= 700 ? 'lg' : (width >= 480 ? 'md' : 'sm'));
+
+        // Graceful fallback if the WPDM dialog system is not available
+        if (typeof WPDMDialog === 'undefined') {
+            window.alert(jQuery('<div>').html(heading).text());
+            return jQuery();
         }
 
-        return jQuery("#" + modal_id);
+        // Remote content: load it through the WPDM dialog AJAX loader
+        if (content && typeof content === 'object' && content.url) {
+            return WPDMDialog.ajax(heading, content.url, { size: size, icon: false });
+        }
+
+        // Inline HTML / message content
+        return WPDMDialog.show({
+            title: heading,
+            content: '<div class="modal-body">' + (content || '') + '</div>',
+            html: true,
+            icon: false,
+            size: size,
+            compactFooter: true,
+            buttons: [{ text: 'Close', type: 'secondary', action: 'close' }]
+        });
     },
 
 
@@ -282,58 +272,54 @@ var WPDM = {
     },
 
 
+    // Map a legacy bootstrap button class (e.g. "btn btn-danger") to a WPDM dialog button type
+    _dialogBtnType: function (cls) {
+        cls = (cls || '').toLowerCase();
+        if (cls.indexOf('danger') > -1) return 'danger';
+        if (cls.indexOf('success') > -1) return 'success';
+        if (cls.indexOf('primary') > -1 || cls.indexOf('info') > -1 || cls.indexOf('warning') > -1) return 'primary';
+        return 'secondary';
+    },
+
     confirm: function (heading, content, buttons) {
-        var html, $ = jQuery;
-        var modal_id = '__boot_popup_' + WPDM.uniqueID();
-        $("#w3eden__boot_popup").remove();
-        var _buttons = '';
-        var id =  WPDM.uniqueID('btx_');
-        if (buttons) {
-            _buttons = '<div class="modal-footer text-center">\n';
-            $.each(buttons, function (i, button) {
-                _buttons += "<button id='" + id + '_' + i + "' class='" + button.class + " btn-sm'>" + button.label + "</button> ";
-            });
-            _buttons += '</div>\n';
+        var $ = jQuery;
+        var oldButtons = buttons || [];
+
+        // Graceful fallback if the WPDM dialog system is not available
+        if (typeof WPDMDialog === 'undefined') {
+            if (window.confirm($('<div>').html(content).text()) && oldButtons.length && typeof oldButtons[0].callback === 'function') {
+                oldButtons[0].callback.call($());
+            }
+            return $();
         }
 
-        html = `<div class="w3eden" id="w3eden__${modal_id}"><div id="${modal_id}" class="modal fade" tabindex="-1" role="dialog">\n` +
-            '  <div class="modal-dialog" style="width: 350px" role="document">\n' +
-            '    <div class="modal-content">\n' +
-            '      <div class="modal-header">\n' +
-            '        <h4 class="modal-title">' + heading + '</h4>\n' +
-            '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
-            '      </div>\n' +
-            '      <div class="modal-body">\n' +
-            '        ' + content + '\n' +
-            '      </div>\n' +
-                    _buttons +
-            '    </div>\n' +
-            '  </div>\n' +
-            '</div></div>';
+        // Map the legacy buttons ({label, class, callback}) to WPDM dialog buttons
+        var dlgButtons = oldButtons.length ? oldButtons.map(function (button, i) {
+            return {
+                text: $('<div>').html(button.label).text(), // strip icons/markup from the label
+                type: WPDM._dialogBtnType(button.class),
+                action: 'btn_' + i
+            };
+        }) : [{ text: 'OK', type: 'primary', action: 'btn_0' }];
 
-        /*html = '<div class="w3eden" id="w3eden' + modal_id + '"><div id="' + modal_id + '" style="z-index: 9999999 !important;" class="modal fade" data-backdrop="static" tabindex="-1" role="dialog">\n' +
-            '  <div class="modal-dialog" role="document" style="max-width: 100%;width: 350px">\n' +
-            '    <div class="modal-content" style="border-radius: 3px;overflow: hidden">\n' +
-            '      <div class="modal-header" style="padding: 12px 15px;background: #f5f5f5;">\n' +
-            '        <h4 class="modal-title" style="font-size: 9pt;font-weight: 500;padding: 0;margin: 0;font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px">' + heading + '</h4>\n' +
-            '      </div>\n' +
-            '      <div class="modal-body text-center" style="font-family:var(--wpdm-font), san-serif;letter-spacing: 0.5px;font-size: 10pt;font-weight: 300;padding: 25px;line-height: 1.5">\n' +
-            '        ' + content + '\n' +
-            '      </div>\n' + _buttons +
-            '    </div>\n' +
-            '  </div>\n' +
-            '</div></div>';*/
-        $('body').append(html);
-        $("#" + modal_id).modal('show');
-        $.each(buttons, function (i, button) {
-            var _id = id + '_' + i;
-            //$('#' + _id).unbind('click');
-            $('body').on('click', '#' + _id, function () {
-                button.callback.call($("#" + modal_id));
-                return false;
-            });
+        WPDMDialog.show({
+            title: heading,
+            message: content,
+            html: true,
+            type: 'question',
+            size: 'sm',
+            buttons: dlgButtons,
+            backdrop: 'static'
+        }).then(function (result) {
+            var m = /^btn_(\d+)$/.exec(result.action || '');
+            if (m && oldButtons[m[1]] && typeof oldButtons[m[1]].callback === 'function') {
+                // The dialog is already closing; legacy callbacks expect `this` to be the
+                // modal, so pass an empty jQuery set where .modal()/.find() are safe no-ops.
+                oldButtons[m[1]].callback.call($());
+            }
         });
-        return $("#" + modal_id);
+
+        return $();
     },
     audioUI: function (audio) {
         var $ = jQuery, song_length, song_length_m, song_length_s;
@@ -529,10 +515,8 @@ jQuery(function ($) {
         if ($(this).data('width') !== undefined) width = $(this).data('width');
         if ($(this).attr('title') !== undefined) title = $(this).attr('title');
         if ($(this).data('url') !== undefined) url = $(this).data('url');
-        var $modal = WPDM.bootAlert(title, "<div id='wpdm-modal-content' class='blockui' style='min-height: 300px;'></div>", width);
-        $($modal).find('#wpdm-modal-content').load(url, function (res) {
-            WPDM.unblockUI('#wpdm-modal-content');
-        });
+        var size = width >= 700 ? 'lg' : (width >= 480 ? 'md' : 'sm');
+        WPDM.dialog.ajax(title, url, { size: size, icon: false });
         return false;
     });
 
@@ -690,7 +674,9 @@ jQuery(function ($) {
         aps = aps.replace(/\n/g, "][");
         allps = "[" + aps + "]";
         $(wpdm_pass_target).val(allps);
-        $('#generatepass').modal('hide');
+        var $dlg = $(this).closest('.wpdm-dialog-wrapper');
+        if ($dlg.length) { $dlg.find('.wpdm-dialog__close').trigger('click'); }
+        else { $('#generatepass').modal('hide'); }
     });
 
     $body.on('click', '*:data[toggle="iframe-modal"]', function (e) {
@@ -736,62 +722,59 @@ function __showDownloadLink(pid, fid) {
 }
 
 function __bootModal(heading, content, width) {
-    var html;
-    if (!width) width = 400;
-    jQuery("#w3eden__bootModal").remove();
-    html = '<div class="w3eden" id="w3eden__bootModal"><div id="__bootModal" class="modal fade" tabindex="-1" role="dialog">\n' +
-        '  <div class="modal-dialog" style="width: ' + width + 'px" role="document">\n' +
-        '    <div class="modal-content">\n' +
-        '      <div class="modal-header">\n' +
-        '        <h4 class="modal-title">' + heading + '</h4>\n' +
-        '        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n' +
-        '      </div>\n' +
-        '      <div class="modal-body">\n' +
-        '        <p>' + content + '</p>\n' +
-        '      </div>\n' +
-        '      <div class="modal-footer">\n' +
-        '        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>\n' +
-        '      </div>\n' +
-        '    </div>\n' +
-        '  </div>\n' +
-        '</div></div>';
-    jQuery('body').append(html);
-    jQuery("#__bootModal").modal('show');
+    var size = !width ? 'sm' : (width >= 700 ? 'lg' : (width >= 480 ? 'md' : 'sm'));
+
+    if (typeof WPDMDialog === 'undefined') {
+        window.alert(jQuery('<div>').html(content).text());
+        return;
+    }
+
+    WPDMDialog.show({
+        title: heading,
+        content: '<div class="modal-body"><p>' + (content || '') + '</p></div>',
+        html: true,
+        icon: false,
+        size: size,
+        compactFooter: true,
+        buttons: [{ text: 'Close', type: 'secondary', action: 'close' }]
+    });
 }
 
 function wpdm_boot_popup(heading, content, buttons) {
-    var html, $ = jQuery;
-    $("#w3eden__boot_popup").remove();
-    var _buttons = '<div class="modal-footer" style="padding: 8px 15px;">\n';
-    $.each(buttons, function (i, button) {
-        var id = 'btx_' + i;
-        _buttons += "<button id='" + id + "' class='" + button.class + " btn-xs' style='font-size: 10px;padding: 3px 20px;'>" + button.label + "</button> ";
-    });
-    _buttons += '</div>\n';
+    var $ = jQuery;
+    var oldButtons = buttons || [];
 
-    html = '<div class="w3eden" id="w3eden__boot_popup"><div id="__boot_popup" style="z-index: 9999999 !important;" class="modal fade" tabindex="-1" role="dialog">\n' +
-        '  <div class="modal-dialog" role="document" style="max-width: 100%;width: 350px">\n' +
-        '    <div class="modal-content">\n' +
-        '      <div class="modal-header">\n' +
-        '        <h4 class="modal-title" style="font-size: 11pt;font-weight: 500;padding: 0;margin: 0;letter-spacing: 0.5px">' + heading + '</h4>\n' +
-        '      </div>\n' +
-        '      <div class="modal-body text-center" style="letter-spacing: 0.5px;font-size: 9pt;font-weight: 300;padding: 25px;">\n' +
-        '        ' + content + '\n' +
-        '      </div>\n' + _buttons +
-        '    </div>\n' +
-        '  </div>\n' +
-        '</div></div>';
-    $('body').append(html);
-    $("#__boot_popup").modal('show');
-    $.each(buttons, function (i, button) {
-        var id = 'btx_' + i;
-        $('#' + id).unbind('click');
-        $('#' + id).bind('click', function () {
-            button.callback.call($("#__boot_popup"));
-            return false;
-        });
+    if (typeof WPDMDialog === 'undefined') {
+        if (window.confirm($('<div>').html(content).text()) && oldButtons.length && typeof oldButtons[0].callback === 'function') {
+            oldButtons[0].callback.call($());
+        }
+        return $();
+    }
+
+    var dlgButtons = oldButtons.length ? oldButtons.map(function (button, i) {
+        return {
+            text: $('<div>').html(button.label).text(),
+            type: WPDM._dialogBtnType(button.class),
+            action: 'btn_' + i
+        };
+    }) : [{ text: 'OK', type: 'primary', action: 'btn_0' }];
+
+    WPDMDialog.show({
+        title: heading,
+        message: content,
+        html: true,
+        type: 'question',
+        size: 'sm',
+        buttons: dlgButtons,
+        backdrop: 'static'
+    }).then(function (result) {
+        var m = /^btn_(\d+)$/.exec(result.action || '');
+        if (m && oldButtons[m[1]] && typeof oldButtons[m[1]].callback === 'function') {
+            oldButtons[m[1]].callback.call($());
+        }
     });
-    return $("#__boot_popup");
+
+    return $();
 }
 
 /**
@@ -831,6 +814,45 @@ function wpdm_iframe_modal(url, closebutton) {
     $('#wpdm_iframe_modal').fadeIn();
 
 }
+
+
+/* ----------------------------------------------------------------------- *
+ * Backward-compat bridge for the WPDM dialog system.
+ *
+ * WPDM.bootAlert()/WPDM.confirm() now render WPDM dialogs instead of the old
+ * bootstrap-style modal markup. Legacy code (and AJAX-loaded partials) still
+ * call `.modal('hide')` — often on a stale `#__mdid` element — to dismiss the
+ * popup. This wraps the existing `$.fn.modal` plugin so that a `'hide'` call
+ * which targets (or sits inside) a WPDM dialog, or matches nothing at all,
+ * closes the active WPDM dialog instead.
+ * ----------------------------------------------------------------------- */
+(function ($) {
+    if (!$ || !$.fn || !$.fn.modal || $.fn.__wpdmDialogBridge) return;
+
+    var _origModal = $.fn.modal;
+
+    function closeWpdmDialog($wrap) {
+        var $btn = $wrap.find('.wpdm-dialog__close').first();
+        if ($btn.length) { $btn.trigger('click'); }
+        else { $wrap.find('.wpdm-dialog-backdrop').first().trigger('click'); }
+    }
+
+    $.fn.modal = function (option) {
+        if (option === 'hide') {
+            // Target is, or lives inside, a WPDM dialog
+            var $wrap = this.closest('.wpdm-dialog-wrapper');
+            if ($wrap.length) { closeWpdmDialog($wrap); return this; }
+            // Legacy selector matched nothing (e.g. a stale #__mdid): close the top dialog
+            if (this.length === 0) {
+                var $top = $('.wpdm-dialog-wrapper.wpdm-dialog-visible').last();
+                if ($top.length) { closeWpdmDialog($top); return this; }
+            }
+        }
+        return _origModal.apply(this, arguments);
+    };
+
+    $.fn.__wpdmDialogBridge = true;
+})(jQuery);
 
 
 
