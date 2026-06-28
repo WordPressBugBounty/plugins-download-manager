@@ -491,8 +491,14 @@ $pagination           = array(
                     $display_name = 'Guest';
                     $user_class = 'guest-user';
 
-                    // Get country name from IP
-                    $country_name = wpdm_get_country_from_ip_history($stat->ip);
+                    // Get country name from IP.
+                    // Only perform the external geolocation lookup when IP handling is enabled
+                    // (same gate as the display below), so stored IPs are never sent to a third
+                    // party when the admin has disabled IP handling via the __wpdm_noip option.
+                    $country_name = __('Unknown', 'download-manager');
+                    if ( get_option( '__wpdm_noip' ) == 0 && !empty($stat->ip) ) {
+                        $country_name = wpdm_get_country_from_ip_history($stat->ip);
+                    }
 
                     if ( $stat->uid > 0 ) {
                         $user = get_user_by( 'id', $stat->uid );
@@ -593,7 +599,7 @@ $pagination           = array(
                                         <i class="fas fa-flag"></i>
                                         <span class="country-name"><?php echo esc_html($country_name); ?></span>
                                     </span>
-                                    <a target="_blank" href="https://ip-api.com/#<?php echo $stat->ip; ?>"
+                                    <a target="_blank" href="https://ip-api.com/#<?php echo esc_attr($stat->ip); ?>"
                                        class="ip-link" title="<?php _e('View IP location details', 'download-manager'); ?>">
                                         <span class="ip-address"><?php echo esc_html($stat->ip); ?></span>
                                     </a>
@@ -761,7 +767,7 @@ $pagination           = array(
                                             <span><?php echo esc_html($country_name); ?></span>
                                         </div>
                                         <div class="card-ip">
-                                            <a target="_blank" href="https://ip-api.com/#<?php echo $stat->ip; ?>"
+                                            <a target="_blank" href="https://ip-api.com/#<?php echo esc_attr($stat->ip); ?>"
                                                class="card-location-link" title="<?php _e('View IP location details', 'download-manager'); ?>">
                                                 <i class="fas fa-globe"></i>
                                                 <?php echo esc_html($stat->ip); ?>
@@ -884,8 +890,8 @@ $pagination           = array(
 
 <!-- SCRIPTS -->
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+<link href="<?php echo esc_url( WPDM_BASE_URL . 'assets/select2/css/select2.min.css' ); ?>" rel="stylesheet"/>
+<script src="<?php echo esc_url( WPDM_BASE_URL . 'assets/select2/js/select2.min.js' ); ?>"></script>
 <script>
     jQuery(function ($) {
         // Standard jQuery UI datepicker (default style)

@@ -107,6 +107,8 @@ class AdminController {
             //wp_enqueue_style('wpdm-bootstrap-theme', plugins_url('/download-manager/assets/css/front.css'));
             wp_enqueue_style('wpdm-admin-styles', WPDM_BASE_URL.'assets/css/admin-styles.css', 9999);
 
+            wp_enqueue_style('wpdm-lock-options', WPDM_BASE_URL.'assets/css/wpdm-lock-options.css', [], WPDM_VERSION);
+
             wp_enqueue_style( 'wp-color-picker' );
             wp_enqueue_script( 'wp-color-picker' );
 
