@@ -401,6 +401,14 @@ class Shortcodes
 
 	    $params = __::a($params, ['items_per_page' => 20]);
 
+        // Defense-in-depth: a contributor-supplied "no data" message must not be
+        // able to smuggle markup into the shortcode output. sanitize_text_field()
+        // strips literal tags here and the value is also escaped with esc_html()
+        // at render time (neutralizing entity-encoded payloads like &#x3c;script&#x3e;).
+        if (isset($params['no_data_msg'])) {
+            $params['no_data_msg'] = sanitize_text_field($params['no_data_msg']);
+        }
+
         $items = isset($params['items_per_page']) && $params['items_per_page'] > 0 ? (int)$params['items_per_page'] : 20;
         $offset = $cp = 0;
         if (isset($params['jstable']) && (int)$params['jstable'] === 1) {

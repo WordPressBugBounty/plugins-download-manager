@@ -393,7 +393,7 @@ if(isset($params['jstable']) && $params['jstable']==1):
                 <tr>
                     <td colspan="4" class="text-center">
 
-                        <?php echo isset($params['no_data_msg']) && $params['no_data_msg']!=''?$params['no_data_msg']:__('No Packages Found','download-manager'); ?>
+                        <?php echo isset($params['no_data_msg']) && $params['no_data_msg']!='' ? esc_html($params['no_data_msg']) : __('No Packages Found','download-manager'); ?>
 
                     </td>
                 </tr>
