@@ -1607,13 +1607,13 @@ class PackageController extends PackageTemplate {
 	 *
 	 * @return string
 	 */
-	function expirableDownloadLink( $ID, $usageLimit = 10, $expirePeriod = 999999, $sessionOnly = true ) {
-		$key = uniqid();
+	function expirableDownloadLink( $ID, $usageLimit = 3, $expirePeriod = 604800, $sessionOnly = true ) {
+		$key = wp_generate_password( 32, false );
 		$exp = array( 'use' => $usageLimit, 'expire' => time() + $expirePeriod );
 		if ( ! $sessionOnly ) {
-			update_post_meta( $ID, "__wpdmkey_" . $key, $exp );
+			TempStorage::set( "__wpdmkey_{$key}_{$ID}", $exp, $expirePeriod, TempStorage::DURABLE_SCOPE );
 		} else {
-			TempStorage::set( "__wpdmkey_{$key}_{$ID}", $exp, time() + $expirePeriod );
+			Session::set( "__wpdmkey_{$key}_{$ID}", $exp, $expirePeriod );
 		}
 		//Session::set( '__wpdm_unlocked_'.$ID , 1 );
 		//$download_url = $this->getDownloadURL($ID, "_wpdmkey={$key}");
@@ -1632,12 +1632,12 @@ class PackageController extends PackageTemplate {
 	 * @return string
 	 */
 	static function expirableDownloadPage( $ID, $usageLimit = 10, $expirePeriod = 604800, $sessionOnly = true ) {
-		$key = uniqid();
+		$key = wp_generate_password( 32, false );
 		$exp = array( 'use' => $usageLimit, 'expire' => time() + $expirePeriod );
 		if ( ! $sessionOnly ) {
-			update_post_meta( $ID, "__wpdmkey_" . $key, $exp );
+			TempStorage::set( "__wpdmkey_{$key}_{$ID}", $exp, $expirePeriod, TempStorage::DURABLE_SCOPE );
 		} else {
-			TempStorage::set( "__wpdmkey_{$key}_{$ID}", $exp, time() + $expirePeriod );
+			Session::set( "__wpdmkey_{$key}_{$ID}", $exp, $expirePeriod );
 		}
 		$download_page_key = Crypt::encrypt( array( 'pid' => $ID, 'key' => $key ) );
 		$download_page     = home_url( "wpdm-download/{$download_page_key}" );
@@ -2335,8 +2335,8 @@ class PackageController extends PackageTemplate {
 		$banner = get_the_post_thumbnail_url( $ID, array( 600, 400 ) );
 		$logo   = get_site_icon_url();
 		foreach ( $emails as $index => $email ) {
-			$download_link      = WPDM()->package->expirableDownloadLink( $ID, $usageLimit, $expireTime );
-			$download_page_link = WPDM()->package->expirableDownloadPage( $ID, $usageLimit, $expireTime );
+			$download_link      = WPDM()->package->expirableDownloadLink( $ID, $usageLimit, $expireTime, false );
+			$download_page_link = WPDM()->package->expirableDownloadPage( $ID, $usageLimit, $expireTime, false );
 			$params             = array(
 				'to_email'          => $email,
 				'name'              => isset( $names[ $index ] ) ? $names[ $index ] : '',

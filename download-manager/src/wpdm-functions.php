@@ -927,10 +927,20 @@ function is_wpdmkey_valid($ID, $_key, $update = false)
     $_key = wpdm_sanitize_var($_key);
     $key = "__wpdmkey_{$_key}";
 
-    $xlimit = TempStorage::get("{$key}_{$ID}");
-
-    if (!$xlimit)
+    // Resolve from a SINGLE store; remember which so we only touch that one.
+    //   session => device-bound token (unlock, same browser)        -> Session
+    //   global  => durable shareable/emailed link                   -> ahm_sessions 'wpdmkey' scope
+    //   meta    => legacy global tokens issued before the migration  -> post_meta (fallback)
+    $store  = null;
+    $xlimit = Session::get("{$key}_{$ID}");
+    if ($xlimit) {
+        $store = 'session';
+    } elseif ($xlimit = TempStorage::get("{$key}_{$ID}", TempStorage::DURABLE_SCOPE)) {
+        $store = 'global';
+    } else {
         $xlimit = get_post_meta($ID, $key, true);
+        if ($xlimit) $store = 'meta';
+    }
 
     if (!$xlimit) return 0; // Invalid
 
@@ -947,8 +957,9 @@ function is_wpdmkey_valid($ID, $_key, $update = false)
     $expired = false;
 
     if ($limit <= 0) {
-        delete_post_meta($ID, $key);
-        TempStorage::kill("{$key}_{$ID}");
+        if ($store === 'session') Session::clear("{$key}_{$ID}");
+        elseif ($store === 'global') TempStorage::kill("{$key}_{$ID}", TempStorage::DURABLE_SCOPE);
+        else delete_post_meta($ID, $key);
         return -1; // Limit exceeded
     } else {
 
@@ -958,12 +969,18 @@ function is_wpdmkey_valid($ID, $_key, $update = false)
         if ((int)$xlimit['expire'] < time()) {
             $xlimit['use'] = $limit = 0;
             $expired = true;
-            delete_post_meta($ID, $key);
-            TempStorage::kill("{$key}_{$ID}");
+            if ($store === 'session') Session::clear("{$key}_{$ID}");
+            elseif ($store === 'global') TempStorage::kill("{$key}_{$ID}", TempStorage::DURABLE_SCOPE);
+            else delete_post_meta($ID, $key);
         }
-        if ($update) {
-            update_post_meta($ID, $key, $xlimit);
-            TempStorage::set("{$key}_{$ID}", $xlimit);
+        if ($update && !$expired) {
+            if ($store === 'session') {
+                Session::set("{$key}_{$ID}", $xlimit, max(1, (int)$xlimit['expire'] - time()));
+            } elseif ($store === 'global') {
+                TempStorage::set("{$key}_{$ID}", $xlimit, max(1, (int)$xlimit['expire'] - time()), TempStorage::DURABLE_SCOPE);
+            } else {
+                update_post_meta($ID, $key, $xlimit);
+            }
         }
         if ($expired) return -2; // Time expired
     }

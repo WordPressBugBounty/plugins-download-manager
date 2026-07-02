@@ -14,6 +14,10 @@ class TempStorage
 {
     static $data;
 
+    // deviceID scope for durable rows (e.g. shareable/emailed download keys) that
+    // must survive cache-clear (TempStorage::clear) and session reset (Session::reset).
+    const DURABLE_SCOPE = 'wpdmkey';
+
     function __construct()
     {
         /*if(file_exists(WPDM_CACHE_DIR.'/temp-storage.txt')) {
@@ -28,35 +32,31 @@ class TempStorage
         //register_shutdown_function(array($this, 'saveData'));
     }
 
-    static function set($name, $value, $expire = 604800)
+    static function set($name, $value, $expire = 604800, $deviceID = 'alldevice')
     {  // 604800 secs = 1 week
-        //self::$data[$name] = array('value' => $value, 'expire' => time() + $expire);
         global $wpdb;
         self::kill($name);
-        $wpdb->insert("{$wpdb->prefix}ahm_sessions", array('deviceID' => 'alldevice', 'name' => $name, 'value' => maybe_serialize($value), 'expire' => time() + $expire));
+        $wpdb->insert("{$wpdb->prefix}ahm_sessions", array('deviceID' => $deviceID, 'name' => $name, 'value' => maybe_serialize($value), 'lastAccess' => time(), 'expire' => time() + $expire));
     }
 
-    static function get($name)
+    static function get($name, $deviceID = null)
     {
-        /*if(!isset(self::$data[$name])) return null;
-        $_value = self::$data[$name];
-        if(count($_value) == 0) return null;
-        extract($_value);
-        if(isset($expire) && $expire < time()) {
-            unset(self::$data[$name]);
-            $value = null;
-        }
-        return $value;*/
         global $wpdb;
         $now = time();
-        $value = $wpdb->get_var($wpdb->prepare("select `value` from {$wpdb->prefix}ahm_sessions where `expire` > %d and `name` = %s", $now, $name));
+        if ($deviceID !== null)
+            $value = $wpdb->get_var($wpdb->prepare("select `value` from {$wpdb->prefix}ahm_sessions where `expire` > %d and `name` = %s and `deviceID` = %s", $now, $name, $deviceID));
+        else
+            $value = $wpdb->get_var($wpdb->prepare("select `value` from {$wpdb->prefix}ahm_sessions where `expire` > %d and `name` = %s", $now, $name));
         return maybe_unserialize($value);
     }
 
-    static function kill($name)
+    static function kill($name, $deviceID = null)
     {
         global $wpdb;
-        $wpdb->delete("{$wpdb->prefix}ahm_sessions", ["name" => $name]);
+        if ($deviceID !== null)
+            $wpdb->delete("{$wpdb->prefix}ahm_sessions", ["name" => $name, "deviceID" => $deviceID]);
+        else
+            $wpdb->delete("{$wpdb->prefix}ahm_sessions", ["name" => $name]);
     }
 
     static function clear()

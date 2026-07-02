@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.0
 License: GPLv3
-Stable tag: 3.3.61
+Stable tag: 3.3.62
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,17 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.62 - 2026.07.02 =
+* Improved: Expirable download link handling
+* Improved: Emailed and shareable download links are now kept in a durable, indexed store instead of post meta, so they survive cache clears and no longer bloat package meta
+* Improved: Indexed the sessions table and stopped duplicate-row accumulation for faster temporary-token lookups and cleanup
+* Security: Added directory-traversal containment to the protected media file handler so the wpdmmedia parameter cannot resolve to files outside the uploads directory
+* Security: Media password verification now requires the item to be private with a non-empty password and uses a strict comparison
+* Security: Hardened the modal login form redirect field ( REQUEST_URI ) with esc_url() output escaping
+* Security: Authenticated (Contributor+) Stored Cross-Site Scripting via the note_before and note_after attributes of the wpdm_reg_form shortcode ( Reported by Wordfence )
+* Security: Temporary download link tokens ( _wpdmkey ) are now generated with a cryptographically secure generator instead of uniqid() ( Reported by Pedro Pinho )
+* Security: Download links issued after a password, captcha or role lock are now bound to the originating session and can no longer be reused from a different device or session if the link is leaked ( Reported by Pedro Pinho )
 
 = 3.3.61 - 2026.06.29 =
 * Fixed: Authenticated (Contributor+) Stored Cross-Site Scripting via the no_data_msg attribute of the wpdm_all_packages shortcode ( Reported by Wordfence )

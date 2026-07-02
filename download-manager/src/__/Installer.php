@@ -12,7 +12,7 @@ class Installer
         /**
          * @var float
          */
-        private $dbVersion = 535.3;
+        private $dbVersion = 535.4;
 
         function __construct()
         {
@@ -103,7 +103,6 @@ class Installer
               PRIMARY KEY (`ID`)
             )";
 
-            $sqls[] = "DROP TABLE IF EXISTS `{$wpdb->prefix}ahm_sessions`";
             $sqls[] = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}ahm_sessions` (
               `ID` bigint(20) NOT NULL AUTO_INCREMENT,
               `deviceID` varchar(255) NOT NULL,
@@ -111,7 +110,9 @@ class Installer
               `value` text NOT NULL,
               `lastAccess` int(11) NOT NULL,
               `expire` int(11) NOT NULL,
-              PRIMARY KEY (`ID`)
+              PRIMARY KEY (`ID`),
+              KEY `name_device` (`name`(150),`deviceID`(40)),
+              KEY `expire` (`expire`)
             )";
 
             $sqls[] = "CREATE TABLE IF NOT EXISTS `{$wpdb->prefix}ahm_user_download_counts` (
@@ -151,6 +152,11 @@ class Installer
             $installer->changeColumn('ahm_download_stats', 'ip', 'ip', 'varchar(255) NOT NULL');
             $installer->addColumn('ahm_emails', 'request_status', "INT(1) NOT NULL");
             $installer->uniqueKey('ahm_asset_links', "asset_key");
+
+            // Index ahm_sessions for the hot lookup + cleanup paths (existing installs).
+            $installer->addColumn('ahm_sessions', 'lastAccess', 'int(11) NOT NULL DEFAULT 0');
+            $installer->addIndex('ahm_sessions', 'name_device', '`name`(150),`deviceID`(40)');
+            $installer->addIndex('ahm_sessions', 'expire', '`expire`');
 
             $ach = get_option("__wpdm_activation_history", array());
             $ach = maybe_unserialize($ach);
@@ -192,6 +198,14 @@ class Installer
         {
             global $wpdb;
             $wpdb->query("ALTER TABLE `{$wpdb->prefix}{$table}` ADD UNIQUE(`{$column}`)");
+        }
+
+        function addIndex($table, $indexName, $columns)
+        {
+            global $wpdb;
+            $exists = $wpdb->get_results("SHOW INDEX FROM `{$wpdb->prefix}{$table}` WHERE Key_name = '{$indexName}'");
+            if (count($exists) === 0)
+                $wpdb->query("ALTER TABLE `{$wpdb->prefix}{$table}` ADD KEY `{$indexName}` ({$columns})");
         }
     }
 

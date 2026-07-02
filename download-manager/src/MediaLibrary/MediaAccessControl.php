@@ -55,7 +55,11 @@ class MediaAccessControl {
 			$mediaid  = Crypt::decrypt( wpdm_query_var( '__meida' ) );
 			$password = get_post_meta( $mediaid, '__wpdm_media_pass', true );
 			//wpdmdd([wpdm_query_var('__pswd'), $password]);
-			if ( $password == wpdm_query_var( '__pswd' ) ) {
+			$private = get_post_meta( $mediaid, '__wpdm_private', true );
+			// Require the item to actually be private with a non-empty password, and
+			// compare strictly — '' == '' and numeric type-juggling would otherwise
+			// hand out a download key for an unprotected/no-password item.
+			if ( $private && $password !== '' && (string) $password === (string) wpdm_query_var( '__pswd' ) ) {
 				$mediakey  = uniqid();
 				$xpire_sex = (int) get_option( '__wpdm_private_link_expiration_period' ) * (int) get_option( '__wpdm_private_link_expiration_period_unit' );
 				$xpire_sex = $xpire_sex > 0 ? $xpire_sex : 30;
@@ -130,6 +134,14 @@ class MediaAccessControl {
 
 			$upload_dir = wp_upload_dir();
 			$file_path = wpdm_valueof($upload_dir, 'basedir').'/'.wpdm_query_var('wpdmmedia');
+			// Containment: the resolved path must stay within the uploads dir so a
+			// crafted wpdmmedia value cannot traverse out and read arbitrary files.
+			$__base = realpath(wpdm_valueof($upload_dir, 'basedir'));
+			$__real = realpath($file_path);
+			if ($__real === false || $__base === false || strpos($__real, $__base . DIRECTORY_SEPARATOR) !== 0) {
+				wp_die(__('Invalid file path!', 'download-manager'));
+			}
+			$file_path = $__real;
 			$file_path = apply_filters("wpdm_media_download", $file_path, $media->ID);
 			FileSystem::downloadFile($file_path, basename($file_path), 10240, 0, array('play' => 1));
 			die();
@@ -204,6 +216,14 @@ class MediaAccessControl {
 
 			//$upload_dir = wp_upload_dir();
 			$file_path = $upload_dir['basedir'] . '/' . __::query_var( 'wpdmmedia' );
+			// Containment: the resolved path must stay within the uploads dir so a
+			// crafted wpdmmedia value cannot traverse out and read arbitrary files.
+			$__base = realpath( $upload_dir['basedir'] );
+			$__real = realpath( $file_path );
+			if ( $__real === false || $__base === false || strpos( $__real, $__base . DIRECTORY_SEPARATOR ) !== 0 ) {
+				wp_die( __( 'Invalid file path!', 'download-manager' ) );
+			}
+			$file_path = $__real;
 			$file_path = apply_filters( "wpdm_media_download", $file_path, $media->ID );
 			//wpdmdd($file_path);
 			FileSystem::downloadFile( $file_path, basename( $file_path ), 10240, 0, array( 'play' => 1 ) );

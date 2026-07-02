@@ -98,7 +98,7 @@ class PackageLocks
             Session::set("pass_verified_" . $packageID, 1);
             $passwordUsage[$password] = wpdm_valueof($passwordUsage, $password, ['validate' => 'int']) + 1;
             update_post_meta($packageID, '__wpdm_password_usage', $passwordUsage);
-            $data = ['success' => true, 'downloadurl' => WPDM()->package->expirableDownloadLink($packageID)];
+            $data = ['success' => true, 'downloadurl' => WPDM()->package->expirableDownloadLink($packageID, $limit, $expirePeriod)];
         }
         wp_send_json($data);
     }

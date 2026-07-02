@@ -70,7 +70,7 @@ $site_name = get_bloginfo('name');
                         <?php if(isset($params['note_after'])) { ?>
                             <div class="wpdm-auth-alert info">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
-                                <?php echo $params['note_after']; ?>
+                                <?php echo esc_html($params['note_after']); ?>
                             </div>
                         <?php } ?>
 
@@ -88,7 +88,7 @@ $site_name = get_bloginfo('name');
                             <a class="wpdm-auth-forgot" href="<?php echo esc_url(wpdm_lostpassword_url()); ?>"><?php _e('Forgot Password?', 'download-manager'); ?></a>
                         </div>
 
-                        <input type="hidden" name="redirect_to" id="wpdm_modal_login_redirect_to" value="<?php echo __::valueof($_SERVER, 'REQUEST_URI', ['validate' => 'escs']); ?>" />
+                        <input type="hidden" name="redirect_to" id="wpdm_modal_login_redirect_to" value="<?php echo esc_url(__::valueof($_SERVER, 'REQUEST_URI', ['validate' => 'escs'])); ?>" />
 
                         <button type="submit" name="wp-submit" id="wpdmloginmodal-submit" class="wpdm-auth-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>

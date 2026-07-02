@@ -43,6 +43,7 @@ class Session
             self::loadFileSession();
             \register_shutdown_function([__CLASS__, 'saveSession']);
         }
+		//wp_die(self::deviceID());
     }
 
     /**
@@ -144,13 +145,20 @@ class Session
             return;
         }
 
-        // DB storage - use REPLACE for single query instead of DELETE + INSERT
+        // DB storage. REPLACE INTO only de-duplicates on a PRIMARY/UNIQUE
+        // collision; (deviceID, name) is not unique here, so REPLACE would keep
+        // inserting duplicate rows on every set(). Delete-then-insert (both
+        // index-backed by `name_device`) guarantees a single row per key.
         global $wpdb;
         if ($value) {
-            $wpdb->query($wpdb->prepare(
-                "REPLACE INTO {$wpdb->prefix}ahm_sessions (deviceID, name, value, expire) VALUES (%s, %s, %s, %d)",
-                self::$deviceID, $name, \maybe_serialize($value), $expireTime
-            ));
+            $wpdb->delete("{$wpdb->prefix}ahm_sessions", ['deviceID' => self::$deviceID, 'name' => $name]);
+            $wpdb->insert("{$wpdb->prefix}ahm_sessions", [
+                'deviceID'   => self::$deviceID,
+                'name'       => $name,
+                'value'      => \maybe_serialize($value),
+                'lastAccess' => \time(),
+                'expire'     => $expireTime,
+            ]);
         } else {
             self::clear($name);
         }
@@ -236,12 +244,12 @@ class Session
     }
 
     /**
-     * Reset all sessions except 'alldevice'
+     * Reset all sessions except 'alldevice' temp rows and durable download-key rows
      */
     static function reset()
     {
         global $wpdb;
-        $wpdb->query("DELETE FROM {$wpdb->prefix}ahm_sessions WHERE deviceID != 'alldevice'");
+        $wpdb->query("DELETE FROM {$wpdb->prefix}ahm_sessions WHERE deviceID NOT IN ('alldevice', '" . TempStorage::DURABLE_SCOPE . "')");
     }
 
     /**

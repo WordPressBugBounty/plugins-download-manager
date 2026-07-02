@@ -66,7 +66,7 @@ wp_enqueue_style('wpdm-auth-forms', \WPDM\__\Template::locate_url('auth-forms.cs
                             <?php if(isset($params['note_before']) && trim($params['note_before']) != ''): ?>
                                 <div class="wpdm-auth-alert info">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                    <span><?php echo $params['note_before']; ?></span>
+                                    <span><?php echo esc_html($params['note_before']); ?></span>
                                 </div>
                             <?php endif; ?>
 
@@ -75,7 +75,7 @@ wp_enqueue_style('wpdm-auth-forms', \WPDM\__\Template::locate_url('auth-forms.cs
                             <?php if(isset($params['note_after']) && trim($params['note_after']) != ''): ?>
                                 <div class="wpdm-auth-alert info">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                    <span><?php echo $params['note_after']; ?></span>
+                                    <span><?php echo esc_html($params['note_after']); ?></span>
                                 </div>
                             <?php endif; ?>
 
