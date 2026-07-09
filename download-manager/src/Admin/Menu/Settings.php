@@ -6,6 +6,7 @@ use WPDM\__\__;
 use WPDM\__\CronJob;
 use WPDM\__\Installer;
 use WPDM\__\Session;
+use WPDM\__\Jobs\ActivityReportJob;
 
 define('WPDMSET_NONCE_KEY', 'xV)Op=Oa<y{Z>~jJ{Y#;(kRz<61x&[Rf$R76?[`6kyGvVa}*/.S#%1{[*>tJw2rp');
 
@@ -21,6 +22,8 @@ class Settings
 
 	    add_action('wp_ajax_wpdm_delete_cron', array($this, 'deleteCron'));
 	    add_action('wp_ajax_wpdm_test_recaptcha', array($this, 'testRecaptcha'));
+        add_action('wp_ajax_wpdm_send_test_activity_report', array($this, 'sendTestActivityReport'));
+        add_action('wp_ajax_wpdm_reschedule_activity_report', array($this, 'rescheduleActivityReport'));
     }
 
     function Menu(){
@@ -94,6 +97,7 @@ class Settings
 
         $stabs = apply_filters("add_wpdm_settings_tab", $stabs);
 
+	    $stabs['activity-reports'] = array('id' => 'activity-reports','icon'=>'fa fa-chart-line', 'link' => 'edit.php?post_type=wpdmpro&page=settings&tab=activity-reports', 'title' => __('Activity Reports', 'download-manager'), 'callback' => array($this, 'activityReports'));
 	    $stabs['wpdm-crons'] = array('id' => 'wpdm-crons','icon'=>'fa fa-clock-rotate-left',  'link' => 'edit.php?post_type=wpdmpro&page=settings&tab=wpdm-crons', 'title' => __('Cron Jobs', 'download-manager'), 'callback' => array($this, 'cronJobs'));
 	    $stabs['privacy'] = array('id' => 'privacy','icon'=>'fas fa-user-shield',  'link' => 'edit.php?post_type=wpdmpro&page=wpdm-settings&tab=privacy', 'title' => 'Privacy', 'callback' => array($this, 'privacy'));
 
@@ -306,7 +310,7 @@ class Settings
 			_e("Nothing to update!", "download-manager");
 			die();
 		}
-		include wpdm_admin_tpl_path("settings/crons.php");
+		include wpdm_admin_tpl_path("settings/cron-jobs.php");
 	}
 
 	function deleteCron() {
@@ -344,5 +348,91 @@ class Settings
 			]);
 		}
 	}
+
+    /**
+     * Activity Reports settings tab
+     */
+    function activityReports()
+    {
+        if (isset($_POST['section']) && $_POST['section'] == 'activity-reports' && isset($_POST['task']) && $_POST['task'] == 'wdm_save_settings' && current_user_can(WPDM_ADMIN_CAP)) {
+
+            if (!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) {
+                die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            }
+
+            // Save enabled state
+            update_option('__wpdm_activity_report_enabled', wpdm_query_var('__wpdm_activity_report_enabled', 'int', 0));
+
+            // Save schedule settings
+            update_option('__wpdm_activity_report_frequency', wpdm_query_var('__wpdm_activity_report_frequency', 'txt', 'weekly'));
+            update_option('__wpdm_activity_report_day', wpdm_query_var('__wpdm_activity_report_day', 'int', 1));
+            update_option('__wpdm_activity_report_hour', wpdm_query_var('__wpdm_activity_report_hour', 'int', 9));
+
+            // Save recipients
+            update_option('__wpdm_activity_report_admin', wpdm_query_var('__wpdm_activity_report_admin', 'int', 1));
+            $emails = wpdm_query_var('__wpdm_activity_report_emails', 'txt', '');
+            update_option('__wpdm_activity_report_emails', sanitize_text_field($emails));
+
+            // Save sections
+            $sections = isset($_POST['__wpdm_activity_report_sections']) ? array_map('sanitize_text_field', $_POST['__wpdm_activity_report_sections']) : [];
+            update_option('__wpdm_activity_report_sections', $sections);
+
+            // Reschedule the job
+            ActivityReportJob::schedule();
+
+            die(__('Activity Report Settings Saved Successfully', 'download-manager'));
+        }
+
+        include wpdm_admin_tpl_path("settings/activity-reports.php");
+    }
+
+    /**
+     * AJAX handler: Send test activity report
+     */
+    function sendTestActivityReport()
+    {
+        if (!current_user_can(WPDM_ADMIN_CAP)) {
+            wp_send_json_error(['message' => __('Permission denied.', 'download-manager')]);
+        }
+
+        if (!wp_verify_nonce(wpdm_query_var('nonce'), 'wpdm_activity_report_test')) {
+            wp_send_json_error(['message' => __('Security token expired. Please refresh the page.', 'download-manager')]);
+        }
+
+        $email = sanitize_email(wpdm_query_var('email', 'txt'));
+        if (!is_email($email)) {
+            wp_send_json_error(['message' => __('Invalid email address.', 'download-manager')]);
+        }
+
+        $result = ActivityReportJob::sendTestReport($email);
+
+        if ($result) {
+            wp_send_json_success(['message' => sprintf(__('Test report sent to %s', 'download-manager'), $email)]);
+        } else {
+            wp_send_json_error(['message' => __('Failed to send test report. Please check your email settings.', 'download-manager')]);
+        }
+    }
+
+    /**
+     * AJAX handler: Reschedule activity report job
+     */
+    function rescheduleActivityReport()
+    {
+        if (!current_user_can(WPDM_ADMIN_CAP)) {
+            wp_send_json_error(['message' => __('Permission denied.', 'download-manager')]);
+        }
+
+        if (!wp_verify_nonce(wpdm_query_var('nonce'), 'wpdm_reschedule_activity_report')) {
+            wp_send_json_error(['message' => __('Security token expired.', 'download-manager')]);
+        }
+
+        $jobId = ActivityReportJob::schedule();
+
+        if ($jobId) {
+            wp_send_json_success(['message' => __('Activity report job rescheduled.', 'download-manager'), 'job_id' => $jobId]);
+        } else {
+            wp_send_json_success(['message' => __('Activity reports are disabled or no job needed.', 'download-manager')]);
+        }
+    }
 
 }

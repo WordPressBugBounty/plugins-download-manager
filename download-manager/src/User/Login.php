@@ -466,6 +466,7 @@ class Login
 	    if((!is_object($user) || get_class($user) !== 'WP_User') && !$user_login) return $user;
 
         $user_email = null;
+        $_user = null;
         if(!is_email($user_login) && !$user) {
             $_user = get_user_by('user_login', $user_login);
             if($_user)
@@ -487,9 +488,9 @@ class Login
     function verifyUserStatus($user, $user_login, $user_pass)
     {
 
-	    if((!is_object($user) || get_class($user) !== 'WP_User') && !$user_login) return $user;
+	    if(!($user instanceof \WP_User)) return $user;
 
-        if($user_login && WPDM()->user->requiresApproval() && !WPDM()->user->isApproved($user->ID)) {
+        if(WPDM()->user->requiresApproval() && !WPDM()->user->isApproved($user->ID)) {
             $status = WPDM()->user->getStatus($user->ID);
 	        $user = new \WP_Error();
 	        if($status === 'pending') {

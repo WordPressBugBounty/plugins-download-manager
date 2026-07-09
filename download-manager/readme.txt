@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.0
 License: GPLv3
-Stable tag: 3.3.62
+Stable tag: 3.3.63
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,16 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.63 - 2026.07.06 =
+* New: Activity Reports - scheduled weekly or monthly summary emails covering downloads, top packages, trending items, user activity, category breakdown and storage usage, with configurable sections, recipients, schedule and a test-report option
+* New: Cron Jobs settings tab showing background job stats, job history and scheduled events
+* Improved: Rebuilt the background job system with job queues, priorities, automatic retries and job locking; job handlers are now whitelisted for security
+* Improved: Legacy confirmation dialogs now route through the WPDM dialog system with proper button styling and a graceful fallback when the dialog script is unavailable
+* Fixed: The "require admin approval" check now applies to every authentication flow, so unapproved accounts can no longer sign in through flows that skip the username parameter
+* Fixed: PHP warning for an undefined variable during authentication
+* Fixed: The [changelog] template tag is now parsed in package page templates, so the changelog timeline renders instead of printing the raw tag
+* Fixed: The [hide_empty:tag] template tag no longer leaks into the markup when the target tag has a value
 
 = 3.3.62 - 2026.07.02 =
 * Improved: Expirable download link handling

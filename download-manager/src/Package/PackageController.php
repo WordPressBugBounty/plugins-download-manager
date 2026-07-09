@@ -1882,6 +1882,11 @@ class PackageController extends PackageTemplate {
 			$vars['video_preview_modal'] = self::videoPreviewModal( $vars, $type );
 		}
 
+		// [changelog] – must be resolved before the [hide_empty:changelog] pass below
+		if ( strpos( $template, '[changelog]' ) !== false ) {
+			$vars['changelog'] = $this->changelog( $vars['ID'] );
+		}
+
 
 		$vars['fav_button']        = self::favBtn( $vars['ID'] );
 		$vars['fav_button_sm']     = self::favBtn( $vars['ID'], array(
@@ -1910,7 +1915,7 @@ class PackageController extends PackageTemplate {
 			if ( ! isset( $vars[ $hematches[1][ $index ] ] ) || ( $vars[ $hematches[1][ $index ] ] == '' || $vars[ $hematches[1][ $index ] ] == '0' ) ) {
 				$vars[ $hide_empty ] = 'wpdm_hide wpdm_remove_empty';
 			} else {
-				$value[ $hide_empty ] = '';
+				$vars[ $hide_empty ] = '';
 			}
 		}
 

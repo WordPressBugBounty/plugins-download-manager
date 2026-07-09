@@ -308,8 +308,56 @@ const WPDM = {
     },
 
 
+    // Map a legacy bootstrap button class (e.g. "btn btn-danger") to a WPDM dialog button type
+    _dialogBtnType: function (cls) {
+        cls = (cls || '').toLowerCase();
+        if (cls.indexOf('danger') > -1) return 'danger';
+        if (cls.indexOf('success') > -1) return 'success';
+        if (cls.indexOf('primary') > -1 || cls.indexOf('info') > -1 || cls.indexOf('warning') > -1) return 'primary';
+        return 'secondary';
+    },
+
     confirm: function (heading, content, buttons, width) {
-         WPDM.dialog.confirm(heading, content, {type: 'question'});
+        var $ = jQuery;
+        var oldButtons = buttons || [];
+        var dialog = WPDM.dialog || window.WPDMDialog;
+
+        // Graceful fallback if the WPDM dialog system is not available
+        if (!dialog) {
+            var lastButton = oldButtons[oldButtons.length - 1];
+            if (window.confirm($('<div>').html(content).text()) && lastButton && typeof lastButton.callback === 'function') {
+                lastButton.callback.call($());
+            }
+            return $();
+        }
+
+        // Map the legacy buttons ({label, class, callback}) to WPDM dialog buttons
+        var dlgButtons = oldButtons.length ? oldButtons.map(function (button, i) {
+            return {
+                text: $('<div>').html(button.label).text(), // strip icons/markup from the label
+                type: WPDM._dialogBtnType(button.class),
+                action: 'btn_' + i
+            };
+        }) : [{ text: 'OK', type: 'primary', action: 'btn_0' }];
+
+        dialog.show({
+            title: heading,
+            message: content,
+            html: true,
+            type: 'question',
+            size: 'sm',
+            buttons: dlgButtons,
+            backdrop: 'static'
+        }).then(function (result) {
+            var m = /^btn_(\d+)$/.exec(result.action || '');
+            if (m && oldButtons[m[1]] && typeof oldButtons[m[1]].callback === 'function') {
+                // The dialog is already closing; legacy callbacks expect `this` to be the
+                // modal, so pass an empty jQuery set where .modal()/.find() are safe no-ops.
+                oldButtons[m[1]].callback.call($());
+            }
+        });
+
+        return $();
     },
     audioUI: function (audio) {
         var $ = jQuery, song_length, song_length_m, song_length_s;

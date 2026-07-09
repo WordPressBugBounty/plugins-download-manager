@@ -217,6 +217,17 @@ class Email {
 		            'message'    => 'Your package has been approved<br/><br/><table style="width: 100%" cellpadding="10px"><tr><td width="120px">Package Name:</td><td>{{package_name}}</td></tr><tr><td width="120px"></td><td><div style="padding-top: 10px;"><a class="btn" href="{{package_url}}">View Package</a></div></td></tr></table>'
 	            )
             ),
+            'activity-report' => array(
+                'label'   => __( "Activity Report" , "download-manager" ),
+                'for'     => 'admin',
+                'default' => array(
+                    'subject'    => sprintf( __( "[%s] {{report_period}} Activity Report" , "download-manager" ), $sitename ),
+                    'from_name'  => get_option( 'blogname' ),
+                    'from_email' => $admin_email,
+                    'to_email'   => $admin_email,
+                    'message'    => '{{report_content}}'
+                )
+            ),
         );
 
         $templates = apply_filters( 'wpdm_email_templates', $templates );

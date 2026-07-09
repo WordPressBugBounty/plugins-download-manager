@@ -12,7 +12,7 @@ class Installer
         /**
          * @var float
          */
-        private $dbVersion = 535.4;
+        private $dbVersion = 535.5;
 
         function __construct()
         {
@@ -157,6 +157,20 @@ class Installer
             $installer->addColumn('ahm_sessions', 'lastAccess', 'int(11) NOT NULL DEFAULT 0');
             $installer->addIndex('ahm_sessions', 'name_device', '`name`(150),`deviceID`(40)');
             $installer->addIndex('ahm_sessions', 'expire', '`expire`');
+
+            // Cron Jobs table improvements
+            $installer->addColumn('ahm_cron_jobs', 'queue', "VARCHAR(64) NOT NULL DEFAULT 'default'");
+            $installer->addColumn('ahm_cron_jobs', 'priority', "TINYINT NOT NULL DEFAULT 5");
+            $installer->addColumn('ahm_cron_jobs', 'status', "VARCHAR(20) NOT NULL DEFAULT 'pending'");
+            $installer->addColumn('ahm_cron_jobs', 'attempts', "TINYINT NOT NULL DEFAULT 0");
+            $installer->addColumn('ahm_cron_jobs', 'max_attempts', "TINYINT NOT NULL DEFAULT 3");
+            $installer->addColumn('ahm_cron_jobs', 'started_at', "INT(11) NULL");
+            $installer->addColumn('ahm_cron_jobs', 'completed_at', "INT(11) NULL");
+            $installer->addColumn('ahm_cron_jobs', 'next_retry_at', "INT(11) NULL");
+            $installer->addColumn('ahm_cron_jobs', 'interval_seconds', "INT(11) NOT NULL DEFAULT 0");
+            $installer->addColumn('ahm_cron_jobs', 'error_message', "TEXT NULL");
+            $installer->addColumn('ahm_cron_jobs', 'locked_by', "VARCHAR(64) NULL");
+            $installer->addColumn('ahm_cron_jobs', 'locked_at', "INT(11) NULL");
 
             $ach = get_option("__wpdm_activation_history", array());
             $ach = maybe_unserialize($ach);
