@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.0
 License: GPLv3
-Stable tag: 3.3.63
+Stable tag: 3.3.65
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,14 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.65 - 2026.07.12 =
+* Fixed: The [wpdm_changelog] shortcode rendered unstyled, because its markup was emitted without the wrapper element that the front-end stylesheet scopes every changelog rule to
+
+= 3.3.64 - 2026.07.12 =
+* Fixed: The [changelog] template tag rendered unstyled, because the front-end stylesheet still targeted an older markup structure - entry content was hidden outright, the timeline had no layout and the icons rendered at their oversized default dimensions
+* Fixed: Changelog toggling stopped working entirely on pages holding more than one changelog, where every entry picked up a duplicate click handler that cancelled itself out
+* Improved: Changelog toggle buttons now expose their expanded state to assistive technology, and the newest release is highlighted in both light and dark mode
 
 = 3.3.63 - 2026.07.06 =
 * New: Activity Reports - scheduled weekly or monthly summary emails covering downloads, top packages, trending items, user activity, category breakdown and storage usage, with configurable sections, recipients, schedule and a test-report option

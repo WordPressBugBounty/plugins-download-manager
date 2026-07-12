@@ -2049,120 +2049,324 @@
 .w3eden .btn-linkedin:hover { background-color: #004182; border-color: #004182; color: #fff; }
 
 /* Changelog styles */
+/* --color-primary/--color-success are injected at runtime from user settings
+   (see Apply.php); the fallbacks keep the changelog legible if they're absent. */
 .w3eden .wpdm-changelog {
-    --wpdm-cl-primary: var(--color-primary);
+    --wpdm-cl-primary: var(--color-primary, #4a8eff);
+    --wpdm-cl-success: var(--color-success, #18ce0f);
+    --wpdm-cl-success-soft: var(--color-success-light, rgba(24, 206, 15, 0.1));
     --wpdm-cl-bg: var(--bg-body);
+    --wpdm-cl-bg-alt: var(--bg-secondary);
     --wpdm-cl-border: var(--border-color);
     --wpdm-cl-text: var(--text-primary);
     --wpdm-cl-muted: var(--text-muted);
+    --wpdm-cl-dot: 12px;
     position: relative;
-    padding-left: 24px;
+    /* Transparent: front-dark.css restyles only the border here, so the frame
+       adapts to whatever surface the theme puts behind it. */
+    padding: 0 20px 20px;
+    border: 1px solid var(--wpdm-cl-border);
+    border-radius: var(--radius-lg);
+}
+
+.w3eden .wpdm-changelog__header {
+    display: flex;
+    align-items: center;
+    padding: 16px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--wpdm-cl-border);
+}
+
+.w3eden .wpdm-changelog__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--wpdm-cl-text);
+}
+
+.w3eden .wpdm-changelog__title svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--wpdm-cl-primary);
+}
+
+.w3eden .wpdm-changelog__list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Each entry is a two-column row: timeline rail + content card */
+.w3eden .wpdm-changelog__item {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
 }
 
 .w3eden .wpdm-changelog__timeline {
-    position: absolute;
-    left: 6px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--wpdm-cl-border);
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    width: var(--wpdm-cl-dot);
+    /* Aligns the dot with the middle of the item header row */
+    padding-top: 18px;
 }
-
-.w3eden .wpdm-changelog__entry {
-    position: relative;
-    margin-bottom: 16px;
-}
-
-.w3eden .wpdm-changelog__entry:last-child { margin-bottom: 0; }
 
 .w3eden .wpdm-changelog__dot {
-    position: absolute;
-    left: -24px;
-    top: 4px;
-    width: 14px;
-    height: 14px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    width: var(--wpdm-cl-dot);
+    height: var(--wpdm-cl-dot);
     background: var(--wpdm-cl-bg);
     border: 2px solid var(--wpdm-cl-border);
     border-radius: 50%;
-    z-index: 1;
 }
 
-.w3eden .wpdm-changelog__entry--latest .wpdm-changelog__dot {
-    background: var(--color-success);
-    border-color: var(--color-success);
+.w3eden .wpdm-changelog__dot--latest {
+    background: var(--wpdm-cl-success);
+    border-color: var(--wpdm-cl-success);
     animation: wpdm-changelog-pulse 2s infinite;
 }
+
+.w3eden .wpdm-changelog__line {
+    flex: 1 1 auto;
+    width: 2px;
+    min-height: 8px;
+    background: var(--wpdm-cl-border);
+}
+
+.w3eden .wpdm-changelog__item:last-child .wpdm-changelog__line { display: none; }
 
 @keyframes wpdm-changelog-pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
     50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
 }
 
-.w3eden .wpdm-changelog__header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    padding: 8px 12px;
-    background: var(--bg-secondary);
+.w3eden .wpdm-changelog__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 16px;
+    background: var(--wpdm-cl-bg);
+    border: 1px solid var(--wpdm-cl-border);
     border-radius: var(--radius);
-    transition: background-color var(--transition);
+    overflow: hidden;
+    transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-.w3eden .wpdm-changelog__header:hover { background: var(--bg-tertiary); }
+.w3eden .wpdm-changelog__content:hover {
+    border-color: var(--wpdm-cl-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.w3eden .wpdm-changelog__item:last-child .wpdm-changelog__content { margin-bottom: 0; }
+
+/* --color-success-light is translucent, so this reads correctly in dark mode too */
+.w3eden .wpdm-changelog__item--latest .wpdm-changelog__content {
+    border-color: var(--wpdm-cl-success);
+}
+
+.w3eden .wpdm-changelog__item--latest .wpdm-changelog__item-header {
+    background: var(--wpdm-cl-success-soft);
+    border-bottom-color: var(--wpdm-cl-success);
+}
+
+.w3eden .wpdm-changelog__item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--wpdm-cl-bg-alt);
+    border-bottom: 1px solid var(--wpdm-cl-border);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--transition), border-color var(--transition);
+}
+
+.w3eden .wpdm-changelog__item-header:hover { background: var(--bg-tertiary); }
+
+.w3eden .wpdm-changelog__item--collapsed .wpdm-changelog__item-header {
+    border-bottom-color: transparent;
+}
+
+.w3eden .wpdm-changelog__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
+}
 
 .w3eden .wpdm-changelog__version {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--wpdm-cl-bg);
+    border: 1px solid var(--wpdm-cl-border);
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--wpdm-cl-text);
+}
+
+.w3eden .wpdm-changelog__version svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    color: var(--wpdm-cl-muted);
+}
+
+.w3eden .wpdm-changelog__version--latest {
+    border-color: var(--wpdm-cl-success);
+    color: var(--wpdm-cl-success);
+}
+
+.w3eden .wpdm-changelog__version--latest svg { color: var(--wpdm-cl-success); }
+
+.w3eden .wpdm-changelog__badge {
+    margin-left: 2px;
+    padding: 2px 6px;
+    background: var(--wpdm-cl-success);
+    color: #fff;
+    border-radius: var(--radius-full);
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.w3eden .wpdm-changelog__date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    color: var(--wpdm-cl-muted);
+}
+
+.w3eden .wpdm-changelog__date svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.w3eden .wpdm-changelog__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--wpdm-cl-border);
+    border-radius: var(--radius-full);
+    color: var(--wpdm-cl-muted);
+    cursor: pointer;
+    transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.w3eden .wpdm-changelog__toggle:hover {
+    background: var(--wpdm-cl-primary);
+    border-color: var(--wpdm-cl-primary);
+    color: #fff;
+}
+
+.w3eden .wpdm-changelog__toggle svg {
+    width: 14px;
+    height: 14px;
+    transform: rotate(180deg);
+    transition: transform var(--transition);
+}
+
+.w3eden .wpdm-changelog__item--collapsed .wpdm-changelog__toggle svg { transform: rotate(0deg); }
+
+/* Collapsible body. 1fr -> 0fr animates to a fully clipped row; browsers without
+   support simply leave the entry expanded, which stays readable. */
+.w3eden .wpdm-changelog__body {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows var(--transition-slow);
+}
+
+.w3eden .wpdm-changelog__item--collapsed .wpdm-changelog__body { grid-template-rows: 0fr; }
+
+.w3eden .wpdm-changelog__body > * {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.w3eden .wpdm-changelog__changes {
+    padding: 14px;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    transition: padding var(--transition-slow);
+}
+
+/* __changes is itself the grid item, so its vertical padding would still paint a
+   sliver at 0fr. Collapse the padding with the row. */
+.w3eden .wpdm-changelog__item--collapsed .wpdm-changelog__changes {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.w3eden .wpdm-changelog__changes > *:first-child { margin-top: 0; }
+.w3eden .wpdm-changelog__changes > *:last-child { margin-bottom: 0; }
+
+.w3eden .wpdm-changelog__changes p { margin: 0 0 8px; }
+
+.w3eden .wpdm-changelog__changes ul,
+.w3eden .wpdm-changelog__changes ol {
+    margin: 0 0 8px;
+    padding-left: 20px;
+}
+
+.w3eden .wpdm-changelog__changes li { margin-bottom: 4px; }
+.w3eden .wpdm-changelog__changes li:last-child { margin-bottom: 0; }
+
+.w3eden .wpdm-changelog__changes strong {
     font-weight: 600;
     color: var(--wpdm-cl-text);
 }
 
-.w3eden .wpdm-changelog__date {
-    font-size: 0.8125rem;
-    color: var(--wpdm-cl-muted);
+.w3eden .wpdm-changelog__changes code {
+    padding: 2px 5px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8125em;
+    color: var(--wpdm-cl-text);
 }
 
-.w3eden .wpdm-changelog__badge {
-    font-size: 0.6875rem;
-    padding: 2px 6px;
-    background: var(--color-success-light);
-    color: #065f46;
-    border-radius: var(--radius-full);
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.w3eden .wpdm-changelog__toggle {
-    margin-left: auto;
-    width: 20px;
-    height: 20px;
-    color: var(--wpdm-cl-muted);
-    transition: transform var(--transition);
-}
-
-.w3eden .wpdm-changelog__entry.is-expanded .wpdm-changelog__toggle {
-    transform: rotate(180deg);
-}
-
-.w3eden .wpdm-changelog__content {
-    display: none;
-    padding: 12px 16px;
-    margin-top: 8px;
-    background: var(--wpdm-cl-bg);
-    border: 1px solid var(--wpdm-cl-border);
+.w3eden .wpdm-changelog-empty {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
     border-radius: var(--radius);
+    font-size: 0.875rem;
+    text-align: center;
+    color: var(--text-muted);
 }
 
-.w3eden .wpdm-changelog__entry.is-expanded .wpdm-changelog__content {
-    display: block;
+@media (max-width: 480px) {
+    .w3eden .wpdm-changelog { padding: 0 12px 12px; }
+    .w3eden .wpdm-changelog__item { gap: 10px; }
 }
 
-.w3eden .wpdm-changelog__content ul {
-    margin: 0;
-    padding-left: 20px;
+@media (prefers-reduced-motion: reduce) {
+    .w3eden .wpdm-changelog__dot--latest { animation: none; }
+    .w3eden .wpdm-changelog__body { transition: none; }
 }
-
-.w3eden .wpdm-changelog__content li { margin-bottom: 4px; }
-.w3eden .wpdm-changelog__content li:last-child { margin-bottom: 0; }
 
 /* Filter toolbar */
 .w3eden .wpdm-filter-toolbar { margin-bottom: 1.5rem; }
@@ -2754,7 +2958,8 @@ svg#wpdm-loading rect {
 .w3eden [role="button"]:focus-visible,
 .w3eden .__wpdm_playvideo:focus-visible,
 .w3eden .wpdm-lightbox:focus-visible,
-.w3eden .wpdm-changelog__header:focus-visible {
+.w3eden .wpdm-changelog__item-header:focus-visible,
+.w3eden .wpdm-changelog__toggle:focus-visible {
     outline: 2px solid var(--color-primary, #6366f1);
     outline-offset: 2px;
     border-radius: var(--radius-sm, 4px);

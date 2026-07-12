@@ -2745,7 +2745,7 @@ class PackageController extends PackageTemplate {
 			$html .= $date;
 			$html .= '</span>';
 			$html .= '</div>';
-			$html .= '<button type="button" class="wpdm-changelog__toggle" aria-label="' . esc_attr__('Toggle details', 'download-manager') . '">';
+			$html .= '<button type="button" class="wpdm-changelog__toggle" aria-expanded="' . ($is_collapsed ? 'false' : 'true') . '" aria-label="' . esc_attr__('Toggle details', 'download-manager') . '">';
 			$html .= '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
 			$html .= '</button>';
 			$html .= '</div>';
@@ -2762,17 +2762,26 @@ class PackageController extends PackageTemplate {
 		$html .= '</div>'; // .wpdm-changelog__list
 		$html .= '</div>'; // .wpdm-changelog
 
-		// Add inline JavaScript for toggle functionality
+		// Add inline JavaScript for toggle functionality.
+		// This markup is emitted once per changelog, so the handler must be idempotent:
+		// binding per-header would attach one listener per changelog on the page, and a
+		// click would then toggle the class once per listener (i.e. cancel itself out
+		// whenever a page holds an even number of changelogs). A single delegated
+		// listener guarded by a flag also covers changelogs inserted later via AJAX.
 		$html .= "
 		<script>
 		(function() {
-			document.querySelectorAll('.wpdm-changelog [data-toggle=\"changelog\"]').forEach(function(header) {
-				header.addEventListener('click', function() {
-					var item = this.closest('.wpdm-changelog__item');
-					if (item) {
-						item.classList.toggle('wpdm-changelog__item--collapsed');
-					}
-				});
+			if (window.__wpdmChangelogBound) return;
+			window.__wpdmChangelogBound = true;
+			document.addEventListener('click', function(e) {
+				if (!e.target || !e.target.closest) return;
+				var header = e.target.closest('.wpdm-changelog [data-toggle=\"changelog\"]');
+				if (!header) return;
+				var item = header.closest('.wpdm-changelog__item');
+				if (!item) return;
+				var collapsed = item.classList.toggle('wpdm-changelog__item--collapsed');
+				var toggle = header.querySelector('.wpdm-changelog__toggle');
+				if (toggle) toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 			});
 		})();
 		</script>";

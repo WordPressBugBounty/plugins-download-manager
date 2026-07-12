@@ -490,7 +490,9 @@ class Shortcodes
 	 */
 	function changelog($params) {
 		if(!isset($params['id'])) return '';
-		return WPDM()->package->changelog($params['id'], $params);
+		$html = WPDM()->package->changelog($params['id'], $params);
+		if($html === '') return '';
+		return "<div class='w3eden'>" . $html . "</div>";
 	}
 
 }
