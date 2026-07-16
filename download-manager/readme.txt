@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.0
 License: GPLv3
-Stable tag: 3.3.65
+Stable tag: 3.3.66
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,13 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.66 - 2026.07.17 =
+* Security: Author+ Stored Cross-Site Scripting via Package Title - the title was run through stripcslashes() when rendered, which decoded C-style escape sequences back into active markup after save-time sanitization had already accepted them; the title is no longer decoded and is now escaped on output ( Reported by WordPress Plugin Review Team )
+* Security: Removed the same escape-sequence decoding from the package description and excerpt, which were open to the identical Author+ Stored XSS vector; the excerpt is now sanitized with wp_kses_post() instead of a filter that only stripped script tags
+* Security: The package title and page URL are now escaped where they are substituted into the QR code image attributes
+* Security: Removed the unauthenticated POST /wpdm/view-count REST route, which let anyone increment the view counter meta on any post ID; the route was unused, as view counts are recorded through the wpdm_view_count ajax action
+* Security: The view count handler now verifies its nonce, which had been left commented out, and only accepts wpdmpro packages, so the counter meta can no longer be created on unrelated posts and pages
 
 = 3.3.65 - 2026.07.12 =
 * Fixed: The [wpdm_changelog] shortcode rendered unstyled, because its markup was emitted without the wrapper element that the front-end stylesheet scopes every changelog rule to

@@ -117,12 +117,14 @@ class PackageController extends PackageTemplate {
 
 		$ID = $post_vars['ID'];
 
-		$post_vars['title']       = stripcslashes( $post_vars['post_title'] );
+		// Never run stripcslashes() on stored input: it decodes C-style escapes
+		// ( \x3C etc. ) back into active markup after save-time KSES has already run.
+		$post_vars['title']       = esc_html( $post_vars['post_title'] );
 
 		$template_tags = $this->parseTemplate( $template, $ID, $template_type );
 
 		if(in_array('description', $template_tags)) {
-			$post_vars['description'] = stripcslashes( str_replace( "[wpdm", "[__wpdm", wp_kses_post( $post_vars['post_content'] ) ) );
+			$post_vars['description'] = str_replace( "[wpdm", "[__wpdm", wp_kses_post( $post_vars['post_content'] ) );
 			$post_vars['description'] = wpautop( stripslashes( $post_vars['description'] ) );
 
 			if($template_type === 'page') {
@@ -136,7 +138,7 @@ class PackageController extends PackageTemplate {
 			$post_vars['description'] = wpautop(strip_shortcodes( $post_vars['post_content'] ));
 		}
 
-		$post_vars['excerpt'] = wpautop( stripcslashes( wpdm_escs( $post_vars['post_excerpt'] ) ) );
+		$post_vars['excerpt'] = wpautop( wp_kses_post( $post_vars['post_excerpt'] ) );
 		$author               = get_user_by( 'id', $post_vars['post_author'] );
 		if ( is_object( $author ) ) {
 			$post_vars['author_name'] = $author->display_name;
@@ -217,7 +219,7 @@ class PackageController extends PackageTemplate {
 		$post_vars['link_label']  = isset( $post_vars['link_label'] ) ? esc_attr( $post_vars['link_label'] ) : esc_attr__( "Download", "download-manager" );
 		$post_vars['page_url']    = get_permalink( $post_vars['ID'] );
 		$post_vars['page_link']   = "<a href='" . $post_vars['page_url'] . "'>{$post_vars['title']}</a>";
-		$post_vars['page_url_qr'] = "<img class='wpdm-qr-code wpdm-qr-code{$post_vars['ID']}' style='max-width: 250px' src='https://chart.googleapis.com/chart?cht=qr&chs=450x450&choe=UTF-8&chld=H|0&chl={$post_vars['page_url']}' alt='{$post_vars['title']}' />";
+		$post_vars['page_url_qr'] = "<img class='wpdm-qr-code wpdm-qr-code{$post_vars['ID']}' style='max-width: 250px' src='https://chart.googleapis.com/chart?cht=qr&chs=450x450&choe=UTF-8&chld=H|0&chl=" . esc_attr( $post_vars['page_url'] ) . "' alt='" . esc_attr( $post_vars['title'] ) . "' />";
 
 
 		if ( ! isset( $post_vars['btnclass'] ) ) {
@@ -2539,9 +2541,23 @@ class PackageController extends PackageTemplate {
 
 	function addViewCount() {
 
-		//__::isAuthentic( '__wpdm_view_count', NONCE_KEY, 'read', false );
+		// Verify the request originated from a rendered package page. 'read' still
+		// permits guests, so this does not gate legitimate visitors - it only stops
+		// blind POSTs against this endpoint. Bails out via wp_send_json() on failure.
+		__::isAuthentic( '__wpdm_view_count', NONCE_KEY, 'read', false );
 
-		$id    = (int) ( $_REQUEST['id'] );
+		$id = (int) __::valueof( $_REQUEST, 'id', [ 'default' => 0, 'validate' => 'int' ] );
+
+		// Only packages get a view count. Without this, any ID could be used to
+		// create/increment __wpdm_view_count meta on arbitrary posts and pages.
+		if ( $id <= 0 || get_post_type( $id ) !== 'wpdmpro' ) {
+			wp_send_json( [
+				'success' => false,
+				'type'    => 'error',
+				'message' => __( 'Invalid package.', 'download-manager' )
+			], 400 );
+		}
+
 		$views = (int) get_post_meta( $id, '__wpdm_view_count', true );
 		update_post_meta( $id, '__wpdm_view_count', $views + 1 );
 		wp_send_json( [ 'views' => $views + 1 ] );

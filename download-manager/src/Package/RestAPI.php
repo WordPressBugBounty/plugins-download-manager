@@ -33,11 +33,12 @@ class RestAPI
             'permission_callback' => '__return_true'
         ));
 
-	    register_rest_route('wpdm', '/view-count', array(
-		    'methods' => 'POST',
-		    'callback' => [new PackageController(), 'addViewCount'],
-		    'permission_callback' => '__return_true'
-	    ));
+        // NOTE: The POST /wpdm/view-count route was removed. It exposed a
+        // state-changing write (__wpdm_view_count post meta, on any post ID)
+        // to unauthenticated callers via permission_callback => '__return_true'.
+        // Nothing in the plugin ever called it - view counts are recorded
+        // through the 'wpdm_view_count' admin-ajax action (see addViewCount()),
+        // which verifies a nonce and constrains the ID to the wpdmpro type.
 
     }
 }
