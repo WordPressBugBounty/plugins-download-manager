@@ -13,8 +13,11 @@ if(is_post_type_archive()) $toolbar = 1;
 if ($toolbar) {
     $title = wpdm_valueof($scparams, 'title');
     $desc = wpdm_valueof($scparams, 'desc');
-    $icon_width = wpdm_valueof($scparams, 'icon_width', ['default' => 64]);
-    $icon = wpdm_valueof($scparams, 'icon');
+    $icon_width = (int) wpdm_valueof($scparams, 'icon_width', ['default' => 64]);
+    // Normalize the caller-supplied icon URL at the source and drop disallowed
+    // schemes (defense in depth). The output is always rendered through UI::img(),
+    // which esc_url()-escapes it and neutralizes any attribute-breakout payload.
+    $icon = esc_url_raw( wpdm_valueof($scparams, 'icon') );
     $titles = $descs = [];
     if((int)$title === 1) {
         $categories = explode(",", $scparams['categories']);

@@ -74,11 +74,15 @@ class UI
 
     static function img($src, $alt = '', $attrs = [])
     {
+        // Escape every interpolated value: $src as a URL, and $alt plus all
+        // attribute names/values as HTML attributes, so a caller-supplied value
+        // (e.g. a shortcode attribute) cannot break out of the quoted attribute
+        // and inject markup such as an onerror handler.
         $_attrs = "";
         foreach ($attrs as $name => $val){
-            $_attrs .= " {$name}='$val'";
+            $_attrs .= " " . esc_attr($name) . "='" . esc_attr($val) . "'";
         }
-        return "<img src='{$src}' alt='{$alt}' {$_attrs} />";
+        return "<img src='" . esc_url($src) . "' alt='" . esc_attr($alt) . "' {$_attrs} />";
     }
 
     static function minifyHTML($html)
