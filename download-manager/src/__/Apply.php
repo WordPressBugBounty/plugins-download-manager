@@ -25,9 +25,6 @@ class Apply
         add_action("wp_ajax_nopriv_showLockOptions", array($this, 'showLockOptions'));
         add_action("wp_ajax_showLockOptions", array($this, 'showLockOptions'));
 
-        add_action('wp_ajax_wpdm_verify_file_pass', array($this, 'checkFilePassword'));
-        add_action('wp_ajax_nopriv_wpdm_verify_file_pass', array($this, 'checkFilePassword'));
-
         add_action("wp_ajax_wpdm_generate_password", [$this, 'generatePassword']);
         add_action("wp_ajax_wpdm-activate-shop", [$this, 'activatePremiumPackage']);
 
@@ -369,43 +366,6 @@ class Apply
             }
         }
 
-    }
-
-    /**
-     * @usage Validate individual file password
-     */
-    function checkFilePassword()
-    {
-        if (isset($_POST['actioninddlpvr'], $_POST['wpdmfileid']) && $_POST['actioninddlpvr'] != '') {
-            $limit = get_option('__wpdm_private_link_usage_limit', 3);
-            $fileid = wpdm_query_var('wpdmfileid', 'int');
-            $filepass = wpdm_query_var('filepass', 'escs');
-            $data = get_post_meta(wpdm_query_var('wpdmfileid', 'int'), '__wpdm_fileinfo', true);
-            $data = $data ? $data : array();
-            $package = get_post($fileid);
-            $packagemeta = wpdm_custom_data($fileid);
-            $password = isset($data[$fileid]['password']) && $data[$fileid]['password'] != "" ? $data[$fileid]['password'] : $packagemeta['password'];
-            $pu = isset($packagemeta['password_usage']) && is_array($packagemeta['password_usage']) ? $packagemeta['password_usage'] : array();
-            if ($filepass !== '' && $password == $filepass || substr_count($password, "[{$filepass}]") > 0) {
-                $pul = $packagemeta['password_usage_limit'];
-                if (is_array($pu) && isset($pu[$password]) && $pu[$password] >= $pul && $pul > 0) {
-                    $data['error'] = __("Password usages limit exceeded", "download-manager");
-                    die('|error|');
-                } else {
-                    if (!is_array($pu)) $pu = array();
-                    $pu[$password] = isset($pu[$password]) ? $pu[$password] + 1 : 1;
-                    update_post_meta($fileid, '__wpdm_password_usage', $pu);
-                }
-
-
-                $_data['error'] = '';
-                $_data['downloadurl'] = WPDM()->package->expirableDownloadLink($fileid);
-                $_data['downloadurl'] .= "&ind=" . wpdm_query_var('wpdmfile');
-                wp_send_json($_data);
-
-            } else
-                wp_send_json(array('error' => __("Invalid password", "download-manager"), 'downloadurl' => ''));
-        }
     }
 
     /**

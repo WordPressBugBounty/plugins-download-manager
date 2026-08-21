@@ -3,9 +3,9 @@ Contributors: w3eden, codename065, shahriar0822, shimo16ab, shafayat-alam
 Donate link:
 Tags: download manager, document management, file manager, digital store, ecommerce, download monitor
 Requires at least: 5.3
-Tested up to: 7.0
+Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.67
+Stable tag: 3.3.68
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -202,11 +202,17 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 
 == Changelog ==
 
+= 3.3.68 - 2026.08.20 =
+* Improved: Redesigned the activity report email with a clearer hierarchy - the headline figure now leads each section, metric cards share a common baseline, and every section carries a designed empty state so a quiet period still reads as intentional
+* Improved: Activity report tables now expose proper column headers to screen readers, and layout tables are marked as presentational
+* Security: Unauthenticated password-protection bypass via PHP type juggling - the package password check ( validate-password REST endpoint ) used a loose comparison, so a download protected with an all-numeric password could be unlocked by submitting an equivalent numeric string ( e.g. "1.23e2" in place of "123" ) without knowing the real password; the check now uses a strict, timing-safe comparison ( Reported by Shikhali Jamalzade )
+* Security: Missing Authorization on the public profile menu endpoint ( wpdm_get_profile_menu_content ) let unauthenticated visitors read any registered user's favourites list by passing an arbitrary user id; the profile owner id is now bound into the signed request token and the handler validates the requested menu, so profile content can only be loaded through a genuine public profile page ( Reported by Harsh Sanghvi )
+
 = 3.3.67 - 2026.07.30 =
 * Security: Contributor+ Stored Cross-Site Scripting via the icon and icon_width attributes of the [wpdm_category] shortcode - the attribute values were interpolated into the image tag unescaped and could break out of the src / style attribute to inject an onerror/onload handler; UI::img() now escapes the src with esc_url() and all other attributes with esc_attr(), and the shortcode sanitizes the icon URL on input ( Reported by Wordfence )
 
 = 3.3.66 - 2026.07.17 =
-* Security: Author+ Stored Cross-Site Scripting via Package Title - the title was run through stripcslashes() when rendered, which decoded C-style escape sequences back into active markup after save-time sanitization had already accepted them; the title is no longer decoded and is now escaped on output ( Reported by WordPress Plugin Review Team )
+* Security: Author+ Stored Cross-Site Scripting via Package Title - the title was run through stripcslashes() when rendered, which decoded C-style escape sequences back into active markup after save-time sanitization had already accepted them; the title is no longer decoded and is now escaped on output ( Reported by Yaswanth Reddy Sunkara )
 * Security: Removed the same escape-sequence decoding from the package description and excerpt, which were open to the identical Author+ Stored XSS vector; the excerpt is now sanitized with wp_kses_post() instead of a filter that only stripped script tags
 * Security: The package title and page URL are now escaped where they are substituted into the QR code image attributes
 * Security: Removed the unauthenticated POST /wpdm/view-count REST route, which let anyone increment the view counter meta on any post ID; the route was unused, as view counts are recorded through the wpdm_view_count ajax action

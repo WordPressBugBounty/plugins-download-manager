@@ -36,8 +36,24 @@ class PublicProfile
     }
 
     function menuContent(){
-        call_user_func($this->profile_menu[wpdm_query_var('__pmenu')]['content']);
+        $menu = wpdm_query_var('__pmenu');
+        // Only dispatch to registered profile-menu handlers.
+        if(!isset($this->profile_menu[$menu]) || !is_callable($this->profile_menu[$menu]['content'])) die();
+        // The profile owner id is signed into the __scp token emitted on the profile page. Requiring
+        // __pu to match the signed token blocks unauthenticated enumeration of arbitrary users' profile
+        // data ( e.g. favourites ) via a guessed/forged __pu ( CWE-862 Missing Authorization ).
+        if($this->profileUser() !== wpdm_query_var('__pu', 'int')){ status_header(403); die(); }
+        call_user_func($this->profile_menu[$menu]['content']);
         die();
+    }
+
+    /**
+     * Authoritative profile-owner id, taken from the signed __scp token rather than the raw __pu
+     * request var. Returns 0 when the token is missing, invalid or forged so callers can reject.
+     */
+    private function profileUser(){
+        $scp = Crypt::decrypt(wpdm_query_var('__scp'), true);
+        return is_array($scp) ? (int) __::valueof($scp, '__pu') : 0;
     }
 
     function profile($params = array()){
@@ -85,15 +101,23 @@ class PublicProfile
 
 
     function downloads(){
+        $uid = $this->profileUser();
+        if(!$uid) die();
         $params = Crypt::decrypt(wpdm_query_var('__scp'), true);
-        $params['author'] = wpdm_query_var('__pu', 'int');
+        if(!is_array($params)) $params = array();
+        unset($params['__pu']);
+        $params['author'] = $uid;
 		$params['async'] = 1;
         echo WPDM()->package->shortCodes->packages($params);
     }
 
     function favourites(){
+        $uid = $this->profileUser();
+        if(!$uid) die();
         $params = Crypt::decrypt(wpdm_query_var('__scp'), true);
-        $myfavs = maybe_unserialize(get_user_meta(wpdm_query_var('__pu', 'int'), '__wpdm_favs', true));
+        if(!is_array($params)) $params = array();
+        unset($params['__pu']);
+        $myfavs = maybe_unserialize(get_user_meta($uid, '__wpdm_favs', true));
 		if(!is_array($myfavs) || count($myfavs) === 0) {
 			Messages::info("Do not have any favourite item yet!");
 			die();

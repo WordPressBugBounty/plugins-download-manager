@@ -85,7 +85,7 @@
             $(this).children('fa').removeClass(cc).addClass('fa fa-sun fa-spin');
             var abtn = $(this);
             WPDM.blockUI('#wpdm-profile-contents');
-            $.get(wpdm_url.ajax, { action: 'wpdm_get_profile_menu_content', __pu: '<?php echo $user_ID; ?>', __pmenu: $(this).data('menu'), __scp: '<?php echo \WPDM\__\Crypt::encrypt($params); ?>'}, function (response) {
+            $.get(wpdm_url.ajax, { action: 'wpdm_get_profile_menu_content', __pu: '<?php echo $user_ID; ?>', __pmenu: $(this).data('menu'), __scp: '<?php echo \WPDM\__\Crypt::encrypt(array_merge((array) $params, ['__pu' => (int) $user_ID])); ?>'}, function (response) {
                 $('#wpdm-profile-contents').html(response);
                 WPDM.unblockUI('#wpdm-profile-contents');
                 abtn.attr('class', cc);
@@ -97,7 +97,7 @@
         });
         var hash = location.hash.substr(1);
         WPDM.blockUI('#wpdm-profile-contents');
-        $.get(wpdm_url.ajax, { action: 'wpdm_get_profile_menu_content', __pu: '<?php echo $user_ID; ?>', __pmenu: (hash ? hash : '<?php echo $first_menu; ?>'), __scp: '<?php echo \WPDM\__\Crypt::encrypt($params); ?>'}, function (response) {
+        $.get(wpdm_url.ajax, { action: 'wpdm_get_profile_menu_content', __pu: '<?php echo $user_ID; ?>', __pmenu: (hash ? hash : '<?php echo $first_menu; ?>'), __scp: '<?php echo \WPDM\__\Crypt::encrypt(array_merge((array) $params, ['__pu' => (int) $user_ID])); ?>'}, function (response) {
             $('#wpdm-profile-contents').html(response);
             $('#profile-button-'+(hash ? hash : '<?php echo $first_menu; ?>')).addClass('active');
             WPDM.unblockUI('#wpdm-profile-contents');

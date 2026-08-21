@@ -78,7 +78,8 @@ class PackageLocks
 	    }
 
         //Check if the given password is matched
-        if ($passwords && $password != $passwords && substr_count($passwords, "[$password]") < 1) {
+        //Use strict, timing-safe comparison to avoid PHP type-juggling bypass (e.g. numeric password "123" matched by "1.23e2")
+        if ($passwords && !hash_equals((string) $passwords, (string) $password) && substr_count($passwords, "[$password]") < 1) {
             $data['message'] = __("Wrong Password!", "download-manager") . " &nbsp; <span><i class='fas fa-redo'></i> " . __("Try Again", "download-manager") . " </span>";
 			$error = true;
         }

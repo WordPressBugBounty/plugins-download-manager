@@ -6,402 +6,629 @@
  * - $data: Array with report data
  * - $sections: Array of enabled sections
  *
+ * Rendered into the {{report_content}} slot of the configured email wrapper, which supplies a
+ * 600px table shell, the site header and the global footer. Everything here is therefore
+ * table-based with inline styles only: no <style> block, no media queries, no flexbox and no
+ * gradients, so the layout survives Outlook's Word rendering engine unchanged. Metric cards are
+ * laid out two-up rather than four-up so they stay legible at ~340px without needing a media
+ * query to stack them.
+ *
  * @package WPDM
  * @since 7.0.2
  */
 
 if (!defined('ABSPATH')) die('!');
 
-// Inline styles for email clients
-$styles = [
-    'section' => 'margin-bottom: 32px; padding: 24px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;',
-    'heading' => 'margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #111827;',
-    'subheading' => 'margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #374151;',
-    'stat_grid' => 'width: 100%; border-collapse: separate; border-spacing: 12px;',
-    'stat_card' => 'background: #f9fafb; padding: 16px; border-radius: 6px; text-align: center; vertical-align: top;',
-    'stat_value' => 'display: block; font-size: 28px; font-weight: 700; color: #111827; margin-bottom: 4px;',
-    'stat_label' => 'display: block; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;',
-    'change_positive' => 'display: inline-block; padding: 2px 8px; background: #d1fae5; color: #065f46; font-size: 12px; font-weight: 600; border-radius: 9999px; margin-top: 8px;',
-    'change_negative' => 'display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; font-size: 12px; font-weight: 600; border-radius: 9999px; margin-top: 8px;',
-    'table' => 'width: 100%; border-collapse: collapse; font-size: 14px;',
-    'th' => 'padding: 12px 16px; text-align: left; background: #f9fafb; color: #374151; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;',
-    'td' => 'padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #374151;',
-    'link' => 'color: #4f46e5; text-decoration: none; font-weight: 500;',
-    'badge' => 'display: inline-block; padding: 2px 8px; background: #eef2ff; color: #4338ca; font-size: 11px; font-weight: 600; border-radius: 4px;',
-    'badge_gold' => 'display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; border-radius: 4px;',
-    'bar' => 'height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;',
-    'bar_fill' => 'height: 100%; background: linear-gradient(90deg, #6366f1, #4f46e5); border-radius: 4px;',
-    'empty' => 'padding: 32px; text-align: center; color: #9ca3af; font-size: 14px;',
-];
-?>
+if (!function_exists('wpdm_ar_tokens')) {
 
-<!-- Report Header -->
-<div style="text-align: center; margin-bottom: 32px;">
-    <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #111827;">
-        <?php echo esc_html($data['period_label']); ?> <?php _e('Activity Report', 'download-manager'); ?>
-    </h1>
-    <p style="margin: 0; font-size: 14px; color: #6b7280;">
-        <?php echo esc_html($data['date_range']); ?>
-    </p>
-</div>
+    /**
+     * Design tokens for the report. Kept in one place so the palette and type scale stay
+     * consistent across sections and can be themed without touching markup.
+     */
+    function wpdm_ar_tokens(): array
+    {
+        return [
+            'font'        => "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+            'tnum'        => 'font-variant-numeric:tabular-nums;',
+            'ink'         => '#0f172a',
+            'ink_soft'    => '#334155',
+            'muted'       => '#64748b',
+            'line'        => '#e2e8f0',
+            'line_soft'   => '#f1f5f9',
+            'surface'     => '#ffffff',
+            'surface_alt' => '#f8fafc',
+            'accent'      => '#4f46e5',
+            'accent_soft' => '#eef2ff',
+            'pos_bg'      => '#ecfdf5',
+            'pos_fg'      => '#047857',
+            'neg_bg'      => '#fef2f2',
+            'neg_fg'      => '#b91c1c',
+            'flat_bg'     => '#f1f5f9',
+            'flat_fg'     => '#475569',
+            'gold_bg'     => '#fffbeb',
+            'gold_fg'     => '#b45309',
+        ];
+    }
 
-<?php if (!empty($data['download_summary'])): ?>
-<!-- Download Summary -->
-<div style="<?php echo $styles['section']; ?>">
-    <h2 style="<?php echo $styles['heading']; ?>">
-        <?php _e('Downloads Overview', 'download-manager'); ?>
-    </h2>
+    /**
+     * Delta pill. Direction is carried by a glyph as well as colour so the meaning survives
+     * greyscale printing and colour-blind readers (WCAG 1.4.1).
+     *
+     * The sign on the value outranks the caller's class because the data layer reports "no
+     * change" as an unsigned "0%" while still classing it positive; showing that as green
+     * growth would overstate a flat period. $class only breaks ties for unsigned non-zero values.
+     */
+    function wpdm_ar_delta(array $t, string $change, ?string $class = null): string
+    {
+        $change = trim($change);
+        if ($change === '') return '';
 
-    <table style="<?php echo $styles['stat_grid']; ?>">
+        if (strpos($change, '+') === 0) {
+            $bg = $t['pos_bg']; $fg = $t['pos_fg']; $glyph = '&#9650;';
+        } elseif (strpos($change, '-') === 0) {
+            $bg = $t['neg_bg']; $fg = $t['neg_fg']; $glyph = '&#9660;';
+        } elseif ((float) $change == 0.0) {
+            $bg = $t['flat_bg']; $fg = $t['flat_fg']; $glyph = '&#8211;';
+        } elseif ($class === 'negative') {
+            $bg = $t['neg_bg']; $fg = $t['neg_fg']; $glyph = '&#9660;';
+        } else {
+            $bg = $t['pos_bg']; $fg = $t['pos_fg']; $glyph = '&#9650;';
+        }
+
+        return '<span style="display:inline-block;padding:3px 9px;background-color:' . $bg . ';color:' . $fg
+             . ';font-family:' . $t['font'] . ';font-size:12px;font-weight:600;line-height:1.4;border-radius:100px;white-space:nowrap;' . $t['tnum'] . '">'
+             . $glyph . '&nbsp;' . esc_html($change) . '</span>';
+    }
+
+    /**
+     * Metric card. Label sits above the figure so a column of cards scans as a list of names
+     * first, values second.
+     */
+    function wpdm_ar_stat(array $t, string $label, string $value, string $sub = ''): string
+    {
+        $html = '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:' . $t['surface_alt'] . ';border:1px solid ' . $t['line'] . ';border-radius:10px;">'
+              . '<tr><td style="padding:16px 18px;font-family:' . $t['font'] . ';">'
+              . '<div style="font-size:11px;font-weight:600;color:' . $t['muted'] . ';text-transform:uppercase;letter-spacing:0.06em;">' . $label . '</div>'
+              . '<div style="padding-top:6px;font-size:24px;line-height:1.15;font-weight:700;color:' . $t['ink'] . ';letter-spacing:-0.02em;' . $t['tnum'] . '">' . $value . '</div>';
+
+        if ($sub !== '') {
+            $html .= '<div style="padding-top:6px;font-size:12px;line-height:1.4;color:' . $t['muted'] . ';">' . $sub . '</div>';
+        }
+
+        return $html . '</td></tr></table>';
+    }
+
+    /**
+     * Lay metric cards out two-up. Each entry is [label, value, sub].
+     *
+     * Gutters come from cell padding because border-spacing is unsupported in Outlook, and
+     * paired cards are padded to a matching line count rather than stretched with height:100%,
+     * which email clients honour inconsistently. Both give a shared baseline everywhere.
+     */
+    function wpdm_ar_stat_row(array $t, array $cards, int $gutter = 12): string
+    {
+        $cards = array_values(array_filter($cards));
+        $rows  = array_chunk($cards, 2);
+        $half  = (int) floor($gutter / 2);
+        $html  = '';
+
+        foreach ($rows as $i => $row) {
+            $has_sub = false;
+            foreach ($row as $card) {
+                if (trim((string) ($card[2] ?? '')) !== '') $has_sub = true;
+            }
+
+            $html .= '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"' . ($i > 0 ? ' style="padding-top:' . $gutter . 'px;"' : '') . '><tr>';
+
+            foreach ($row as $j => $card) {
+                $sub = (string) ($card[2] ?? '');
+                if ($sub === '' && $has_sub) $sub = '&nbsp;';
+
+                $pad = count($row) === 1
+                    ? ''
+                    : ($j === 0 ? 'padding-right:' . $half . 'px;' : 'padding-left:' . $half . 'px;');
+
+                $html .= '<td width="' . (count($row) === 1 ? '100' : '50') . '%" style="vertical-align:top;' . $pad . '">'
+                       . wpdm_ar_stat($t, (string) $card[0], (string) $card[1], $sub)
+                       . '</td>';
+            }
+
+            $html .= '</tr></table>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Section shell: eyebrow, title and body inside a bordered surface.
+     */
+    function wpdm_ar_section(array $t, string $title, string $body, string $eyebrow = '', ?string $accent = null): string
+    {
+        $accent = $accent ?: $t['accent'];
+
+        $head = '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"><tr>'
+              . '<td width="3" style="width:3px;background-color:' . $accent . ';border-radius:2px;font-size:0;line-height:0;">&nbsp;</td>'
+              . '<td style="padding-left:10px;font-family:' . $t['font'] . ';">';
+
+        if ($eyebrow !== '') {
+            $head .= '<div style="font-size:10px;font-weight:600;color:' . $t['muted'] . ';text-transform:uppercase;letter-spacing:0.08em;">' . $eyebrow . '</div>';
+        }
+
+        $head .= '<div style="' . ($eyebrow !== '' ? 'padding-top:3px;' : '') . 'font-size:15px;font-weight:700;color:' . $t['ink'] . ';letter-spacing:-0.01em;">' . $title . '</div>'
+               . '</td></tr></table>';
+
+        return '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:' . $t['surface'] . ';border:1px solid ' . $t['line'] . ';border-radius:12px;">'
+             . '<tr><td style="padding:20px 20px 8px 20px;">' . $head . '</td></tr>'
+             . '<tr><td style="padding:0 20px 20px 20px;">' . $body . '</td></tr>'
+             . '</table>';
+    }
+
+    /**
+     * Proportion bar. Solid fill rather than a gradient, which Outlook drops entirely.
+     */
+    function wpdm_ar_bar(array $t, float $pct, ?string $color = null): string
+    {
+        $pct   = max(0, min(100, $pct));
+        $color = $color ?: $t['accent'];
+        $track = '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:' . $t['line_soft'] . ';border-radius:3px;"><tr><td height="6" style="height:6px;line-height:6px;font-size:0;">';
+
+        if ($pct <= 0) {
+            return $track . '&nbsp;</td></tr></table>';
+        }
+
+        return $track
+             . '<table role="presentation" width="' . round($pct, 2) . '%" border="0" cellspacing="0" cellpadding="0" style="background-color:' . $color . ';border-radius:3px;"><tr>'
+             . '<td height="6" style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr></table>'
+             . '</td></tr></table>';
+    }
+
+    /**
+     * Empty state. Designed rather than left blank so a quiet period still looks intentional.
+     */
+    function wpdm_ar_empty(array $t, string $message): string
+    {
+        return '<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:' . $t['surface_alt'] . ';border:1px solid ' . $t['line'] . ';border-radius:10px;">'
+             . '<tr><td align="center" style="padding:28px 20px;font-family:' . $t['font'] . ';font-size:13px;line-height:1.6;color:' . $t['muted'] . ';">'
+             . $message . '</td></tr></table>';
+    }
+
+    /**
+     * Data-table column header. Uses <th scope="col"> so the table stays navigable.
+     */
+    function wpdm_ar_th(array $t, string $label, string $align = 'left', string $width = ''): string
+    {
+        return '<th scope="col" align="' . $align . '"' . ($width !== '' ? ' width="' . $width . '"' : '') . ' style="padding:0 0 8px 0;font-family:' . $t['font']
+             . ';font-size:10px;font-weight:600;color:' . $t['muted'] . ';text-transform:uppercase;letter-spacing:0.08em;text-align:' . $align
+             . ';border-bottom:1px solid ' . $t['line'] . ';">' . $label . '</th>';
+    }
+
+    /**
+     * Shared cell styling for data-table body rows.
+     */
+    function wpdm_ar_td(array $t, string $align = 'left', bool $last = false): string
+    {
+        return 'padding:11px 0;font-family:' . $t['font'] . ';font-size:14px;line-height:1.45;color:' . $t['ink_soft']
+             . ';text-align:' . $align . ';vertical-align:top;' . ($last ? '' : 'border-bottom:1px solid ' . $t['line_soft'] . ';');
+    }
+}
+
+$t          = wpdm_ar_tokens();
+$blocks     = [];
+$link_style = 'color:' . $t['accent'] . ';text-decoration:none;font-weight:600;';
+
+/* ---------------------------------------------------------------- Downloads */
+
+if (!empty($data['download_summary'])) {
+    $summary = $data['download_summary'];
+    $delta   = wpdm_ar_delta($t, (string) $summary['change'], $summary['change_class'] ?? null);
+
+    ob_start(); ?>
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-            <td style="<?php echo $styles['stat_card']; ?> width: 33%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['download_summary']['total']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Total Downloads', 'download-manager'); ?></span>
+            <td style="font-family:<?php echo $t['font']; ?>;font-size:40px;line-height:1.05;font-weight:700;color:<?php echo $t['ink']; ?>;letter-spacing:-0.03em;<?php echo $t['tnum']; ?>">
+                <?php echo esc_html(number_format_i18n((int) $summary['total'])); ?>
+            </td>
+            <td align="right" style="vertical-align:bottom;"><?php echo $delta; ?></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding-top:6px;font-family:<?php echo $t['font']; ?>;font-size:13px;color:<?php echo $t['muted']; ?>;">
                 <?php
-                $changeClass = $data['download_summary']['change_class'] === 'positive' ? $styles['change_positive'] : $styles['change_negative'];
+                printf(
+                    /* translators: %s: download count for the preceding period */
+                    esc_html__('Total downloads · %s in the previous period', 'download-manager'),
+                    '<span style="' . $t['tnum'] . '">' . esc_html(number_format_i18n((int) ($summary['previous'] ?? 0))) . '</span>'
+                );
                 ?>
-                <span style="<?php echo $changeClass; ?>"><?php echo esc_html($data['download_summary']['change']); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 33%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['download_summary']['daily_average'], 1); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Daily Average', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 33%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['download_summary']['peak_day_count']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Peak Day', 'download-manager'); ?></span>
-                <span style="display: block; font-size: 12px; color: #6b7280; margin-top: 4px;"><?php echo esc_html($data['download_summary']['peak_day']); ?></span>
             </td>
         </tr>
     </table>
-</div>
-<?php endif; ?>
-
-<?php if (!empty($data['top_packages'])): ?>
-<!-- Top Packages -->
-<div style="<?php echo $styles['section']; ?>">
-    <h2 style="<?php echo $styles['heading']; ?>">
-        <?php _e('Top Downloads', 'download-manager'); ?>
-    </h2>
-
-    <?php if (count($data['top_packages']) > 0): ?>
-    <table style="<?php echo $styles['table']; ?>">
-        <thead>
-            <tr>
-                <th style="<?php echo $styles['th']; ?> width: 40px;">#</th>
-                <th style="<?php echo $styles['th']; ?>"><?php _e('Package', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 120px; text-align: right;"><?php _e('Downloads', 'download-manager'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($data['top_packages'] as $package): ?>
-            <tr>
-                <td style="<?php echo $styles['td']; ?>">
-                    <?php if ($package['rank'] <= 3): ?>
-                    <span style="<?php echo $styles['badge_gold']; ?>">#<?php echo $package['rank']; ?></span>
-                    <?php else: ?>
-                    <span style="color: #9ca3af;">#<?php echo $package['rank']; ?></span>
-                    <?php endif; ?>
-                </td>
-                <td style="<?php echo $styles['td']; ?>">
-                    <a href="<?php echo esc_url($package['url']); ?>" style="<?php echo $styles['link']; ?>">
-                        <?php echo esc_html($package['title']); ?>
-                    </a>
-                    <div style="margin-top: 8px;">
-                        <div style="<?php echo $styles['bar']; ?>">
-                            <div style="<?php echo $styles['bar_fill']; ?> width: <?php echo $package['bar_width']; ?>%;"></div>
-                        </div>
-                    </div>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: right; font-weight: 600;">
-                    <?php echo number_format($package['downloads']); ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php else: ?>
-    <div style="<?php echo $styles['empty']; ?>">
-        <?php _e('No downloads recorded during this period.', 'download-manager'); ?>
+    <div style="padding-top:18px;">
+        <?php
+        echo wpdm_ar_stat_row($t, [
+            [esc_html__('Daily average', 'download-manager'), esc_html(number_format_i18n((float) $summary['daily_average'], 1)), ''],
+            [esc_html__('Peak day', 'download-manager'), esc_html(number_format_i18n((int) $summary['peak_day_count'])), esc_html($summary['peak_day'])],
+        ]);
+        ?>
     </div>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
+    <?php
+    $blocks[] = wpdm_ar_section($t, esc_html__('Downloads', 'download-manager'), ob_get_clean(), esc_html__('Overview', 'download-manager'));
+}
 
-<?php if (!empty($data['trending_packages'])): ?>
-<!-- Trending Packages -->
-<div style="<?php echo $styles['section']; ?>">
-    <h2 style="<?php echo $styles['heading']; ?>">
-        <?php _e('Trending Packages', 'download-manager'); ?>
-    </h2>
+/* ------------------------------------------------------------ Top packages */
 
-    <?php if (count($data['trending_packages']) > 0): ?>
-    <table style="<?php echo $styles['table']; ?>">
-        <thead>
-            <tr>
-                <th style="<?php echo $styles['th']; ?>"><?php _e('Package', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: center;"><?php _e('Previous', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: center;"><?php _e('Current', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: right;"><?php _e('Growth', 'download-manager'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($data['trending_packages'] as $package): ?>
-            <tr>
-                <td style="<?php echo $styles['td']; ?>">
-                    <a href="<?php echo esc_url($package['url']); ?>" style="<?php echo $styles['link']; ?>">
-                        <?php echo esc_html($package['title']); ?>
-                    </a>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: center; color: #6b7280;">
-                    <?php echo number_format($package['previous_downloads']); ?>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: center; font-weight: 600;">
-                    <?php echo number_format($package['current_downloads']); ?>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: right;">
-                    <span style="<?php echo $styles['change_positive']; ?>"><?php echo esc_html($package['growth_text']); ?></span>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php else: ?>
-    <div style="<?php echo $styles['empty']; ?>">
-        <?php _e('No trending packages found for this period.', 'download-manager'); ?>
-    </div>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
+if (!empty($data['top_packages'])) {
+    ob_start();
 
-<?php if (!empty($data['user_activity'])): ?>
-<!-- User Activity -->
-<div style="<?php echo $styles['section']; ?>">
-    <h2 style="<?php echo $styles['heading']; ?>">
-        <?php _e('User Activity', 'download-manager'); ?>
-    </h2>
-
-    <table style="<?php echo $styles['stat_grid']; ?>">
-        <tr>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['user_activity']['new_users']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('New Users', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['user_activity']['unique_downloaders']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Unique Downloaders', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['user_activity']['registered_downloaders']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Registered', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['user_activity']['guest_downloaders']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Guests', 'download-manager'); ?></span>
-            </td>
-        </tr>
-    </table>
-
-    <?php if (!empty($data['user_activity']['top_downloaders'])): ?>
-    <h3 style="<?php echo $styles['subheading']; ?> margin-top: 24px;">
-        <?php _e('Top Downloaders', 'download-manager'); ?>
-    </h3>
-    <table style="<?php echo $styles['table']; ?>">
-        <thead>
-            <tr>
-                <th style="<?php echo $styles['th']; ?>"><?php _e('User', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: right;"><?php _e('Downloads', 'download-manager'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($data['user_activity']['top_downloaders'] as $user): ?>
-            <tr>
-                <td style="<?php echo $styles['td']; ?>">
-                    <strong><?php echo esc_html($user['name']); ?></strong>
-                    <span style="display: block; font-size: 12px; color: #6b7280;"><?php echo esc_html($user['email']); ?></span>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: right; font-weight: 600;">
-                    <?php echo number_format($user['downloads']); ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
-
-<?php if (!empty($data['category_breakdown'])): ?>
-<!-- Category Breakdown -->
-<div style="<?php echo $styles['section']; ?>">
-    <h2 style="<?php echo $styles['heading']; ?>">
-        <?php _e('Category Breakdown', 'download-manager'); ?>
-    </h2>
-
-    <?php if (count($data['category_breakdown']) > 0): ?>
-    <table style="<?php echo $styles['table']; ?>">
-        <thead>
-            <tr>
-                <th style="<?php echo $styles['th']; ?>"><?php _e('Category', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: center;"><?php _e('Downloads', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 80px; text-align: center;"><?php _e('Share', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 80px; text-align: right;"><?php _e('Change', 'download-manager'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach (array_slice($data['category_breakdown'], 0, 10) as $category): ?>
-            <tr>
-                <td style="<?php echo $styles['td']; ?>">
-                    <?php if (!is_wp_error($category['url'])): ?>
-                    <a href="<?php echo esc_url($category['url']); ?>" style="<?php echo $styles['link']; ?>">
-                        <?php echo esc_html($category['name']); ?>
-                    </a>
-                    <?php else: ?>
-                    <?php echo esc_html($category['name']); ?>
-                    <?php endif; ?>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: center; font-weight: 600;">
-                    <?php echo number_format($category['downloads']); ?>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: center;">
-                    <span style="<?php echo $styles['badge']; ?>"><?php echo $category['percentage']; ?>%</span>
-                </td>
-                <td style="<?php echo $styles['td']; ?> text-align: right;">
+    if (count($data['top_packages']) > 0) {
+        $last = count($data['top_packages']) - 1; ?>
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <thead>
+                <tr>
                     <?php
-                    $isPositive = strpos($category['change'], '+') === 0;
-                    $changeStyle = $isPositive ? $styles['change_positive'] : $styles['change_negative'];
+                    echo wpdm_ar_th($t, esc_html__('Package', 'download-manager'));
+                    echo wpdm_ar_th($t, esc_html__('Downloads', 'download-manager'), 'right', '96');
                     ?>
-                    <span style="<?php echo $changeStyle; ?>"><?php echo esc_html($category['change']); ?></span>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach (array_values($data['top_packages']) as $i => $package):
+                    $rank    = (int) $package['rank'];
+                    $is_lead = $rank <= 3; ?>
+                    <tr>
+                        <td style="<?php echo wpdm_ar_td($t, 'left', $i === $last); ?>padding-right:12px;">
+                            <table role="presentation" border="0" cellspacing="0" cellpadding="0" width="100%">
+                                <tr>
+                                    <td width="26" style="vertical-align:top;padding-top:1px;">
+                                        <span style="display:inline-block;min-width:20px;padding:1px 5px;text-align:center;border-radius:5px;font-size:11px;font-weight:700;<?php echo $t['tnum']; ?><?php echo $is_lead
+                                            ? 'background-color:' . $t['gold_bg'] . ';color:' . $t['gold_fg'] . ';'
+                                            : 'background-color:' . $t['line_soft'] . ';color:' . $t['muted'] . ';'; ?>"><?php echo esc_html(number_format_i18n($rank)); ?></span>
+                                    </td>
+                                    <td style="vertical-align:top;">
+                                        <a href="<?php echo esc_url($package['url']); ?>" style="<?php echo $link_style; ?>"><?php echo esc_html($package['title']); ?></a>
+                                        <div style="padding-top:8px;"><?php echo wpdm_ar_bar($t, (float) $package['bar_width']); ?></div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>font-weight:700;color:<?php echo $t['ink']; ?>;<?php echo $t['tnum']; ?>">
+                            <?php echo esc_html(number_format_i18n((int) $package['downloads'])); ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php } else {
+        echo wpdm_ar_empty($t, esc_html__('No downloads were recorded during this period.', 'download-manager'));
+    }
+
+    $blocks[] = wpdm_ar_section($t, esc_html__('Top downloads', 'download-manager'), ob_get_clean(), esc_html__('Most active', 'download-manager'));
+}
+
+/* --------------------------------------------------------------- Trending */
+
+if (!empty($data['trending_packages'])) {
+    ob_start();
+
+    if (count($data['trending_packages']) > 0) {
+        $last = count($data['trending_packages']) - 1; ?>
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <thead>
+                <tr>
+                    <?php
+                    echo wpdm_ar_th($t, esc_html__('Package', 'download-manager'));
+                    echo wpdm_ar_th($t, esc_html__('Growth', 'download-manager'), 'right', '104');
+                    ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach (array_values($data['trending_packages']) as $i => $package): ?>
+                    <tr>
+                        <td style="<?php echo wpdm_ar_td($t, 'left', $i === $last); ?>padding-right:12px;">
+                            <a href="<?php echo esc_url($package['url']); ?>" style="<?php echo $link_style; ?>"><?php echo esc_html($package['title']); ?></a>
+                            <div style="padding-top:4px;font-size:12px;color:<?php echo $t['muted']; ?>;<?php echo $t['tnum']; ?>">
+                                <?php
+                                printf(
+                                    /* translators: 1: previous period downloads, 2: current period downloads */
+                                    esc_html__('%1$s → %2$s downloads', 'download-manager'),
+                                    esc_html(number_format_i18n((int) $package['previous_downloads'])),
+                                    esc_html(number_format_i18n((int) $package['current_downloads']))
+                                );
+                                ?>
+                            </div>
+                        </td>
+                        <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>">
+                            <?php echo wpdm_ar_delta($t, (string) $package['growth_text'], 'positive'); ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php } else {
+        echo wpdm_ar_empty($t, esc_html__('No packages gained momentum during this period.', 'download-manager'));
+    }
+
+    $blocks[] = wpdm_ar_section($t, esc_html__('Trending packages', 'download-manager'), ob_get_clean(), esc_html__('Fastest growing', 'download-manager'));
+}
+
+/* ---------------------------------------------------------- User activity */
+
+if (!empty($data['user_activity'])) {
+    $activity = $data['user_activity'];
+
+    ob_start();
+
+    echo wpdm_ar_stat_row($t, [
+        [esc_html__('New users', 'download-manager'), esc_html(number_format_i18n((int) $activity['new_users'])), ''],
+        [esc_html__('Unique downloaders', 'download-manager'), esc_html(number_format_i18n((int) $activity['unique_downloaders'])), ''],
+        [
+            esc_html__('Registered', 'download-manager'),
+            esc_html(number_format_i18n((int) $activity['registered_downloaders'])),
+            isset($activity['registered_ratio'])
+                ? sprintf(
+                    /* translators: %s: percentage of downloaders who were signed in */
+                    esc_html__('%s%% of downloaders', 'download-manager'),
+                    '<span style="' . $t['tnum'] . '">' . esc_html(number_format_i18n((float) $activity['registered_ratio'], 1)) . '</span>'
+                )
+                : '',
+        ],
+        [esc_html__('Guests', 'download-manager'), esc_html(number_format_i18n((int) $activity['guest_downloaders'])), ''],
+    ]);
+
+    if (!empty($activity['top_downloaders'])) {
+        $last = count($activity['top_downloaders']) - 1; ?>
+        <div style="padding-top:20px;">
+            <div style="padding-bottom:10px;font-family:<?php echo $t['font']; ?>;font-size:12px;font-weight:700;color:<?php echo $t['ink']; ?>;">
+                <?php esc_html_e('Top downloaders', 'download-manager'); ?>
+            </div>
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <thead>
+                    <tr>
+                        <?php
+                        echo wpdm_ar_th($t, esc_html__('User', 'download-manager'));
+                        echo wpdm_ar_th($t, esc_html__('Downloads', 'download-manager'), 'right', '96');
+                        ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_values($activity['top_downloaders']) as $i => $user): ?>
+                        <tr>
+                            <td style="<?php echo wpdm_ar_td($t, 'left', $i === $last); ?>padding-right:12px;">
+                                <div style="font-weight:600;color:<?php echo $t['ink']; ?>;"><?php echo esc_html($user['name']); ?></div>
+                                <div style="padding-top:2px;font-size:12px;color:<?php echo $t['muted']; ?>;"><?php echo esc_html($user['email']); ?></div>
+                            </td>
+                            <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>font-weight:700;color:<?php echo $t['ink']; ?>;<?php echo $t['tnum']; ?>">
+                                <?php echo esc_html(number_format_i18n((int) $user['downloads'])); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php }
+
+    $blocks[] = wpdm_ar_section($t, esc_html__('User activity', 'download-manager'), ob_get_clean(), esc_html__('Audience', 'download-manager'));
+}
+
+/* ----------------------------------------------------- Category breakdown */
+
+if (!empty($data['category_breakdown'])) {
+    ob_start();
+
+    if (count($data['category_breakdown']) > 0) {
+        $categories = array_slice($data['category_breakdown'], 0, 10);
+        $last       = count($categories) - 1; ?>
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <thead>
+                <tr>
+                    <?php
+                    echo wpdm_ar_th($t, esc_html__('Category', 'download-manager'));
+                    echo wpdm_ar_th($t, esc_html__('Downloads', 'download-manager'), 'right', '86');
+                    echo wpdm_ar_th($t, esc_html__('Change', 'download-manager'), 'right', '86');
+                    ?>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach (array_values($categories) as $i => $category):
+                    $share = (float) $category['percentage']; ?>
+                    <tr>
+                        <td style="<?php echo wpdm_ar_td($t, 'left', $i === $last); ?>padding-right:12px;">
+                            <?php if (!empty($category['url']) && !is_wp_error($category['url'])): ?>
+                                <a href="<?php echo esc_url($category['url']); ?>" style="<?php echo $link_style; ?>"><?php echo esc_html($category['name']); ?></a>
+                            <?php else: ?>
+                                <span style="font-weight:600;color:<?php echo $t['ink']; ?>;"><?php echo esc_html($category['name']); ?></span>
+                            <?php endif; ?>
+                            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="padding-top:8px;">
+                                <tr>
+                                    <td style="vertical-align:middle;"><?php echo wpdm_ar_bar($t, $share); ?></td>
+                                    <td width="44" align="right" style="vertical-align:middle;padding-left:8px;font-family:<?php echo $t['font']; ?>;font-size:11px;font-weight:600;color:<?php echo $t['muted']; ?>;<?php echo $t['tnum']; ?>">
+                                        <?php echo esc_html(number_format_i18n($share, 1)); ?>%
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>font-weight:700;color:<?php echo $t['ink']; ?>;<?php echo $t['tnum']; ?>">
+                            <?php echo esc_html(number_format_i18n((int) $category['downloads'])); ?>
+                        </td>
+                        <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>">
+                            <?php echo wpdm_ar_delta($t, (string) $category['change']); ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php } else {
+        echo wpdm_ar_empty($t, esc_html__('No category data is available for this period.', 'download-manager'));
+    }
+
+    $blocks[] = wpdm_ar_section($t, esc_html__('Category breakdown', 'download-manager'), ob_get_clean(), esc_html__('Distribution', 'download-manager'));
+}
+
+/* ----------------------------------------------------------------- Revenue */
+
+if (!empty($data['revenue_summary'])) {
+    $revenue = $data['revenue_summary'];
+    $delta   = wpdm_ar_delta($t, (string) $revenue['change'], $revenue['change_class'] ?? null);
+
+    ob_start(); ?>
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td style="font-family:<?php echo $t['font']; ?>;font-size:34px;line-height:1.1;font-weight:700;color:<?php echo $t['pos_fg']; ?>;letter-spacing:-0.03em;<?php echo $t['tnum']; ?>">
+                <?php echo esc_html($revenue['revenue_formatted']); ?>
+            </td>
+            <td align="right" style="vertical-align:bottom;"><?php echo $delta; ?></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding-top:6px;font-family:<?php echo $t['font']; ?>;font-size:13px;color:<?php echo $t['muted']; ?>;">
+                <?php esc_html_e('Total revenue for the period', 'download-manager'); ?>
+            </td>
+        </tr>
     </table>
-    <?php else: ?>
-    <div style="<?php echo $styles['empty']; ?>">
-        <?php _e('No category data available.', 'download-manager'); ?>
+    <div style="padding-top:18px;">
+        <?php
+        echo wpdm_ar_stat_row($t, [
+            [esc_html__('Orders', 'download-manager'), esc_html(number_format_i18n((int) $revenue['orders'])), ''],
+            [esc_html__('Average order', 'download-manager'), esc_html($revenue['average_order']), ''],
+        ]);
+        ?>
     </div>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
 
-<?php if (!empty($data['revenue_summary'])): ?>
-<!-- Revenue Summary -->
-<div style="<?php echo $styles['section']; ?> border-color: #10b981;">
-    <h2 style="<?php echo $styles['heading']; ?> color: #065f46;">
-        <?php _e('Revenue Summary', 'download-manager'); ?>
-    </h2>
+    <?php if (!empty($revenue['top_products'])):
+        $last = count($revenue['top_products']) - 1; ?>
+        <div style="padding-top:20px;">
+            <div style="padding-bottom:10px;font-family:<?php echo $t['font']; ?>;font-size:12px;font-weight:700;color:<?php echo $t['ink']; ?>;">
+                <?php esc_html_e('Top selling products', 'download-manager'); ?>
+            </div>
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <thead>
+                    <tr>
+                        <?php
+                        echo wpdm_ar_th($t, esc_html__('Product', 'download-manager'));
+                        echo wpdm_ar_th($t, esc_html__('Sold', 'download-manager'), 'right', '64');
+                        echo wpdm_ar_th($t, esc_html__('Revenue', 'download-manager'), 'right', '96');
+                        ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_values($revenue['top_products']) as $i => $product): ?>
+                        <tr>
+                            <td style="<?php echo wpdm_ar_td($t, 'left', $i === $last); ?>padding-right:12px;font-weight:600;color:<?php echo $t['ink']; ?>;">
+                                <?php echo esc_html($product['title']); ?>
+                            </td>
+                            <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?><?php echo $t['tnum']; ?>">
+                                <?php echo esc_html(number_format_i18n((int) $product['quantity'])); ?>
+                            </td>
+                            <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>font-weight:700;color:<?php echo $t['pos_fg']; ?>;<?php echo $t['tnum']; ?>">
+                                <?php echo esc_html($revenue['currency'] . number_format_i18n((float) $product['revenue'], 2)); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif;
 
-    <table style="<?php echo $styles['stat_grid']; ?>">
+    $blocks[] = wpdm_ar_section($t, esc_html__('Revenue', 'download-manager'), ob_get_clean(), esc_html__('Sales', 'download-manager'), $t['pos_fg']);
+}
+
+/* ----------------------------------------------------------------- Storage */
+
+if (!empty($data['storage_usage'])) {
+    $storage = $data['storage_usage'];
+
+    ob_start();
+
+    echo wpdm_ar_stat_row($t, [
+        [esc_html__('Total size', 'download-manager'), esc_html($storage['total_size']), ''],
+        [esc_html__('Files', 'download-manager'), esc_html(number_format_i18n((int) $storage['file_count'])), ''],
+        [esc_html__('Packages', 'download-manager'), esc_html(number_format_i18n((int) $storage['package_count'])), ''],
+        [esc_html__('New this period', 'download-manager'), esc_html(number_format_i18n((int) $storage['new_packages'])), ''],
+    ]);
+
+    if (!empty($storage['largest_packages'])) {
+        $last = count($storage['largest_packages']) - 1; ?>
+        <div style="padding-top:20px;">
+            <div style="padding-bottom:10px;font-family:<?php echo $t['font']; ?>;font-size:12px;font-weight:700;color:<?php echo $t['ink']; ?>;">
+                <?php esc_html_e('Largest packages', 'download-manager'); ?>
+            </div>
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <thead>
+                    <tr>
+                        <?php
+                        echo wpdm_ar_th($t, esc_html__('Package', 'download-manager'));
+                        echo wpdm_ar_th($t, esc_html__('Size', 'download-manager'), 'right', '96');
+                        ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_values($storage['largest_packages']) as $i => $package): ?>
+                        <tr>
+                            <td style="<?php echo wpdm_ar_td($t, 'left', $i === $last); ?>padding-right:12px;font-weight:600;color:<?php echo $t['ink']; ?>;">
+                                <?php echo esc_html($package['title']); ?>
+                            </td>
+                            <td style="<?php echo wpdm_ar_td($t, 'right', $i === $last); ?>font-weight:700;color:<?php echo $t['ink']; ?>;<?php echo $t['tnum']; ?>">
+                                <?php echo esc_html($package['size']); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php }
+
+    $blocks[] = wpdm_ar_section($t, esc_html__('Storage', 'download-manager'), ob_get_clean(), esc_html__('Library', 'download-manager'));
+}
+?>
+<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="font-family:<?php echo $t['font']; ?>;">
+
+    <tr>
+        <td style="padding-bottom:24px;">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td style="font-family:<?php echo $t['font']; ?>;font-size:11px;font-weight:600;color:<?php echo $t['accent']; ?>;text-transform:uppercase;letter-spacing:0.1em;">
+                        <?php echo esc_html($data['period_label']); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top:6px;font-family:<?php echo $t['font']; ?>;font-size:26px;line-height:1.2;font-weight:700;color:<?php echo $t['ink']; ?>;letter-spacing:-0.025em;">
+                        <?php esc_html_e('Activity Report', 'download-manager'); ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top:6px;font-family:<?php echo $t['font']; ?>;font-size:13px;color:<?php echo $t['muted']; ?>;">
+                        <?php echo esc_html($data['date_range']); ?>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <?php if (empty($blocks)): ?>
         <tr>
-            <td style="<?php echo $styles['stat_card']; ?> background: #ecfdf5; width: 33%;">
-                <span style="<?php echo $styles['stat_value']; ?> color: #065f46;"><?php echo esc_html($data['revenue_summary']['revenue_formatted']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Total Revenue', 'download-manager'); ?></span>
-                <?php
-                $changeClass = $data['revenue_summary']['change_class'] === 'positive' ? $styles['change_positive'] : $styles['change_negative'];
-                ?>
-                <span style="<?php echo $changeClass; ?>"><?php echo esc_html($data['revenue_summary']['change']); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 33%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['revenue_summary']['orders']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Orders', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 33%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo esc_html($data['revenue_summary']['average_order']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Avg. Order Value', 'download-manager'); ?></span>
-            </td>
+            <td><?php echo wpdm_ar_empty($t, esc_html__('There is no activity to report for this period.', 'download-manager')); ?></td>
         </tr>
-    </table>
-
-    <?php if (!empty($data['revenue_summary']['top_products'])): ?>
-    <h3 style="<?php echo $styles['subheading']; ?> margin-top: 24px;">
-        <?php _e('Top Selling Products', 'download-manager'); ?>
-    </h3>
-    <table style="<?php echo $styles['table']; ?>">
-        <thead>
+    <?php else: ?>
+        <?php foreach ($blocks as $i => $block): ?>
             <tr>
-                <th style="<?php echo $styles['th']; ?>"><?php _e('Product', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 80px; text-align: center;"><?php _e('Sold', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: right;"><?php _e('Revenue', 'download-manager'); ?></th>
+                <td style="padding-bottom:<?php echo $i === count($blocks) - 1 ? '0' : '16'; ?>px;"><?php echo $block; ?></td>
             </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($data['revenue_summary']['top_products'] as $product): ?>
-            <tr>
-                <td style="<?php echo $styles['td']; ?>"><?php echo esc_html($product['title']); ?></td>
-                <td style="<?php echo $styles['td']; ?> text-align: center;"><?php echo number_format($product['quantity']); ?></td>
-                <td style="<?php echo $styles['td']; ?> text-align: right; font-weight: 600; color: #065f46;">
-                    <?php echo esc_html($data['revenue_summary']['currency'] . number_format($product['revenue'], 2)); ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+        <?php endforeach; ?>
     <?php endif; ?>
-</div>
-<?php endif; ?>
 
-<?php if (!empty($data['storage_usage'])): ?>
-<!-- Storage Usage -->
-<div style="<?php echo $styles['section']; ?>">
-    <h2 style="<?php echo $styles['heading']; ?>">
-        <?php _e('Storage Usage', 'download-manager'); ?>
-    </h2>
+    <tr>
+        <td style="padding-top:24px;">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-top:1px solid <?php echo $t['line']; ?>;">
+                <tr>
+                    <td style="padding-top:14px;font-family:<?php echo $t['font']; ?>;font-size:12px;line-height:1.6;color:<?php echo $t['muted']; ?>;">
+                        <?php esc_html_e('Generated automatically by WordPress Download Manager.', 'download-manager'); ?>
+                    </td>
+                    <td align="right" style="padding-top:14px;white-space:nowrap;">
+                        <a href="<?php echo esc_url(admin_url('edit.php?post_type=wpdmpro&page=settings&tab=activity-reports')); ?>" style="font-family:<?php echo $t['font']; ?>;font-size:12px;<?php echo $link_style; ?>">
+                            <?php esc_html_e('Report settings', 'download-manager'); ?> &rarr;
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
 
-    <table style="<?php echo $styles['stat_grid']; ?>">
-        <tr>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo esc_html($data['storage_usage']['total_size']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Total Size', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['storage_usage']['file_count']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Total Files', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['storage_usage']['package_count']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('Packages', 'download-manager'); ?></span>
-            </td>
-            <td style="<?php echo $styles['stat_card']; ?> width: 25%;">
-                <span style="<?php echo $styles['stat_value']; ?>"><?php echo number_format($data['storage_usage']['new_packages']); ?></span>
-                <span style="<?php echo $styles['stat_label']; ?>"><?php _e('New This Period', 'download-manager'); ?></span>
-            </td>
-        </tr>
-    </table>
-
-    <?php if (!empty($data['storage_usage']['largest_packages'])): ?>
-    <h3 style="<?php echo $styles['subheading']; ?> margin-top: 24px;">
-        <?php _e('Largest Packages', 'download-manager'); ?>
-    </h3>
-    <table style="<?php echo $styles['table']; ?>">
-        <thead>
-            <tr>
-                <th style="<?php echo $styles['th']; ?>"><?php _e('Package', 'download-manager'); ?></th>
-                <th style="<?php echo $styles['th']; ?> width: 100px; text-align: right;"><?php _e('Size', 'download-manager'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($data['storage_usage']['largest_packages'] as $package): ?>
-            <tr>
-                <td style="<?php echo $styles['td']; ?>"><?php echo esc_html($package['title']); ?></td>
-                <td style="<?php echo $styles['td']; ?> text-align: right; font-weight: 600;">
-                    <?php echo esc_html($package['size']); ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php endif; ?>
-</div>
-<?php endif; ?>
-
-<!-- Footer -->
-<div style="text-align: center; padding: 24px 0; border-top: 1px solid #e5e7eb; margin-top: 32px;">
-    <p style="margin: 0 0 8px 0; font-size: 13px; color: #6b7280;">
-        <?php _e('This report was automatically generated by WordPress Download Manager.', 'download-manager'); ?>
-    </p>
-    <p style="margin: 0;">
-        <a href="<?php echo admin_url('edit.php?post_type=wpdmpro&page=settings&tab=activity-reports'); ?>" style="<?php echo $styles['link']; ?> font-size: 13px;">
-            <?php _e('Manage Report Settings', 'download-manager'); ?>
-        </a>
-    </p>
-</div>
+</table>
