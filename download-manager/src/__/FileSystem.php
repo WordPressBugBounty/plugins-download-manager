@@ -147,27 +147,53 @@ class FileSystem {
 		//check if http_range is sent by browser (or download manager)
 		if ( isset( $_SERVER['HTTP_RANGE'] ) && $file_size > 0 ) {
 
-			list( $rangeUnit, $http_range ) = explode( "=", $_SERVER['HTTP_RANGE'], 2 );
+			$range_header = explode( "=", $_SERVER['HTTP_RANGE'], 2 );
+			// A header with no "=" leaves index 1 unset, which warns on PHP 8+
+			$rangeUnit  = strtolower( trim( $range_header[0] ) );
+			$http_range = isset( $range_header[1] ) ? trim( $range_header[1] ) : '';
 
 			if ( substr_count( $http_range, ',' ) > 0 ) {
 				header( $proto.' 416 Requested Range Not Satisfiable' );
 				header( "Content-Range: bytes $start_range-$end_byte/$org_size" );
 				exit;
 			}
-			if ( $rangeUnit == 'bytes' ) {
-				if ( $http_range === '-' ) {
-					$start_range = $file_size - substr( $http_range, 1 );
-				} else {
-					$http_range  = explode( '-', $http_range );
-					$start_range = $http_range[0];
-					$end_range   = wpdm_valueof( $http_range, 1, [ 'validate' => 'int' ] ) > 0 ? wpdm_valueof( $http_range, 1, [ 'validate' => 'int' ] ) : $end_byte;
-					//file_put_contents(ABSPATH.'/server.txt', print_r($http_range, 1));
-				}
-			} else {
+			if ( $rangeUnit !== 'bytes' ) {
 				header( $proto.' 416 Requested Range Not Satisfiable' );
+				header( "Content-Range: bytes */$org_size" );
 				exit;
 			}
+
+			$range      = explode( '-', trim( $http_range ), 2 );
+			$range_from = isset( $range[0] ) ? trim( $range[0] ) : '';
+			$range_to   = isset( $range[1] ) ? trim( $range[1] ) : '';
+
+			// Both ends empty, or a non-numeric end, is a malformed range spec.
+			// Casting those to int would fatal on PHP 8+ ("Unsupported operand types").
+			if ( ( $range_from === '' && $range_to === '' )
+			     || ( $range_from !== '' && ! ctype_digit( $range_from ) )
+			     || ( $range_to !== '' && ! ctype_digit( $range_to ) ) ) {
+				header( $proto.' 416 Requested Range Not Satisfiable' );
+				header( "Content-Range: bytes */$org_size" );
+				exit;
+			}
+
+			if ( $range_from === '' ) {
+				// Suffix range, i.e. "bytes=-500" means the last 500 bytes
+				$suffix      = (int) $range_to;
+				$start_range = $suffix >= $file_size ? 0 : $file_size - $suffix;
+				$end_range   = $end_byte;
+			} else {
+				$start_range = (int) $range_from;
+				$end_range   = $range_to === '' ? $end_byte : (int) $range_to;
+			}
+
 			$end_range = $end_range > $end_byte ? $end_byte : $end_range;
+
+			if ( $start_range > $end_range || $start_range > $end_byte ) {
+				header( $proto.' 416 Requested Range Not Satisfiable' );
+				header( "Content-Range: bytes */$org_size" );
+				exit;
+			}
 
 			header( "Accept-Ranges: bytes" );
 			//header( "Accept-Ranges: 0-$end_byte" );
@@ -177,7 +203,12 @@ class FileSystem {
 			header( "Content-Length: $content_length" );
 			header( "Content-Range: bytes $start_range-$end_range/$org_size" );
 
-			fseek( $file, $start_range );
+			// Stream only the requested range, not the rest of the file
+			$file_size = $content_length;
+
+			if ( $file ) {
+				fseek( $file, $start_range );
+			}
 
 		} else {
 			header( "Content-Length: " . $file_size );
@@ -237,12 +268,26 @@ class FileSystem {
 				exit;
 			}
 
-			if ( $range == '-' ) {
-				$c_start = $size - substr( $range, 1 );
+			$range   = explode( '-', trim( $range ), 2 );
+			$c_from  = isset( $range[0] ) ? trim( $range[0] ) : '';
+			$c_to    = isset( $range[1] ) ? trim( $range[1] ) : '';
+
+			if ( ( $c_from === '' && $c_to === '' )
+			     || ( $c_from !== '' && ! ctype_digit( $c_from ) )
+			     || ( $c_to !== '' && ! ctype_digit( $c_to ) ) ) {
+				header( 'HTTP/1.1 416 Requested range is not valid' );
+				header( "Content-Range: bytes */$size" );
+				exit;
+			}
+
+			if ( $c_from === '' ) {
+				// Suffix range, i.e. "bytes=-500" means the last 500 bytes
+				$suffix  = (int) $c_to;
+				$c_start = $suffix >= $size ? 0 : $size - $suffix;
+				$c_end   = $end;
 			} else {
-				$range   = explode( '-', $range );
-				$c_start = $range[0];
-				$c_end   = ( isset( $range[1] ) && is_numeric( $range[1] ) ) ? $range[1] : $size;
+				$c_start = (int) $c_from;
+				$c_end   = $c_to === '' ? $end : (int) $c_to;
 			}
 			$c_end = ( $c_end > $end ) ? $end : $c_end;
 

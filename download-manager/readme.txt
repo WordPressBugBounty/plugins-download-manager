@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.68
+Stable tag: 3.3.69
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,14 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.69 - 2026.09.16 =
+* Improved: The Asset Manager's New Folder and New File dialogs are now a single panel that anchors under the button that opened it, with inline validation for empty names and names containing slashes, a busy state while the folder or file is created, and any error returned by the server shown in place rather than the panel closing as though it had worked
+* Improved: Rebuilt the Asset Manager upload tray with a dedicated drop zone, a running "x of y uploaded" summary, a "Clear finished" action, and per-file rows carrying a progress bar, transferred size and final status
+* Fixed: A failed upload in the Asset Manager gave no indication of what had gone wrong - oversized files, disallowed file types and expired sessions now report the reason on the file's own row
+* Fixed: A malformed HTTP Range header could raise a PHP warning, or a fatal "Unsupported operand types" error on PHP 8, while serving a download; range requests are now validated and answered with a 416 Requested Range Not Satisfiable response when the range cannot be served
+* Fixed: A ranged download streamed the remainder of the file past the requested end byte, and a suffix range ( e.g. "bytes=-500", meaning the last 500 bytes ) was miscalculated
+* Security: Contributor+ Insecure Direct Object Reference in the package duplicate handler - the handler hooked on admin_init checked only the generic edit_posts capability, which every contributor holds, and a plugin-wide static nonce action that any logged-in user could obtain from an unrelated front-end form; neither is tied to the package being copied, so a contributor could duplicate any other user's package and inherit its file references, role-based access restrictions and password lock into a copy they own and can strip bare. The handler now requires the same capability as the duplicate row action and the bulk action, adds an edit_post check against the target package, and verifies a package-scoped nonce
 
 = 3.3.68 - 2026.08.20 =
 * Improved: Redesigned the activity report email with a clearer hierarchy - the headline figure now leads each section, metric cards share a common baseline, and every section carries a designed empty state so a quiet period still reads as intentional

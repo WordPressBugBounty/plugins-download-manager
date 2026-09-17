@@ -130,14 +130,31 @@ class Packages {
 	}
 
 	function duplicate() {
-		if ( wpdm_query_var( 'wpdm_duplicate', 'int' ) > 0 && get_post_type( wpdm_query_var( 'wpdm_duplicate' ) ) === 'wpdmpro' ) {
-			if ( ! current_user_can( 'edit_posts' ) || ! wp_verify_nonce( wpdm_query_var( '__copynonce' ), NONCE_KEY ) ) {
-				wp_die( esc_attr__( 'You are not authorized!', 'download-manager' ) );
-			}
-			Package::copy( wpdm_query_var( 'wpdm_duplicate', 'int' ) );
-			wp_redirect( "edit.php?post_type=wpdmpro" );
-			die();
+		$package_id = wpdm_query_var( 'wpdm_duplicate', 'int' );
+
+		if ( $package_id <= 0 || get_post_type( $package_id ) !== 'wpdmpro' ) {
+			return;
 		}
+
+		// Match the gate already applied to the row action and the bulk handler.
+		// 'edit_posts' is generic - every contributor holds it - and says nothing
+		// about this particular package, so on its own it allowed cloning another
+		// user's package, along with its file references, role restrictions and
+		// password lock, into a copy the attacker owns and can strip bare.
+		if ( ! current_user_can( WPDM_ADMIN_CAP ) || ! current_user_can( 'edit_post', $package_id ) ) {
+			wp_die( esc_attr__( 'You are not authorized!', 'download-manager' ) );
+		}
+
+		// Package-scoped nonce. NONCE_KEY is a single static action shared by every
+		// WPDM feature, including front-end forms any logged-in user can reach, so a
+		// nonce minted anywhere in the plugin authorised duplicating any package.
+		if ( ! wp_verify_nonce( wpdm_query_var( '__copynonce' ), 'wpdm_duplicate_package_' . $package_id ) ) {
+			wp_die( esc_attr__( 'You are not authorized!', 'download-manager' ) );
+		}
+
+		Package::copy( $package_id );
+		wp_redirect( "edit.php?post_type=wpdmpro" );
+		die();
 	}
 
 
@@ -477,7 +494,7 @@ class Packages {
 
 	function rowActions( $actions, $post ) {
 		if ( $post->post_type == 'wpdmpro' && current_user_can( WPDM_ADMIN_CAP ) ) {
-			$actions['duplicate']  = '<a title="' . __( "Duplicate", "download-manager" ) . '" href="' . admin_url( "/?wpdm_duplicate={$post->ID}&__copynonce=" . wp_create_nonce( NONCE_KEY ) ) . '" class="wpdm_duplicate w3eden">' . esc_attr__( 'Duplicate', 'download-manager' ) . '</a>';
+			$actions['duplicate']  = '<a title="' . __( "Duplicate", "download-manager" ) . '" href="' . admin_url( "/?wpdm_duplicate={$post->ID}&__copynonce=" . wp_create_nonce( 'wpdm_duplicate_package_' . $post->ID ) ) . '" class="wpdm_duplicate w3eden">' . esc_attr__( 'Duplicate', 'download-manager' ) . '</a>';
 			$actions['view_stats'] = '<a title="' . __( "Stats", "download-manager" ) . '" href="edit.php?post_type=wpdmpro&page=wpdm-stats&pid=' . $post->ID . '" class="view_stats w3eden"><i class="fas fa-chart-pie color-blue"></i></a>';
 			if ( $post->post_status == 'publish' ) {
 				$actions['download_link'] = '<a title="' . __( "Master Download URL", "download-manager" ) . '" href="#" class="gdl_action w3eden" data-mdlu="' . WPDM()->package->getMasterDownloadURL( $post->ID ) . '" data-pid="' . $post->ID . '"><i class="far fa-arrow-alt-circle-down color-purple"></i></a>';

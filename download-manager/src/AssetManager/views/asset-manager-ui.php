@@ -27,27 +27,327 @@ if(is_admin()){
         #wpdm-dashboard-content{
             overflow: visible;
         }
-        #rename, #upfile, #newfol{
+        #rename{
             z-index: 999999999999;
             padding-top: 150px;
             overflow: hidden;
         }
-        #upfile{
-            width: 350px;
-        }
-        #upfile .drag-drop .drag-drop-inside{
-            margin: 45px auto 0;
+
+        /* New folder / new file panel. Lives inside #mainfmarea so it always stacks above the file manager, including in browser full-screen. */
+        .wpdmam-create{
+            position: absolute;
+            z-index: 1000;
             width: 300px;
+            max-width: calc(100% - 32px);
+            padding: 16px;
+            text-align: left;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 12px 32px rgba(15, 23, 42, 0.14);
         }
-        #upfile .panel-heading{
-            box-shadow: none !important;
-            background: #f5f5f5;
+        .wpdmam-create[hidden]{
+            display: none;
         }
-        #filelist .panel-heading{
-            padding-right: 30px;
+        .wpdmam-create__head{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
         }
-        .w3eden #upfile  .progress-bar-info {
-            background-color: var(--color-purple);
+        .wpdmam-create__icon{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 32px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--color-primary, #4f46e5);
+            background: rgba(var(--color-primary-rgb, 79, 70, 229), 0.1);
+        }
+        .wpdmam-create__title{
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #0f172a;
+        }
+        .wpdmam-create__label{
+            display: block;
+            margin: 0 0 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .w3eden .wpdmam-create__input.form-control{
+            height: 36px;
+            margin: 0;
+            padding: 0 10px;
+            font-size: 13px;
+        }
+        .w3eden .wpdmam-create__input.form-control[aria-invalid="true"],
+        .w3eden .wpdmam-create__input.form-control[aria-invalid="true"]:focus{
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+        }
+        .wpdmam-create__error{
+            margin: 8px 0 0;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #b91c1c;
+        }
+        .wpdmam-create__error:empty{
+            margin: 0;
+        }
+        .wpdmam-create__actions{
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        /* Upload tray */
+        /* Scoped to #upfile so these rules outrank the base .w3eden p and .w3eden button styles. */
+        #upfile.wpdmam-upload{
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 100001;
+            width: 360px;
+            max-width: calc(100vw - 32px);
+            overflow: hidden;
+            text-align: left;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 16px 40px rgba(15, 23, 42, 0.16);
+        }
+        #upfile .wpdmam-upload__head{
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 10px 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        #upfile .wpdmam-upload__heading{
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        #upfile .wpdmam-upload__title{
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #0f172a;
+        }
+        #upfile .wpdmam-upload__summary{
+            margin: 2px 0 0;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #64748b;
+        }
+        #upfile .wpdmam-upload__text-btn,
+        #upfile .wpdmam-upload__browse{
+            padding: 0;
+            border: 0;
+            background: none;
+            font: inherit;
+            font-weight: 600;
+            color: var(--color-primary, #4f46e5);
+            cursor: pointer;
+        }
+        #upfile .wpdmam-upload__text-btn{
+            flex: 0 0 auto;
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        #upfile .wpdmam-upload__text-btn:hover{
+            background: rgba(var(--color-primary-rgb, 79, 70, 229), 0.08);
+        }
+        #upfile .wpdmam-upload__text-btn[hidden]{
+            display: none;
+        }
+        #upfile .wpdmam-upload__browse:hover{
+            text-decoration: underline;
+        }
+        #upfile .wpdmam-upload__close{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 28px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 0;
+            border-radius: 6px;
+            background: none;
+            font-size: 14px;
+            color: #64748b;
+            cursor: pointer;
+        }
+        #upfile .wpdmam-upload__close:hover{
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        #upfile .wpdmam-upload__close:focus-visible,
+        #upfile .wpdmam-upload__text-btn:focus-visible,
+        #upfile .wpdmam-upload__browse:focus-visible{
+            outline: 2px solid var(--color-primary, #4f46e5);
+            outline-offset: 2px;
+        }
+        #upfile .wpdmam-upload__body{
+            padding: 12px 16px 14px;
+        }
+        /* The border needs !important: admin-styles.css gives every #drag-drop-area an !important green border. */
+        #upfile #drag-drop-area{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+            min-height: 132px;
+            margin: 0;
+            padding: 20px 16px;
+            text-align: center;
+            background: #f8fafc;
+            border: 1.5px dashed #cbd5e1 !important;
+            border-radius: 10px;
+            transition: border-color 150ms ease, background-color 150ms ease;
+        }
+        #upfile .drag-over #drag-drop-area{
+            background: rgba(var(--color-primary-rgb, 79, 70, 229), 0.06);
+            border-color: var(--color-primary, #4f46e5) !important;
+        }
+        #upfile .wpdmam-upload__drop-icon{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            font-size: 16px;
+            color: var(--color-primary, #4f46e5);
+            background: rgba(var(--color-primary-rgb, 79, 70, 229), 0.1);
+        }
+        #upfile .wpdmam-upload__drop-title{
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        #upfile .wpdmam-upload__drop-hint{
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: #64748b;
+        }
+        #upfile .wpdmam-upload__limit{
+            margin: 8px 0 0;
+            font-size: 11px;
+            color: #64748b;
+        }
+        #upfile .wpdmam-upload__queue{
+            max-height: 264px;
+            overflow-y: auto;
+        }
+        #upfile .wpdmam-upload__queue:empty{
+            display: none;
+        }
+        #upfile .wpdmam-upload__item{
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+        #upfile .wpdmam-upload__item-icon{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 28px;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #64748b;
+            background: #f1f5f9;
+        }
+        #upfile .wpdmam-upload__item[data-state="done"] .wpdmam-upload__item-icon{
+            color: #047857;
+            background: #ecfdf5;
+        }
+        #upfile .wpdmam-upload__item[data-state="failed"] .wpdmam-upload__item-icon{
+            color: #b91c1c;
+            background: #fef2f2;
+        }
+        #upfile .wpdmam-upload__item-main{
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        #upfile .wpdmam-upload__item-row{
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        #upfile .wpdmam-upload__item-name{
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 13px;
+            font-weight: 500;
+            color: #0f172a;
+        }
+        #upfile .wpdmam-upload__item-meta{
+            flex: 0 0 auto;
+            font-size: 11px;
+            color: #64748b;
+            font-variant-numeric: tabular-nums;
+        }
+        #upfile .wpdmam-upload__bar{
+            height: 4px;
+            margin-top: 7px;
+            overflow: hidden;
+            border-radius: 4px;
+            background: #f1f5f9;
+        }
+        #upfile .wpdmam-upload__bar-fill{
+            display: block;
+            width: 0;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--color-primary, #4f46e5);
+            transition: width 200ms ease;
+        }
+        #upfile .wpdmam-upload__item[data-state="done"] .wpdmam-upload__bar-fill{
+            background: #10b981;
+        }
+        #upfile .wpdmam-upload__item[data-state="failed"] .wpdmam-upload__bar-fill{
+            background: #ef4444;
+        }
+        #upfile .wpdmam-upload__item-status{
+            margin: 4px 0 0;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #64748b;
+        }
+        #upfile .wpdmam-upload__item-status:empty{
+            display: none;
+        }
+        #upfile .wpdmam-upload__item[data-state="done"] .wpdmam-upload__item-status{
+            color: #047857;
+        }
+        #upfile .wpdmam-upload__item[data-state="failed"] .wpdmam-upload__item-status{
+            color: #b91c1c;
+        }
+        @media (prefers-reduced-motion: reduce){
+            #upfile #drag-drop-area,
+            #upfile .wpdmam-upload__bar-fill{
+                transition: none;
+            }
         }
         #breadcrumb,
         .wpdm-file-locator,
@@ -474,25 +774,6 @@ if(is_admin()){
         .wp-video-shortcode{
             height: auto !important;
         }
-
-        #filelist .panel.upcompleted .panel-heading::before {
-            content: "\f560";
-            position: absolute;
-            color: #41c441;
-            right: 10px;
-            font-family: "Font Awesome 5 Free";
-            transition: all ease-in-out 400ms;
-
-        }
-        #filelist .panel.upfailed .panel-heading::before {
-            content: "\f071";
-            position: absolute;
-            color: var(--color-red);
-            right: 10px;
-            font-family: "Font Awesome 5 Free";
-            transition: all ease-in-out 400ms;
-
-        }
         button.btn-unzip{
             display: none !important;
         }
@@ -573,6 +854,22 @@ if(is_admin()){
 <div class="w3eden" id="mainfmarea">
     <?php do_action("wpdm_frontend_filemanager_top", ""); ?>
     <div id="loadingfm" class="blockui" style="position: fixed;width: 100%;height: 100%;z-index: 99"></div>
+
+    <div id="wpdmam-create" class="wpdmam-create" role="dialog" aria-labelledby="wpdmam-create-title" hidden>
+        <form id="wpdmam-create-form" novalidate>
+            <div class="wpdmam-create__head">
+                <span class="wpdmam-create__icon" aria-hidden="true"><i class="fa fa-folder-open" data-wpdmam-create-icon></i></span>
+                <p class="wpdmam-create__title" id="wpdmam-create-title"></p>
+            </div>
+            <label class="wpdmam-create__label" for="wpdmam-create-name"></label>
+            <input type="text" id="wpdmam-create-name" class="form-control wpdmam-create__input" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="255" aria-describedby="wpdmam-create-error">
+            <p class="wpdmam-create__error" id="wpdmam-create-error" role="alert"></p>
+            <div class="wpdmam-create__actions">
+                <button type="button" class="btn btn-simple btn-sm" data-wpdmam-create-cancel><?php esc_html_e( "Cancel", "download-manager" ); ?></button>
+                <button type="submit" class="btn btn-primary btn-sm" id="wpdmam-create-submit"></button>
+            </div>
+        </form>
+    </div>
     <div id="mainfmc" class="panel panel-default wpdm-file-manager-panel" style="display: none;">
         <div class="panel-body">
             <div class="media well-sm well-file" style="margin: 0;padding: 0">
@@ -580,9 +877,9 @@ if(is_admin()){
                     <span id="__file_search"><input  v-on:keyup.enter="searchAsset.execute()" type="search" v-model="keyword" placeholder="Search File..." class="form-control input-sm" style="font-family: 'Overpass Mono', monospace;width: 140px;display: inline-block;padding: 0 10px;min-height: 20px;height: 27px;"></span>
                     <button class="btn btn-primary btn-simple btn-sm ttip" title="Reload" id="reload"><i class="fa fa-sync"></i></button>
                     <div class="btn-group">
-                        <button class="btn btn-simple btn-sm wpdm-am-newfol" type="button"><i class="fa fa-folder-open"></i> <?php echo __( "New Folder", "download-manager" ) ?></button>
-                        <button class="btn btn-simple btn-sm wpdm-am-newfile" type="button"><i class="far fa-file"></i> <?php echo  esc_attr__( 'New File', "download-manager" ); ?></button>
-                        <button class="btn btn-simple btn-sm" id="btn-upload-file" ><i class="fa fa-cloud-upload-alt"></i> <?php echo __( "Upload File", "download-manager" ) ?></button>
+                        <button class="btn btn-simple btn-sm" type="button" data-wpdmam-create="folder" aria-haspopup="dialog" aria-expanded="false" aria-controls="wpdmam-create"><i class="fa fa-folder-open" aria-hidden="true"></i> <?php esc_html_e( "New Folder", "download-manager" ); ?></button>
+                        <button class="btn btn-simple btn-sm" type="button" data-wpdmam-create="file" aria-haspopup="dialog" aria-expanded="false" aria-controls="wpdmam-create"><i class="far fa-file" aria-hidden="true"></i> <?php esc_html_e( "New File", "download-manager" ); ?></button>
+                        <button class="btn btn-simple btn-sm" id="btn-upload-file" type="button" aria-expanded="false" aria-controls="upfile"><i class="fa fa-cloud-upload-alt" aria-hidden="true"></i> <?php echo __( "Upload File", "download-manager" ) ?></button>
                     </div>
                     <button class="btn btn-info btn-simple btn-sm ttip" id="btn-paste" disabled="disabled" title="Paste"><i class="fa fa-clipboard"></i></button>
                     <button class="btn btn-simple btn-sm ttip" title="Full Screen"  onclick="openFullscreen('mainfmarea');"><i class="fa fa-expand-arrows-alt"></i></button>
@@ -775,23 +1072,26 @@ if(is_admin()){
 
     </div>
 
-    <div id="upfile" style="position: fixed;z-index: 999999;bottom: 0px;right: 40px;display: none">
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <div class="pull-right c-pointer" onclick="jQuery('#upfile').slideUp();"><i class="far fa-window-close color-red"></i></div>
-            <?php echo __( "Upload File", "download-manager" ) ?>
+    <div id="upfile" class="wpdmam-upload" role="region" aria-labelledby="wpdmam-upload-title" style="display: none">
+        <div class="wpdmam-upload__head">
+            <div class="wpdmam-upload__heading">
+                <p class="wpdmam-upload__title" id="wpdmam-upload-title"><?php esc_html_e( "Upload File", "download-manager" ); ?></p>
+                <p class="wpdmam-upload__summary" id="wpdmam-upload-summary" aria-live="polite"></p>
+            </div>
+            <button type="button" class="wpdmam-upload__text-btn" data-wpdmam-upload-clear hidden><?php esc_html_e( "Clear finished", "download-manager" ); ?></button>
+            <button type="button" class="wpdmam-upload__close" data-wpdmam-upload-close aria-label="<?php esc_attr_e( "Close", "download-manager" ); ?>"><i class="fa fa-times" aria-hidden="true"></i></button>
         </div>
-        <div class="panel-body">
-            <div id="upload" class="modal-body">
-                <div id="plupload-upload-ui" class="hide-if-no-js">
-                    <div id="drag-drop-area">
-                        <div class="drag-drop-inside">
-                            <p class="drag-drop-info"><?php _e('Drop files here'); ?></p>
-                            <p><?php _ex('or', 'Uploader: Drop files here - or - Select Files'); ?></p>
-                            <p class="drag-drop-buttons"><button id="plupload-browse-button" type="button" class="btn btn-success"> &mdash; <?php esc_attr_e('Select Files'); ?> &mdash; </button></p>
-                        </div>
-                    </div>
+        <div class="wpdmam-upload__body">
+            <div id="plupload-upload-ui" class="hide-if-no-js">
+                <div id="drag-drop-area" class="wpdmam-upload__drop">
+                    <span class="wpdmam-upload__drop-icon" aria-hidden="true"><i class="fa fa-cloud-upload-alt"></i></span>
+                    <p class="wpdmam-upload__drop-title"><?php esc_html_e( "Drop files here", "download-manager" ); ?></p>
+                    <p class="wpdmam-upload__drop-hint">
+                        <?php echo esc_html_x( "or", "Uploader: Drop files here - or - Select Files", "download-manager" ); ?>
+                        <button id="plupload-browse-button" type="button" class="wpdmam-upload__browse"><?php esc_html_e( "Select Files", "download-manager" ); ?></button>
+                    </p>
                 </div>
+            </div>
 
                 <?php
                 $slimit = get_option('__wpdm_max_upload_size',0);
@@ -832,37 +1132,10 @@ if(is_admin()){
 
                 // we should probably not apply this filter, plugins may expect wp's media uploader...
                 $plupload_init = apply_filters('plupload_init', $plupload_init); ?>
-
-
-
-            </div>
+            <p class="wpdmam-upload__limit"><?php printf( esc_html__( "Maximum file size: %s", "download-manager" ), esc_html( size_format( wp_convert_hr_to_bytes( $plupload_init['max_file_size'] ) ) ) ); ?></p>
         </div>
-
+        <div id="filelist" class="wpdmam-upload__queue"></div>
     </div>
-
-        <div id="filelist"></div>
-        <div  style="clear: both"></div>
-    </div>
-
-    <script type="text/template" id="newfol-tpl">
-        <div id="upload" class="modal-body">
-            <input type="text" placeholder="Folder Name" id="folname" class="form-control form-control-lg" style="margin: 0">
-        </div>
-        <div class="text-right" style="margin-top: 12px">
-            <div style="float:left;display: none;" id="fcd" class="text-success"><i class="fa fa-check-circle"></i> <?php echo  esc_attr__( 'Folder Created', "download-manager" ); ?></div>
-            <button type="button" id="createfol" class="btn btn-info"><?php echo  esc_attr__( 'Create Folder', "download-manager" ); ?></button>
-        </div>
-    </script>
-
-    <script type="text/template" id="newfile-tpl">
-        <div id="upload" class="modal-body">
-            <input type="text" placeholder="File Name" id="filename" class="form-control form-control-lg" style="margin: 0">
-        </div>
-        <div class="text-right" style="margin-top: 12px">
-            <div style="float:left;display: none;" id="fcd" class="text-success"><i class="fa fa-check-circle"></i> <?php echo  esc_attr__( 'File Created', "download-manager" ); ?></div>
-            <button type="button" id="createfile" class="btn btn-info"><?php echo  esc_attr__( 'Create File', "download-manager" ); ?></button>
-        </div>
-    </script>
 
     <div class="modal fade" tabindex="-1" role="dialog" id="__link_settings">
         <div class="modal-dialog" role="document">
@@ -1376,98 +1649,289 @@ if(is_admin()){
 
         uploader.init();
 
-        // a file was added in the queue
-        uploader.bind('FilesAdded', function(up, files){
-            //var hundredmb = 100 * 1024 * 1024, max = parseInt(up.settings.max_file_size, 10);
+        /* Upload queue */
+        var uploadText = <?php echo wp_json_encode( array(
+            'idle'       => __( 'Files are added to the folder you are viewing.', 'download-manager' ),
+            /* translators: 1: number of files uploaded, 2: number of files in the queue */
+            'progress'   => __( '%1$s of %2$s uploaded', 'download-manager' ),
+            'complete'   => __( 'All uploads complete', 'download-manager' ),
+            /* translators: 1: number of files uploaded, 2: number of files that failed */
+            'withErrors' => __( '%1$s uploaded, %2$s failed', 'download-manager' ),
+            'uploaded'   => __( 'Uploaded', 'download-manager' ),
+            'failed'     => __( 'Upload failed. Please try again.', 'download-manager' ),
+            /* translators: %s: maximum upload size, e.g. 64 MB */
+            'tooLarge'   => sprintf( __( 'This file is larger than the %s limit.', 'download-manager' ), size_format( wp_convert_hr_to_bytes( $plupload_init['max_file_size'] ) ) ),
+            'badType'    => __( 'This file type is not allowed.', 'download-manager' ),
+            'expired'    => __( 'Your session has expired. Refresh the page and try again.', 'download-manager' ),
+        ) ); ?>;
+        var $uploadQueue = $('#filelist'),
+            $uploadSummary = $('#wpdmam-upload-summary'),
+            $uploadClear = $('[data-wpdmam-upload-clear]');
 
+        function uploadItem(file) {
+            var $item = $('#' + file.id), $main;
+
+            if ($item.length) return $item;
+
+            $main = $('<div class="wpdmam-upload__item-main"></div>');
+            $('<div class="wpdmam-upload__item-row"></div>')
+                .append($('<span class="wpdmam-upload__item-name"></span>').text(file.name).attr('title', file.name))
+                .append($('<span class="wpdmam-upload__item-meta"></span>').text(plupload.formatSize(file.size || 0)))
+                .appendTo($main);
+            $('<div class="wpdmam-upload__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="wpdmam-upload__bar-fill"></span></div>')
+                .attr('aria-label', file.name)
+                .appendTo($main);
+            $('<p class="wpdmam-upload__item-status"></p>').appendTo($main);
+
+            return $('<div class="wpdmam-upload__item" data-state="queued"></div>')
+                .attr('id', file.id)
+                .append('<span class="wpdmam-upload__item-icon" aria-hidden="true"><i class="far fa-file"></i></span>')
+                .append($main)
+                .appendTo($uploadQueue);
+        }
+
+        function setUploadState($item, state, message) {
+            var icons = { done: 'fas fa-check', failed: 'fas fa-exclamation' };
+
+            $item.attr('data-state', state);
+            $item.find('.wpdmam-upload__item-icon i').attr('class', icons[state] || 'far fa-file');
+            $item.find('.wpdmam-upload__item-status').text(message || '');
+            $item.find('.wpdmam-upload__bar-fill').css('width', '100%');
+            $item.find('.wpdmam-upload__bar').attr('aria-valuenow', 100);
+            updateUploadSummary();
+        }
+
+        function updateUploadSummary() {
+            var $items = $uploadQueue.children(),
+                done = $items.filter('[data-state="done"]').length,
+                failed = $items.filter('[data-state="failed"]').length,
+                active = $items.length - done - failed;
+
+            if (!$items.length) $uploadSummary.text(uploadText.idle);
+            else if (active) $uploadSummary.text(uploadText.progress.replace('%1$s', done).replace('%2$s', $items.length));
+            else if (failed) $uploadSummary.text(uploadText.withErrors.replace('%1$s', done).replace('%2$s', failed));
+            else $uploadSummary.text(uploadText.complete);
+
+            $uploadClear.prop('hidden', !$items.length || active > 0);
+        }
+
+        /* Non-JSON replies from the upload endpoint: -2 (expired nonce), -3 (blocked type) or an HTML alert wrapped in |||. */
+        function uploadError(raw) {
+            var text = $.trim(String(raw || '')),
+                wrapped = text.match(/^\|\|\|([\s\S]*)\|\|\|$/),
+                message;
+
+            if (text === '-2') return uploadText.expired;
+            if (text === '-3') return uploadText.badType;
+            if (wrapped && /<[a-z]/i.test(wrapped[1])) {
+                message = $.trim(new DOMParser().parseFromString(wrapped[1], 'text/html').body.textContent || '');
+                if (message) return message;
+            }
+            return uploadText.failed;
+        }
+
+        updateUploadSummary();
+
+        uploader.bind('FilesAdded', function (up, files) {
             uploader.settings.multipart_params.current_path = current_path;
-
-            plupload.each(files, function(file){
-                jQuery('#filelist').append(
-                    '<div class="panel panel-default file" id="' + file.id + '"><div class="panel-heading txtellipsis"><b>' +
-
-                    file.name + '</b></div><div class="panel-body">' +
-                    '<div class="progress" style="margin: 0;"><div class="progress-bar progress-bar-info progress-bar-striped fileprogress" role="progressbar"><span class="sr-only">(<span>' + plupload.formatSize(0) + '</span>/' + plupload.formatSize(file.size) + ')</span></div></div></div></div>');
+            plupload.each(files, function (file) {
+                uploadItem(file);
             });
-
+            updateUploadSummary();
             up.refresh();
             up.start();
         });
 
-        uploader.bind('UploadProgress', function(up, file) {
-            jQuery('#' + file.id + " .fileprogress").width(file.percent + "%");
-            jQuery('#' + file.id + " span").html(plupload.formatSize(parseInt(file.size * file.percent / 100)));
+        uploader.bind('UploadProgress', function (up, file) {
+            var $item = uploadItem(file),
+                loaded = typeof file.loaded === 'number' ? file.loaded : Math.round(file.size * file.percent / 100);
+
+            $item.attr('data-state', 'uploading');
+            $item.find('.wpdmam-upload__bar-fill').css('width', file.percent + '%');
+            $item.find('.wpdmam-upload__bar').attr('aria-valuenow', file.percent);
+            $item.find('.wpdmam-upload__item-meta').text(plupload.formatSize(loaded) + ' / ' + plupload.formatSize(file.size));
         });
 
+        uploader.bind('FileUploaded', function (up, file, result) {
+            var $item = uploadItem(file), response = null, isJson;
 
-        // a file was uploaded
-        uploader.bind('FileUploaded', function(up, file, response) {
-            var d = new Date();
-            var ID = d.getTime();
-            if(response.status == 200) {
-                response = JSON.parse(response.response);
-                if (response.success) {
-                    jQuery('#' + file.id).addClass('upcompleted');
-                    refresh_scandir(current_path);
-                    jQuery('#' + file.id + ".upcompleted").on('click', function () {
-                        jQuery(this).slideUp();
-                    });
-                } else {
-                    jQuery('#' + file.id).addClass('upfailed');
-                    jQuery('#' + file.id + ".upfailed").on('click', function () {
-                        jQuery(this).slideUp();
-                    });
-                }
+            try {
+                response = JSON.parse(result.response);
+            } catch (e) {}
+            isJson = response !== null && typeof response === 'object';
+
+            if (result.status == 200 && isJson && response.success) {
+                setUploadState($item, 'done', uploadText.uploaded);
+                refresh_scandir(current_path);
             } else {
-                jQuery('#' + file.id).addClass('upfailed');
-                jQuery('#' + file.id + ".upfailed").on('click', function () {
-                    jQuery(this).slideUp();
-                });
+                setUploadState($item, 'failed', isJson ? (response.message || uploadText.failed) : uploadError(result.response));
             }
+        });
+
+        uploader.bind('Error', function (up, error) {
+            var message = uploadText.failed;
+
+            if (!error.file) return;
+            if (error.code === plupload.FILE_SIZE_ERROR) message = uploadText.tooLarge;
+            else if (error.code === plupload.FILE_EXTENSION_ERROR) message = uploadText.badType;
+            else if (error.response) message = uploadError(error.response);
+
+            setUploadState(uploadItem(error.file), 'failed', message);
+            up.refresh();
         });
 
         $('#reload').on('click', function () {
             refresh_scandir(current_path);
         });
 
-        $('body').on('click', '.wpdm-am-newfol', function () {
-            WPDM.dialog.show({
-                title: '<?php echo esc_js(__( "New Folder", "download-manager" )); ?>',
-                content: document.getElementById('newfol-tpl').innerHTML,
-                size: 'sm', icon: false
-            });
-        });
-        $('body').on('click', '.wpdm-am-newfile', function () {
-            WPDM.dialog.show({
-                title: '<?php echo esc_js(esc_attr__( "New File", "download-manager" )); ?>',
-                content: document.getElementById('newfile-tpl').innerHTML,
-                size: 'sm', icon: false
-            });
-        });
+        /* New folder / new file */
+        (function () {
+            var modes = <?php echo wp_json_encode( array(
+                'folder' => array(
+                    'action'     => 'wpdm_mkdir',
+                    'nonceField' => '__wpdm_mkdir',
+                    'icon'       => 'fa fa-folder-open',
+                    'title'      => __( 'New folder', 'download-manager' ),
+                    'label'      => __( 'Folder name', 'download-manager' ),
+                    'submit'     => __( 'Create folder', 'download-manager' ),
+                    'failed'     => __( 'The folder could not be created.', 'download-manager' ),
+                ),
+                'file'   => array(
+                    'action'     => 'wpdm_newfile',
+                    'nonceField' => '__wpdm_newfile',
+                    'icon'       => 'far fa-file',
+                    'title'      => __( 'New file', 'download-manager' ),
+                    'label'      => __( 'File name', 'download-manager' ),
+                    'submit'     => __( 'Create file', 'download-manager' ),
+                    'failed'     => __( 'The file could not be created.', 'download-manager' ),
+                ),
+            ) ); ?>;
+            var i18n = <?php echo wp_json_encode( array(
+                'required' => __( 'Enter a name.', 'download-manager' ),
+                'invalid'  => __( 'Names cannot contain slashes.', 'download-manager' ),
+                'creating' => __( 'Creating…', 'download-manager' ),
+                'failed'   => __( 'Something went wrong. Refresh the page and try again.', 'download-manager' ),
+            ) ); ?>;
+            var nonce = '<?php echo esc_js( wp_create_nonce( WPDMAM_NONCE_KEY ) ); ?>';
 
-        $('body').on('click', '#createfol', function () {
-            var $btn = $(this);
-            var folname = $('#folname').val();
-            if(folname !=''){
-                $btn.html('<i class="fa fa-refresh fa-spin"></i> &nbsp; Creating...');
-                $.get(ajaxurl, {__wpdm_mkdir:'<?php echo wp_create_nonce(WPDMAM_NONCE_KEY); ?>', action: 'wpdm_mkdir', path: current_path, name: folname}, function (data) {
-                    refresh_scandir(current_path);
-                    $btn.closest('.wpdm-dialog-wrapper').find('.wpdm-dialog__close').trigger('click');
-                });
-            }
-        });
+            var $panel = $('#wpdmam-create'),
+                $form = $('#wpdmam-create-form'),
+                $title = $('#wpdmam-create-title'),
+                $label = $form.find('label[for="wpdmam-create-name"]'),
+                $icon = $panel.find('[data-wpdmam-create-icon]'),
+                $name = $('#wpdmam-create-name'),
+                $error = $('#wpdmam-create-error'),
+                $submit = $('#wpdmam-create-submit'),
+                $triggers = $('[data-wpdmam-create]'),
+                $trigger = $(),
+                mode = null,
+                busy = false;
 
-        $('body').on('click', '#createfile', function () {
-            var $btn = $(this);
-            var filename = $('#filename').val();
-            if(filename !=''){
-                $btn.html('<i class="fa fa-refresh fa-spin"></i> &nbsp; Creating...');
-                $.get(ajaxurl, {__wpdm_newfile:'<?php echo wp_create_nonce(WPDMAM_NONCE_KEY); ?>', action: 'wpdm_newfile', path: current_path, name: filename}, function (data) {
-                    refresh_scandir(current_path);
-                    $btn.closest('.wpdm-dialog-wrapper').find('.wpdm-dialog__close').trigger('click');
-                });
+            function isOpen() {
+                return !$panel.prop('hidden');
             }
-        });
+
+            function setError(message) {
+                $error.text(message || '');
+                $name.attr('aria-invalid', message ? 'true' : 'false');
+            }
+
+            function place() {
+                var area = document.getElementById('mainfmarea').getBoundingClientRect(),
+                    button = $trigger[0].getBoundingClientRect(),
+                    left = Math.min(button.left - area.left, area.width - $panel.outerWidth() - 16);
+
+                $panel.css({ top: button.bottom - area.top + 8, left: Math.max(16, left) });
+            }
+
+            function open(nextMode, $button) {
+                var config = modes[nextMode];
+
+                mode = nextMode;
+                $triggers.attr('aria-expanded', 'false');
+                $trigger = $button.attr('aria-expanded', 'true');
+                $icon.attr('class', config.icon);
+                $title.text(config.title);
+                $label.text(config.label);
+                if (!busy) $submit.text(config.submit);
+                $name.val('');
+                setError('');
+                $panel.prop('hidden', false);
+                place();
+                $name.trigger('focus');
+            }
+
+            function close(restoreFocus) {
+                if (!isOpen()) return;
+                $panel.prop('hidden', true);
+                $triggers.attr('aria-expanded', 'false');
+                if (restoreFocus) $trigger.trigger('focus');
+                mode = null;
+            }
+
+            $triggers.on('click', function (event) {
+                var nextMode = $(this).attr('data-wpdmam-create');
+
+                event.preventDefault();
+                if (isOpen() && mode === nextMode) close(true);
+                else open(nextMode, $(this));
+            });
+
+            $form.on('submit', function (event) {
+                var config, name, payload;
+
+                event.preventDefault();
+                if (busy || !mode) return;
+
+                config = modes[mode];
+                name = $.trim($name.val());
+
+                if (!name) { setError(i18n.required); $name.trigger('focus'); return; }
+                if (/[\\/]/.test(name)) { setError(i18n.invalid); $name.trigger('focus'); return; }
+
+                payload = { action: config.action, path: current_path, name: name };
+                payload[config.nonceField] = nonce;
+
+                busy = true;
+                setError('');
+                $submit.prop('disabled', true).attr('aria-busy', 'true').text(i18n.creating);
+
+                $.post(ajaxurl, payload, null, 'json')
+                    .done(function (response) {
+                        if (response && response.success) {
+                            close(true);
+                            refresh_scandir(current_path);
+                        } else {
+                            setError((response && response.message) || config.failed);
+                        }
+                    })
+                    .fail(function () {
+                        setError(i18n.failed);
+                    })
+                    .always(function () {
+                        busy = false;
+                        $submit.prop('disabled', false).removeAttr('aria-busy').text(mode ? modes[mode].submit : config.submit);
+                    });
+            });
+
+            $panel.on('click', '[data-wpdmam-create-cancel]', function () {
+                close(true);
+            });
+
+            $panel.on('keydown', function (event) {
+                if (event.key !== 'Escape') return;
+                event.stopPropagation();
+                close(true);
+            });
+
+            $(document).on('pointerdown', function (event) {
+                if (isOpen() && !$(event.target).closest('#wpdmam-create, [data-wpdmam-create]').length) close(false);
+            });
+
+            $(window).on('resize', function () {
+                if (isOpen()) place();
+            });
+        })();
 
         /* Delete */
         $('body').on('click', '.btn-delete', function (e) {
@@ -1636,7 +2100,27 @@ if(is_admin()){
         });
 
         $('body').on('click', '#btn-upload-file', function () {
-            $('#upfile').slideToggle();
+            var $panel = $('#upfile').stop(true, true),
+                opening = !$panel.is(':visible');
+
+            $(this).attr('aria-expanded', opening ? 'true' : 'false');
+            $panel.slideToggle(180, function () {
+                if (opening) uploader.refresh();
+            });
+        });
+
+        $('body').on('click', '[data-wpdmam-upload-close]', function () {
+            $('#upfile').stop(true, true).slideUp(180);
+            $('#btn-upload-file').attr('aria-expanded', 'false').trigger('focus');
+        });
+
+        $('body').on('click', '[data-wpdmam-upload-clear]', function () {
+            $('#filelist').children('[data-state="done"], [data-state="failed"]').remove();
+            updateUploadSummary();
+        });
+
+        $('body').on('keydown', '#upfile', function (event) {
+            if (event.key === 'Escape') $('[data-wpdmam-upload-close]').trigger('click');
         });
 
         $('body').on('click', '.btn-settings', function (e) {
