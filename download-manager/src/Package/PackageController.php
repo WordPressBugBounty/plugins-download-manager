@@ -2631,9 +2631,9 @@ class PackageController extends PackageTemplate {
 			}
 		}
 		if ( count( $posts ) == 0 ) {
-			$html = "<div class='col-md-12'><div class='alert alert-info'>" . __( "No related download found!", "download-manager" ) . "</div> </div>";
+			$html = ""; //"<div class='col-md-12'><div class='alert alert-info'>" . __( "No related download found!", "download-manager" ) . "</div> </div>";
 		}
-		$html = "<div class='w3eden'><div class='row'>" . $html . "</div></div>";
+		$html = $html !== '' ? "<div class='w3eden'><div class='row'>" . $html . "</div></div>" : "";
 		wp_reset_query();
 
 		return $html;

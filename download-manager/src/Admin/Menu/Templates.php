@@ -4,7 +4,6 @@ namespace WPDM\Admin\Menu;
 
 
 use WPDM\__\__;
-use WPDM\__\Crypt;
 use WPDM\__\Template;
 
 class Templates
@@ -36,10 +35,16 @@ class Templates
                 $package = get_posts(array('post_type' => 'wpdmpro', 'posts_per_page' => 1, 'post_status' => 'publish'));
                 $package = (array)$package[0];
             }
-            $template = Crypt::decrypt(wpdm_query_var('template_preview'));
-            $template = stripslashes_deep(str_replace(array("\r", "\n"), "", html_entity_decode(urldecode($template))));
+            // The template itself is kept server-side (see preview()); the URL
+            // only carries a token, so large templates don't hit URI limits.
+            $token = preg_replace('/[^a-zA-Z0-9]/', '', wpdm_query_var('template_preview'));
+            $preview = $token ? get_transient("wpdm_tpl_preview_{$token}") : false;
+            if (!is_array($preview) || (int)$preview['uid'] !== get_current_user_id())
+                wp_die(esc_html__("Preview has expired. Please open the preview again.", "download-manager"));
+            $template = stripslashes_deep(str_replace(array("\r", "\n"), "", html_entity_decode($preview['template'])));
             $output = wpdm_fetch_template($template, $package, $type);
-            $template = "<div class='w3eden' style='max-width: 900px;margin: 20px auto !important;padding: 40px;'>{$output}</div><script> jQuery(function($) {  var body = document.body, html = document.documentElement; var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); window.parent.wpdmifh(height); });</script>";
+            $css = $preview['css'] !== '' ? "<style>" . str_ireplace('</style', '', $preview['css']) . "</style>" : '';
+            $template = "{$css}<div class='w3eden' style='max-width: 900px;margin: 20px auto !important;padding: 40px;'>{$output}</div><script> jQuery(function($) {  var body = document.body, html = document.documentElement; var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ); window.parent.wpdmifh(height); });</script>";
             include $page_template;
             die();
         }
@@ -108,10 +113,10 @@ class Templates
 
         $wposts = get_posts( $args  );
         $template = stripslashes($template);
-        $template = urlencode($template);
         $tplnonce = wp_create_nonce(NONCE_KEY);
-        $template_enc = Crypt::encrypt($template);
-        $preview_link = home_url("/?template_preview={$template_enc}&_type={$type}&_tplnonce={$tplnonce}");
+        $token = wp_generate_password(20, false);
+        set_transient("wpdm_tpl_preview_{$token}", array('uid' => get_current_user_id(), 'template' => $template, 'css' => $css), 30 * MINUTE_IN_SECONDS);
+        $preview_link = esc_url(add_query_arg(array('template_preview' => $token, '_type' => $type, '_tplnonce' => $tplnonce), home_url('/')));
 
         if(count($wposts)==0) $html = "<div class='w3eden'><div class='col-md-12'><div class='alert alert-info'>".__( "No package found! Please create at least 1 package to see template preview" , "download-manager" )."</div> </div></div>";
         else

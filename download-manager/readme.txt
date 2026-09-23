@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.69
+Stable tag: 3.3.70
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,11 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.70 - 2026.09.23 =
+* Fixed: Previewing a large link or page template failed because the whole template was passed in the preview URL and exceeded the server's URI length limit; the template is now held server-side for the preview session and the URL carries only a short-lived token
+* Fixed: The related downloads section rendered an empty wrapper when a package had no related downloads; nothing is output now when there is nothing to show
+* Fixed: A PHP warning - "file_exists(): File name is longer than the maximum allowed path length" - while rendering a package whose link or page template is given as inline markup rather than the name of a saved template; the lookup now recognises that such a value cannot be a template id instead of handing the whole template body to the filesystem as a path
 
 = 3.3.69 - 2026.09.16 =
 * Improved: The Asset Manager's New Folder and New File dialogs are now a single panel that anchors under the button that opened it, with inline validation for empty names and names containing slashes, a busy state while the folder or file is created, and any error returned by the server shown in place rather than the panel closing as though it had worked

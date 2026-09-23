@@ -68,6 +68,12 @@ class PackageTemplate
         if ($templateType !== null)
             $this->type($templateType);
 
+        // $id becomes a filename — keep it path-safe (same as delete()) and
+        // short enough to write: 251 + ".xml" is the 255 char filename limit,
+        // past which file_put_contents() warns "File name too long".
+        $id = wpdm_sanitize_var($id, 'filename');
+        if (!$id || strlen($id) > 251) return $this;
+
         $file = $this->dir . '/' . $id . '.xml';
         $code = stripslashes_deep($code);
         $data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><template><tplid>{$id}</tplid><name>{$name}</name><designer>Admin</designer><code><![CDATA[{$code}]]></code><css><![CDATA[{$css}]]></css></template>";
@@ -87,11 +93,38 @@ class PackageTemplate
         return $this;
     }
 
+    /**
+     * Whether a value can be one of this directory's template ids.
+     *
+     * add() stores templates as "<id>.xml" after sanitize_file_name(), so a
+     * real id survives that call unchanged and still fits inside a filename.
+     */
+    public static function isTemplateId($template)
+    {
+        // 255 is the filename limit on every platform we run on, less ".xml".
+        if (!is_string($template) || $template === '' || strlen($template) > 251) {
+            return false;
+        }
+
+        return $template === wpdm_sanitize_var($template, 'filename');
+    }
+
     function get($template, $templateType = null, $contentOnly = false)
     {
         if ($templateType !== null)
             $this->type($templateType);
         $template = str_replace(".xml", "", $template);
+
+        // Callers pass whole template bodies through here, not just ids:
+        // Package\PackageTemplate::getTemplateContent() calls this first and
+        // only checks for inline markup afterwards. Handing one of those to
+        // file_exists() warns "File name is longer than the maximum allowed
+        // path length", and anything carrying a path would read outside the
+        // template directory.
+        if (!self::isTemplateId($template)) {
+            return false;
+        }
+
         $file = $this->dir . $template . '.xml';
         $tpl = [];
         if (file_exists($file)) {
