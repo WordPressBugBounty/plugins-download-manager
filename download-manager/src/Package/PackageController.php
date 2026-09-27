@@ -2409,7 +2409,7 @@ class PackageController extends PackageTemplate {
 			$icon = FileSystem::fileTypeIcon( $ext );
 		}
 		if ( $html ) {
-			$icon = "<img src='{$icon}' alt='Icon' class='$class' />";
+			$icon = "<img src='" . esc_url( $icon ) . "' alt='Icon' class='" . esc_attr( $class ) . "' />";
 		}
 
 		return apply_filters( "wpdm_package_icon", $icon, $ID );

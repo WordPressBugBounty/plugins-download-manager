@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) die();
     var ctz = new Date().getMilliseconds();
     var siteurl = "<?php echo esc_url(home_url('/?__wpdmnocache=')); ?>"+ctz,force="<?php echo esc_js($force); ?>";
     var verifyCallback_<?php echo esc_js($package['ID']); ?> = function(response) {
-        jQuery.post("<?php echo esc_url(wpdm_rest_url('validate-captcha')); ?>",{__wpdm_ID:<?php echo (int)$package['ID'];?>,dataType:'json',force:force,social:'c',reCaptchaVerify:response,action:'wpdm_ajax_call'},function(res){
+        jQuery.post("<?php echo esc_url(wpdm_rest_url('validate-captcha')); ?>",{<?php if(is_user_logged_in()) echo "_wpnonce:'" . esc_js(wp_create_nonce('wp_rest')) . "',"; ?>__wpdm_ID:<?php echo (int)$package['ID'];?>,dataType:'json',force:force,social:'c',reCaptchaVerify:response,action:'wpdm_ajax_call'},function(res){
             if(res.downloadurl!='' && res.downloadurl != undefined && res!= undefined ) {
 
                 if(window.parent == undefined)

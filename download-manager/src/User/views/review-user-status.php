@@ -27,7 +27,7 @@ $iid = uniqid();
 
                     <div class="form-group">
                         <strong class="d-block"><?php _e('Name', WPDM_TEXT_DOMAIN); ?></strong>
-						<?= $user->display_name; ?>
+						<?= esc_html($user->display_name); ?>
                     </div>
                     <div class="form-group">
                         <strong class="d-block"><?php _e('Email', WPDM_TEXT_DOMAIN); ?></strong>

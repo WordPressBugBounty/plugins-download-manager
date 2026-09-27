@@ -39,9 +39,16 @@ class PackageLocks
         $limit = get_option('__wpdm_private_link_usage_limit', 3);
         $xpire_period = ((int)get_option('__wpdm_private_link_expiration_period', 3)) * ((int)get_option('__wpdm_private_link_expiration_period_unit', 60));
         $xpire_period = $xpire_period > 0 ? $xpire_period : 3600;
+        $packageID = wpdm_query_var('__wpdm_ID', 'int');
+
+        //Only issue a key for a published package that is actually captcha locked and accessible to the current user
+        if (!$this->isCaptchaUnlockable($packageID)) {
+            wp_send_json(['error' => __("Invalid request!", "download-manager")]);
+        }
+
         $ret = wpdm_recaptcha_enterprise_verify(wpdm_query_var('reCaptchaVerify'), 'DOWNLOAD');
         if ($ret['success']) {
-            $download_url = WPDM()->package->expirableDownloadLink(wpdm_query_var('__wpdm_ID', 'int'), $limit, $xpire_period);
+            $download_url = WPDM()->package->expirableDownloadLink($packageID, $limit, $xpire_period);
             $data['downloadurl'] = $download_url;
         } else {
             $data['error'] = __("Captcha Verification Failed!", "wpmdpro");
@@ -49,6 +56,18 @@ class PackageLocks
 
         wp_send_json($data);
         die();
+    }
+
+    /**
+     * Check if the captcha lock of the given package can issue a download key
+     * @param $packageID
+     * @return bool
+     */
+    private function isCaptchaUnlockable($packageID)
+    {
+        if (!$packageID || get_post_type($packageID) !== 'wpdmpro' || get_post_status($packageID) !== 'publish') return false;
+        if ((int)get_post_meta($packageID, '__wpdm_captcha_lock', true) !== 1) return false;
+        return WPDM()->package->userCanAccess($packageID);
     }
 
     function validatePassword()

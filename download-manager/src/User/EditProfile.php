@@ -54,7 +54,18 @@ class EditProfile
 
             $error = 0;
 
-            $pfile_data['display_name'] = wpdm_sanitize_var($_POST['wpdm_profile']['display_name']);
+            // Plain text only. Fully decode first (bounded, covers named and numeric entities) so
+            // entity-encoded markup such as &lt;img …&gt; or &#60;img …&#62; is stripped as markup instead
+            // of being stored as text that an HTML consumer could later revive.
+            $display_name = wp_unslash($_POST['wpdm_profile']['display_name']);
+            for ($i = 0; $i < 5; $i++) {
+                $decoded = html_entity_decode($display_name, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                if ($decoded === $display_name) {
+                    break;
+                }
+                $display_name = $decoded;
+            }
+            $pfile_data['display_name'] = sanitize_text_field(wp_strip_all_tags($display_name));
             $pfile_data['user_email'] = sanitize_email($_POST['wpdm_profile']['user_email']);
 
 

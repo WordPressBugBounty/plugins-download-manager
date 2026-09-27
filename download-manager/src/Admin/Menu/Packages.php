@@ -109,7 +109,7 @@ class Packages {
 					}
 				}
 			} else {
-				$meta_value = is_array( $meta_value ) ? wpdm_sanitize_array( $meta_value, 'txt' ) : htmlspecialchars( $meta_value );
+				$meta_value = is_array( $meta_value ) ? wpdm_sanitize_array( $meta_value, 'txt' ) : esc_html( $meta_value );
 			}
 			update_post_meta( $post, $key_name, $meta_value );
 		}

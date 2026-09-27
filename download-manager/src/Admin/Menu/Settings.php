@@ -15,7 +15,7 @@ class Settings
 
     function __construct()
     {
-        //add_action('admin_init', array($this, 'checkSaveSettingsAuth'), 1);
+        add_action('admin_init', array($this, 'checkSaveSettingsAuth'), 1);
         add_action('admin_init', array($this, 'initiateSettings'));
         add_action('wp_ajax_wpdm_settings', array($this, 'loadSettingsPage'));
         add_action('admin_menu', array($this, 'Menu'), 999999);
@@ -33,7 +33,7 @@ class Settings
     function checkSaveSettingsAuth(){
         if(wpdm_query_var('task') === 'wdm_save_settings') {
             check_ajax_referer(WPDMSET_NONCE_KEY, '__wpdms_nonce');
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
             if(!current_user_can('manage_options')) die(__( "You are not allowed to change settings!", "download-manager" ));
         }
     }
@@ -124,7 +124,7 @@ class Settings
 
             if(!current_user_can('manage_options')) die(__( "You are not allowed to change settings!", "download-manager" ));
 
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
 
             foreach ($_POST as $optn => $optv) {
                 if(strpos("__".$optn, '_wpdm_')) {
@@ -167,7 +167,7 @@ class Settings
 
         if (isset($_POST['task']) && $_POST['task'] == 'wdm_save_settings' && current_user_can(WPDM_ADMIN_CAP)) {
 
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
 
             foreach ($_POST as $optn => $optv) {
                 if(strpos("__".$optn, '_wpdm_')) {
@@ -187,7 +187,7 @@ class Settings
 
     function frontEnd(){
         if(isset($_POST['section']) && $_POST['section']=='frontend' && isset($_POST['task']) && $_POST['task']=='wdm_save_settings' && current_user_can(WPDM_ADMIN_CAP)){
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
 
             foreach($_POST as $k => $v){
                 if(strpos("__".$k, '_wpdm_')){
@@ -246,7 +246,7 @@ class Settings
     function socialConnects(){
         if(isset($_POST['section']) && $_POST['section']=='social-connects' && isset($_POST['task']) && $_POST['task']=='wdm_save_settings' && current_user_can(WPDM_ADMIN_CAP)){
 
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
 
             foreach($_POST as $k => $v){
                 if(strpos("__".$k, '_wpdm_')){
@@ -261,7 +261,7 @@ class Settings
     function Buddypress(){
         if(isset($_POST['section']) && $_POST['section']=='buddypress' && isset($_POST['task']) && $_POST['task']=='wdm_save_settings' && current_user_can(WPDM_ADMIN_CAP)){
 
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
 
             foreach($_POST as $k => $v){
                 if(strpos("__".$k, '_wpdm_')){
@@ -276,7 +276,7 @@ class Settings
     function cloudStorage(){
         if(isset($_POST['section']) && $_POST['section']=='cloud-storage' && isset($_POST['task']) && $_POST['task']=='wdm_save_settings' && current_user_can(WPDM_ADMIN_CAP)){
 
-            if(!wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
+            if(!isset($_POST['__wpdms_nonce']) || !wp_verify_nonce($_POST['__wpdms_nonce'], WPDMSET_NONCE_KEY)) die(__('Security token is expired! Refresh the page and try again.', 'download-manager'));
 
             foreach($_POST as $k => $v){
                 if(strpos("__".$k, '_wpdm_')){
@@ -292,6 +292,7 @@ class Settings
 
     function Privacy(){
         if (wpdm_query_var('task') == 'wdm_save_settings' && wpdm_query_var('section') == 'privacy') {
+            if (!current_user_can(WPDM_ADMIN_CAP)) die(__( "You are not allowed to change settings!", "download-manager" ));
             update_option('__wpdm_noip', wpdm_query_var('__wpdm_noip', 'int', 0));
             update_option('__wpdm_delstats_on_udel', wpdm_query_var('__wpdm_delstats_on_udel', 'int', 0));
             update_option('__wpdm_checkout_privacy', wpdm_query_var('__wpdm_checkout_privacy', 'int', 0));

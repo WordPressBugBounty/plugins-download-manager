@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.70
+Stable tag: 3.3.71
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,13 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.71 - 2026.09.27 =
+* Security: Fixed Subscriber+ Stored XSS via display name in the Download History user filter ( Reported by Wordfence )
+* Security: Fixed CSRF on the settings screen that could overwrite Privacy options, including the cron key ( Reported by Kartik Sharma via WPScan )
+* Security: Fixed unauthenticated download of protected files via cross-package CAPTCHA validation ( Reported by Raj Ukani via WPScan )
+* Security: Fixed Author+ Stored XSS via the package icon URL ( Reported by Mark Moore via WPScan )
+* Fixed: Display names are escaped in the public profile card and account status view
 
 = 3.3.70 - 2026.09.23 =
 * Fixed: Previewing a large link or page template failed because the whole template was passed in the preview URL and exceeded the server's URI length limit; the template is now held server-side for the preview session and the URL carries only a short-lived token

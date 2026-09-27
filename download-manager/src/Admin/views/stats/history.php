@@ -228,8 +228,8 @@ $pagination           = array(
                 <div class="select-wrapper">
                     <select id="user_ids" name="user_ids[]" multiple="multiple" class="elegant-select">
                         <?php foreach ($selected_users as $u): ?>
-                            <option selected value="<?php echo $u->ID ?>">
-                                <?php echo $u->display_name . " (" . $u->user_login . ")"; ?>
+                            <option selected value="<?php echo (int) $u->ID; ?>">
+                                <?php echo esc_html($u->display_name . " (" . $u->user_login . ")"); ?>
                             </option>
                         <?php endforeach ?>
                     </select>
@@ -944,8 +944,7 @@ $pagination           = array(
                         },
                         cache: true
                     },
-                    minimumInputLength: 2,
-                    escapeMarkup: function (markup) { return markup; }
+                    minimumInputLength: 2
                 });
             }
 
@@ -975,8 +974,7 @@ $pagination           = array(
                         },
                         cache: true
                     },
-                    minimumInputLength: 2,
-                    escapeMarkup: function (markup) { return markup; }
+                    minimumInputLength: 2
                 });
             }
         }
