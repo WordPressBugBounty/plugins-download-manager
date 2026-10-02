@@ -137,7 +137,7 @@ wp_enqueue_style('wpdm-auth-forms', \WPDM\__\Template::locate_url('auth-forms.cs
                     <?php if(isset($regurl) && $regurl != ''){ ?>
                         <div class="wpdm-auth-link">
                             <?php _e("Don't have an account?", "download-manager"); ?>
-                            <a href="<?php echo esc_attr($regurl); ?>"><?php _e("Sign up", "download-manager"); ?></a>
+                            <a href="<?php echo esc_url($regurl); ?>"><?php _e("Sign up", "download-manager"); ?></a>
                         </div>
                     <?php } ?>
 

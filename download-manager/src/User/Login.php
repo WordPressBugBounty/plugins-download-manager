@@ -123,7 +123,7 @@ class Login
         if (!isset($params) || !is_array($params)) $params = array();
 
         if (isset($params) && is_array($params))
-            extract($params);
+            extract($params, EXTR_SKIP);
         if (!isset($redirect)) $redirect = get_permalink(get_option('__wpdm_user_dashboard'));
 
         $_social_only = isset($params['social_only']) && ($params['social_only'] === 'true' || (int)$params['social_only'] === 1) ? true : false;
@@ -134,6 +134,8 @@ class Login
             if ($regurl > 0)
                 $regurl = get_permalink($regurl);
         }
+        // regurl may be a shortcode attribute (author-controlled): drop javascript:/data: etc.
+        $regurl = is_string($regurl) ? esc_url_raw($regurl) : '';
         $log_redirect = __::valueof($_SERVER, 'REQUEST_URI', ['validate' => 'escs']);
         if (isset($params['redirect'])) $log_redirect = wpdm_valueof($params, 'redirect');
         if (isset($_GET['redirect_to'])) $log_redirect = wpdm_query_var('redirect_to');
@@ -381,7 +383,7 @@ class Login
         if (!isset($params) || !is_array($params)) $params = array();
 
         if (isset($params) && is_array($params))
-            extract($params);
+            extract($params, EXTR_SKIP);
         if (!isset($redirect)) $redirect = get_permalink(get_option('__wpdm_user_dashboard'));
 
         if (!isset($regurl)) {
@@ -389,6 +391,8 @@ class Login
             if ($regurl > 0)
                 $regurl = get_permalink($regurl);
         }
+        // regurl may be a shortcode attribute (author-controlled): drop javascript:/data: etc.
+        $regurl = is_string($regurl) ? esc_url_raw($regurl) : '';
         $log_redirect = __::valueof($_SERVER, 'REQUEST_URI', ['validate' => 'escs']);
         if (isset($params['redirect'])) $log_redirect = esc_url($params['redirect']);
         if (isset($_GET['redirect_to'])) $log_redirect = esc_url($_GET['redirect_to']);
@@ -526,7 +530,7 @@ class Login
         if (!isset($params) || !is_array($params)) $params = array();
 
         if (isset($params) && is_array($params))
-            extract($params);
+            extract($params, EXTR_SKIP);
         if (!isset($redirect)) $redirect = get_permalink(get_option('__wpdm_user_dashboard'));
 
         if (!isset($regurl)) {
@@ -534,6 +538,8 @@ class Login
             if ($regurl > 0)
                 $regurl = get_permalink($regurl);
         }
+        // regurl may be a shortcode attribute (author-controlled): drop javascript:/data: etc.
+        $regurl = is_string($regurl) ? esc_url_raw($regurl) : '';
         $log_redirect = __::valueof($_SERVER, 'REQUEST_URI', ['validate' => 'escs']);
         if (isset($params['redirect'])) $log_redirect = esc_url($params['redirect']);
         if (isset($_GET['redirect_to'])) $log_redirect = esc_url($_GET['redirect_to']);

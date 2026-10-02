@@ -118,7 +118,7 @@ wp_enqueue_style('wpdm-auth-forms', \WPDM\__\Template::locate_url('auth-forms.cs
                         <?php if($loginurl != ''): ?>
                             <div class="wpdm-auth-link">
                                 <?php _e("Already have an account?", "download-manager"); ?>
-                                <a href="<?php echo esc_attr($loginurl); ?>"><?php _e("Sign in", "download-manager"); ?></a>
+                                <a href="<?php echo esc_url($loginurl); ?>"><?php _e("Sign in", "download-manager"); ?></a>
                             </div>
                         <?php endif; ?>
                     </form>

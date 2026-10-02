@@ -27,11 +27,6 @@ if(is_admin()){
         #wpdm-dashboard-content{
             overflow: visible;
         }
-        #rename{
-            z-index: 999999999999;
-            padding-top: 150px;
-            overflow: hidden;
-        }
 
         /* New folder / new file panel. Lives inside #mainfmarea so it always stacks above the file manager, including in browser full-screen. */
         .wpdmam-create{
@@ -684,42 +679,8 @@ if(is_admin()){
             transition: all ease-in-out 400ms;
         }
 
-        .w3eden #__file_settings_tabs.nav.nav-tabs > li > a{
-            box-shadow: none !important;
-            border: 1px solid #e8e8e8;
-            padding: 8px 16px;
-            font-size: 10px;
-            font-weight: 400 !important;
-        }
-        .w3eden #__file_settings_tabs.nav.nav-tabs > li.active > a{
-            border-bottom: 1px solid #ffffff;
-        }
-        .w3eden #__file_settings_tabs.nav.nav-tabs > li:not(.active) > a{
-            background: #fafafa;
-        }
-
-        .w3eden #__asset_settings .form-control.form-control-lg{
-            border: 0;
-            background: #ffffff; text-align: center; font-family: "Overpass Mono", monospace;font-size: 11pt !important;box-shadow: none !important;
-        }
-        .w3eden #__asset_settings .panel-default{
-            border: 1px solid #e6e6e6;
-        }
-        .w3eden #__asset_settings .panel-default .panel-heading {
-            border-bottom: 1px solid #e6e6e6;
-            background: #fafafa;
-        }
-        .w3eden #__asset_settings .panel-default .panel-footer {
-            border-top: 1px solid #e6e6e6;
-            background: #fafafa;
-        }
-
-        .allow-roles label,
-        .w3eden #__asset_settings .tab-content *,
-        .w3eden #__asset_settings .tab-content{
-            font-size: 11px;
-        }
         .allow-roles label{
+            font-size: 11px;
             font-weight: 400;
             line-height: 16px;
         }
@@ -727,6 +688,165 @@ if(is_admin()){
             margin: 0 5px !important;
         }
 
+        .wpdmam-dialog .wpdm-dialog {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 2rem);
+        }
+        .wpdmam-dialog .wpdm-dialog__body {
+            overflow-y: auto;
+        }
+
+        /* Asset settings: Share tab */
+        #__asset_settings .wpdmam-tabs {
+            --wpdmam-ink: #0f172a;
+            --wpdmam-body: #334155;
+            --wpdmam-muted: #64748b;
+            --wpdmam-border: #e2e8f0;
+            --wpdmam-border-strong: #cbd5e1;
+            --wpdmam-surface: #f8fafc;
+            --wpdmam-hover: #f1f5f9;
+            --wpdmam-accent: var(--admin-color, var(--color-primary, #2563eb));
+            --wpdmam-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--wpdmam-body);
+        }
+        #__asset_settings .wpdmam-tabs svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+        #__asset_settings .btn {
+            background-image: none;
+        }
+
+        #__asset_settings .wpdmam-tabs__nav {
+            display: flex;
+            margin: 0 -15px 20px;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--wpdmam-border);
+        }
+        #__asset_settings .wpdmam-tabs__tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 -1px;
+            padding: 12px 6px 10px;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+            color: var(--wpdmam-muted);
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: default;
+        }
+        #__asset_settings .wpdmam-tabs__tab.is-active {
+            color: var(--wpdmam-ink);
+            border-bottom-color: var(--wpdmam-accent);
+        }
+        #__asset_settings .wpdmam-tabs__tab.is-active svg {
+            color: var(--wpdmam-accent);
+        }
+        #__asset_settings .wpdmam-tabs__tab:focus {
+            outline: none;
+        }
+        #__asset_settings .wpdmam-tabs__tab:focus-visible {
+            outline: 2px solid var(--wpdmam-accent);
+            outline-offset: -4px;
+            border-radius: 6px;
+        }
+
+        #__asset_settings .wpdmam-section__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 28px;
+            margin-bottom: 8px;
+        }
+        #__asset_settings .wpdmam-section__title {
+            margin: 0;
+            color: var(--wpdmam-ink);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        #__asset_settings .wpdmam-section__hint {
+            margin: 8px 0 0;
+            color: var(--wpdmam-muted);
+            font-size: 12px;
+        }
+
+        #__asset_settings .wpdmam-field {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 3px 3px 12px;
+            border: 1px solid var(--wpdmam-border);
+            border-radius: var(--wpdmam-radius);
+            background: var(--wpdmam-surface);
+        }
+        #__asset_settings .wpdmam-field__input {
+            flex: 1;
+            min-width: 0;
+            height: 30px;
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            color: var(--wpdmam-ink);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            text-overflow: ellipsis;
+        }
+        #__asset_settings .wpdmam-field__input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        #__asset_settings .wpdmam-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--wpdmam-muted);
+            cursor: pointer;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+        #__asset_settings .wpdmam-icon-btn:hover {
+            background: var(--wpdmam-hover);
+            color: var(--wpdmam-ink);
+        }
+        #__asset_settings .wpdmam-icon-btn:focus {
+            outline: none;
+        }
+        #__asset_settings .wpdmam-icon-btn:focus-visible {
+            outline: 2px solid var(--wpdmam-accent);
+            outline-offset: 1px;
+        }
+
+        #__asset_settings .wpdmam-empty {
+            margin: 0;
+            padding: 20px 16px;
+            border: 1px dashed var(--wpdmam-border-strong);
+            border-radius: var(--wpdmam-radius);
+            color: var(--wpdmam-muted);
+            font-size: 12px;
+            text-align: center;
+        }
 
         .w3eden .modal-header .close.pull-right {
             height: 16px;
@@ -949,60 +1069,41 @@ if(is_admin()){
                             <div class="form-group">
                                 <div class="media" style="border:1px solid #e8e8e8;border-radius: 3px;padding: 10px;">
                                     <div class="pull-right">
-                                        <button class="btn btn-xs btn-secondary btn-rename" type="button" title="<?php echo  esc_attr__( 'Rename', "download-manager" ); ?>" data-toggle="modal" data-target="#rename"><i class="fas fa-i-cursor"></i> <?php echo  esc_attr__( 'Rename', "download-manager" ); ?></button>
+                                        <button class="btn btn-xs btn-secondary btn-rename" type="button" title="<?php echo  esc_attr__( 'Rename', "download-manager" ); ?>"><i class="fas fa-i-cursor"></i> <?php echo  esc_attr__( 'Rename', "download-manager" ); ?></button>
                                     </div>
                                     <div class="media-body">
                                         &nbsp;{{ asset.name }}
                                     </div>
                                 </div>
 
-                                <div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" id="rename">
-                                    <div class="modal-dialog modal-sm" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <strong class="modal-title" id="myModalLabel"><?php echo  esc_attr__( 'Rename', "download-manager" ); ?></strong>
-                                                <button type="button" class="close pull-right p-0" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i class="fa fa-times-circle"></i></span></button>
-                                            </div>
-                                            <div id="upload" class="modal-body">
-                                                <input type="text" v-bind:value="asset.name" placeholder="<?php echo  esc_attr__( 'New Name', "download-manager" ); ?>" id="newname" class="form-control form-control-lg" style="margin: 0px;border: 1px dashed #d4d4d4;">
-                                            </div>
-                                            <div class="modal-footer text-right">
-                                                <button type="button" id="renamenow" class="btn btn-info"  :data-assetid="asset.ID" :data-oldname="asset.name" :data-path="asset.path"><?php echo  esc_attr__( 'Rename', "download-manager" ); ?></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
 
-                            <div>
-
-                                <!-- Nav tabs -->
-                                <ul class="nav nav-tabs" id="__file_settings_tabs" role="tablist" style="margin-left: -15px;padding-left: 15px;margin-right: -15px;border-bottom: 1px solid #e8e8e8;">
-                                    <li role="presentation" class="active"><a href="#share" aria-controls="share" role="tab" data-toggle="tab"><?php echo  esc_attr__( 'Share', "download-manager" ); ?></a></li>
-                                </ul>
-
-                                <!-- Tab panes -->
-                                <div class="tab-content">
-                                    <!-- div role="tabpanel" class="tab-pane" id="activity">...</div -->
-                                    <div role="tabpanel" class="tab-pane active" id="share">
-                                        <div class="panel panel-default" style="margin-top: 15px;margin-bottom: 0;" v-if="asset.type === 'file'">
-                                            <div class="input-group" style="border: 0 !important;">
-                                                <input type="text" readonly="readonly" id="sharecode" class="form-control form-control-lg" v-bind:value="asset.sharecode" />
-                                                <div onclick="WPDM.copy('sharecode');" class="input-group-addon ttip" title="<?php echo __( "Copy Shortcode", "download-manager" ) ?>" style="border: 0 !important;background: #ffffff;cursor: pointer;"><i class="fa fa-copy color-purple"></i></div>
-                                            </div>
-                                            <div class="panel-footer text-center">
-                                                <?php echo  esc_attr__( 'Use the shortcode to embed this asset on any page or post', "download-manager" ); ?>
-                                            </div>
-                                        </div>
-
-
-
-
-                                    </div>
-
+                            <?php
+                            $wpdmam_icon = function ( $paths ) {
+                                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $paths . '</svg>';
+                            };
+                            ?>
+                            <div class="wpdmam-tabs">
+                                <div class="wpdmam-tabs__nav" id="__file_settings_tabs" role="tablist" aria-label="<?php echo esc_attr__( 'Asset settings', "download-manager" ); ?>">
+                                    <button type="button" class="wpdmam-tabs__tab is-active" id="tab-share" role="tab" aria-selected="true" aria-controls="share">
+                                        <?php echo $wpdmam_icon( '<circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>' ); ?>
+                                        <span><?php echo esc_html__( 'Share', "download-manager" ); ?></span>
+                                    </button>
                                 </div>
 
+                                <div class="wpdmam-tabs__panel" id="share" role="tabpanel" aria-labelledby="tab-share">
+                                    <section class="wpdmam-section" v-if="asset.type === 'file'">
+                                        <div class="wpdmam-section__head">
+                                            <h4 class="wpdmam-section__title"><?php echo esc_html__( 'Shortcode', "download-manager" ); ?></h4>
+                                        </div>
+                                        <div class="wpdmam-field">
+                                            <input type="text" readonly="readonly" id="sharecode" class="wpdmam-field__input" v-bind:value="asset.sharecode" aria-label="<?php echo esc_attr__( 'Shortcode', "download-manager" ); ?>" />
+                                            <button type="button" class="wpdmam-icon-btn" onclick="WPDM.copy('sharecode')" title="<?php echo esc_attr__( 'Copy Shortcode', "download-manager" ); ?>" aria-label="<?php echo esc_attr__( 'Copy Shortcode', "download-manager" ); ?>"><?php echo $wpdmam_icon( '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>' ); ?></button>
+                                        </div>
+                                        <p class="wpdmam-section__hint"><?php echo esc_html__( 'Use the shortcode to embed this asset on any page or post', "download-manager" ); ?></p>
+                                    </section>
+                                    <p class="wpdmam-empty" v-else><?php echo esc_html__( 'Shortcodes are available for files only.', "download-manager" ); ?></p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1135,6 +1236,30 @@ if(is_admin()){
             <p class="wpdmam-upload__limit"><?php printf( esc_html__( "Maximum file size: %s", "download-manager" ), esc_html( size_format( wp_convert_hr_to_bytes( $plupload_init['max_file_size'] ) ) ) ); ?></p>
         </div>
         <div id="filelist" class="wpdmam-upload__queue"></div>
+    </div>
+
+    <div class="wpdm-dialog-wrapper wpdmam-dialog w3eden<?php echo is_admin() ? ' light-mode' : ''; ?>" id="rename">
+        <div class="wpdm-dialog-backdrop"></div>
+        <div class="wpdm-dialog wpdm-dialog--md" role="dialog" aria-modal="true" aria-labelledby="rename-title">
+            <button type="button" class="wpdm-dialog__close" data-dismiss="wpdm-dialog" aria-label="<?php echo esc_attr__( 'Close', "download-manager" ); ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="wpdm-dialog__header">
+                <div class="wpdm-dialog__icon wpdm-dialog__icon--info">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>
+                </div>
+                <div class="wpdm-dialog__header-content">
+                    <h3 class="wpdm-dialog__title" id="rename-title"><?php echo esc_html__( 'Rename', "download-manager" ); ?></h3>
+                </div>
+            </div>
+            <div class="wpdm-dialog__body">
+                <input type="text" placeholder="<?php echo esc_attr__( 'New Name', "download-manager" ); ?>" id="newname" class="form-control form-control-lg">
+            </div>
+            <div class="wpdm-dialog__footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="wpdm-dialog"><?php echo esc_html__( 'Cancel', "download-manager" ); ?></button>
+                <button type="button" id="renamenow" class="btn btn-primary"><?php echo esc_html__( 'Rename', "download-manager" ); ?></button>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" tabindex="-1" role="dialog" id="__link_settings">
@@ -2086,7 +2211,29 @@ if(is_admin()){
             $('#btn-paste').removeAttr('disabled').attr("data-item", localStorage.getItem("__wpdm_fm_copy"));
         });
 
+        function openDialog(dialog) {
+            var $dialog = $(dialog).addClass('wpdm-dialog-visible');
+            $(document).off('keydown.wpdmamDialog').on('keydown.wpdmamDialog', function (e) {
+                if (e.key === 'Escape') closeDialog($dialog);
+            });
+        }
+        function closeDialog(dialog) {
+            $(dialog).removeClass('wpdm-dialog-visible');
+            $(document).off('keydown.wpdmamDialog');
+        }
+        $('.wpdmam-dialog').on('click', '.wpdm-dialog-backdrop, [data-dismiss="wpdm-dialog"]', function () {
+            closeDialog($(this).closest('.wpdmam-dialog'));
+        });
+
         /* Rename */
+        $('body').on('click', '.btn-rename', function () {
+            $('#newname').val(assetSettings.asset.name);
+            openDialog('#rename');
+            setTimeout(function () {
+                $('#newname').trigger('focus').trigger('select');
+            }, 50);
+        });
+
         $('body').on('click', '#renamenow', function (e) {
             e.preventDefault();
             $(this).html('<i class="fa fa-spinner fa-spin"></i>');
@@ -2095,7 +2242,7 @@ if(is_admin()){
                 refresh_scandir(current_path);
                 $(this).data('oldname', $('#newname').val());
                 $('#renamenow').html('Rename');
-                $('#rename').modal('hide');
+                closeDialog('#rename');
             });
         });
 

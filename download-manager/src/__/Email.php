@@ -376,12 +376,27 @@ class Email {
             }
         }
 
-        $template['subject'] = isset($params['subject']) ? $params['subject'] : str_replace( array_keys( $params ), array_values( $params ), $template['subject'] );
+        // Values are inserted in a single pass and never scanned again, so a
+        // token stored in user data (e.g. a first name of "{{SERVER_HTTP_COOKIE}}")
+        // stays plain text instead of being resolved. Known tokens are swapped
+        // for opaque placeholders while the template's own dynamic tokens are
+        // compiled, then the values go in last.
+        $placeholders = array();
+        $values       = array();
+        $index        = 0;
+        foreach ( $params as $key => $val ) {
+            $placeholder            = "\x1Awpdm" . ( $index++ ) . "\x1A";
+            $placeholders[ $key ]   = $placeholder;
+            $values[ $placeholder ] = $val;
+        }
+
+        $template['subject'] = isset($params['subject']) ? $params['subject'] : strtr( $template['subject'], $params );
         if(isset($template['to_email']))
-            $template['to_email'] = str_replace( array_keys( $params ), array_values( $params ), $template['to_email'] );
-        $template['message'] = str_replace( array_keys( $params ), array_values( $params ), $template['message'] );
+            $template['to_email'] = strtr( $template['to_email'], $params );
+        $template['message'] = strtr( $template['message'], $placeholders );
         $template['message'] = self::compile($template['message']);
         $template['message'] = self::compile($template['message'], "/\{\{([^\}]+)\}\}/");
+        $template['message'] = strtr( $template['message'], $values );
 		return $template;
     }
 
@@ -510,6 +525,7 @@ class Email {
         }
         if(substr_count($matched[1], "user_meta_")){
             $meta_name = str_replace("user_meta_", "", $matched[1]);
+            if(self::isSensitiveKey($meta_name)) return '';
             if(substr_count($meta_name, '/')){
                 $meta_name = explode("/", $meta_name);
                 $meta_value = get_user_meta(get_current_user_id(), $meta_name[0], true);
@@ -521,6 +537,7 @@ class Email {
         }
 	    if(substr_count($matched[1], "um_")){
 		    $meta_name = str_replace("um_", "", $matched[1]);
+		    if(self::isSensitiveKey($meta_name)) return '';
 		    if(substr_count($meta_name, '/')){
 			    $meta_name = explode("/", $meta_name);
 			    $meta_value = get_user_meta(get_current_user_id(), $meta_name[0], true);
@@ -532,16 +549,30 @@ class Email {
 	    }
         if(substr_count($matched[1], "SERVER_")){
             $meta_name = str_replace("SERVER_", "", $matched[1]);
+            if(self::isSensitiveKey($meta_name)) return '';
             $meta_value = wpdm_valueof($_SERVER, $meta_name);
             return $meta_value;
         }
         if(substr_count($matched[1], "REQUEST_")){
             $meta_name = str_replace("REQUEST_", "", $matched[1]);
+            if(self::isSensitiveKey($meta_name)) return '';
             $meta_value = wpdm_valueof($_REQUEST, $meta_name);
             if(is_array($meta_value)) $meta_value = implode(", ", $meta_value);
             return $meta_value;
         }
         return $matched[1];
+    }
+
+    /**
+     * Whether a server, request or user meta key holds credentials or session
+     * data (cookies, auth headers, nonces, passwords, keys), which must never
+     * be printed into an email.
+     *
+     * @param string $key
+     * @return bool
+     */
+    private static function isSensitiveKey( $key ) {
+        return (bool) preg_match( '/cookie|auth(?!or)|pass|pwd|secret|token|nonce|session|salt|key/i', (string) $key );
     }
 
     /**
