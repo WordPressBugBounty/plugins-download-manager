@@ -1143,6 +1143,10 @@ class FileSystem {
 	}
 
 	public static function mediaURL( $pid, $fileID, $fileName = '' ) {
+		//The media key bypasses all locks and access roles of the package, so only issue it to a user who can already download the package
+		if ( ! WPDM()->package->userCanAccess( $pid ) || WPDM()->package->isLocked( $pid ) ) {
+			return '';
+		}
 		if ( $fileName == '' ) {
 			$files    = WPDM()->package->getFiles( $pid );
 			$fileName = wpdm_basename( $files[ $fileID ] );

@@ -5,9 +5,9 @@ namespace WPDM\Admin\Menu;
 
 
 use WPDM\__\__;
-use WPDM\__\Crypt;
 use WPDM\__\FileSystem;
 use WPDM\Package\Package;
+use WPDM\Package\PackageService;
 use WPDM\WordPressDownloadManager;
 
 class Packages {
@@ -59,69 +59,10 @@ class Packages {
 			return;
 		}
 
-		$cdata             = get_post_custom( $post );
-		$donot_delete_meta = array( '__wpdm_favs', '__wpdm_masterkey' );
-		foreach ( $cdata as $k => $v ) {
-			$tk = str_replace( "__wpdm_", "", $k );
-			if ( ! isset( $_POST['file'][ $tk ] ) && $tk !== $k && ! in_array( $k, $donot_delete_meta ) ) {
-				delete_post_meta( $post, $k );
-			}
+		PackageService::saveMeta( $post, $_POST['file'], true );
+		unset( $_POST['file']['zipped_file'], $_POST['file']['masterkey'] );
 
-		}
-
-        if(isset($_POST['file']['zipped_file'])) { unset($_POST['file']['zipped_file']); }
-        if(isset($_POST['file']['masterkey'])) { unset($_POST['file']['masterkey']); }
-
-		foreach ( $_POST['file'] as $meta_key => $meta_value ) {
-			$key_name = "__wpdm_" . $meta_key;
-			if ( $meta_key == 'package_size' && (double) $meta_value == 0 ) {
-				$meta_value = "";
-			}
-			if ( $meta_key == 'password' ) {
-				//don't alter/sanitize password
-			}
-			else if ( $meta_key == 'files' ) {
-				foreach ( $meta_value as &$value ) {
-					$value = wpdm_escs( $value );
-					if ( ! __::is_url( $value ) ) {
-						if ( WPDM()->fileSystem->isBlocked( $value ) ) {
-							$value = '';
-						}
-						$abspath = WPDM()->fileSystem->locateFile( $value );
-						if ( ! WPDM()->fileSystem->allowedPath( $abspath ) ) {
-							$value = '';
-						}
-					}
-				}
-				$meta_value = array_unique( $meta_value );
-			} else if ( $meta_key == 'terms_conditions' ) {
-				$meta_value = __::sanitize_var( $meta_value, 'kses' );
-			} else if ( $meta_key == 'changelog' ) {
-				if ( is_array( $meta_value ) ) {
-					foreach ( $meta_value as &$entry ) {
-						if ( is_array( $entry ) ) {
-							$entry['id'] = sanitize_text_field( $entry['id'] );
-							$entry['version'] = sanitize_text_field( $entry['version'] );
-							$entry['date'] = sanitize_text_field( $entry['date'] );
-							$entry['changes'] = wp_kses_post( $entry['changes'] );
-							$entry['timestamp'] = absint( $entry['timestamp'] );
-						}
-					}
-				}
-			} else {
-				$meta_value = is_array( $meta_value ) ? wpdm_sanitize_array( $meta_value, 'txt' ) : esc_html( $meta_value );
-			}
-			update_post_meta( $post, $key_name, $meta_value );
-		}
-
-		$masterKey = Crypt::encrypt( [ 'id' => $post, 'time' => time() ] );
-		if ( get_post_meta( $post, '__wpdm_masterkey', true ) == '' ) {
-			update_post_meta( $post, '__wpdm_masterkey', $masterKey );
-		}
-
-		if ( isset( $_POST['reset_key'] ) && $_POST['reset_key'] == 1 ) {
-			update_post_meta( $post, '__wpdm_masterkey', $masterKey );
-		}
+		PackageService::ensureMasterKey( $post, isset( $_POST['reset_key'] ) && $_POST['reset_key'] == 1 );
 
 		if ( isset( $_REQUEST['reset_udl'] ) ) {
 			WPDM()->downloadHistory->resetUserDownloadCount( $post, 'all' );

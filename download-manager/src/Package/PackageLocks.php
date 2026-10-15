@@ -42,7 +42,7 @@ class PackageLocks
         $packageID = wpdm_query_var('__wpdm_ID', 'int');
 
         //Only issue a key for a published package that is actually captcha locked and accessible to the current user
-        if (!$this->isCaptchaUnlockable($packageID)) {
+        if (!WPDM()->package->canIssueKey($packageID, 'captcha_lock')) {
             wp_send_json(['error' => __("Invalid request!", "download-manager")]);
         }
 
@@ -56,18 +56,6 @@ class PackageLocks
 
         wp_send_json($data);
         die();
-    }
-
-    /**
-     * Check if the captcha lock of the given package can issue a download key
-     * @param $packageID
-     * @return bool
-     */
-    private function isCaptchaUnlockable($packageID)
-    {
-        if (!$packageID || get_post_type($packageID) !== 'wpdmpro' || get_post_status($packageID) !== 'publish') return false;
-        if ((int)get_post_meta($packageID, '__wpdm_captcha_lock', true) !== 1) return false;
-        return WPDM()->package->userCanAccess($packageID);
     }
 
     function validatePassword()
@@ -88,8 +76,8 @@ class PackageLocks
         $data = [ 'success' => false ];
         $error = false;
 
-	    //Check if given password lock is not active
-	    if (!$passwords) {
+	    //Check if given password lock is not active, or the package is not published or accessible to the current user
+	    if (!$passwords || !WPDM()->package->canIssueKey($packageID, 'password_lock')) {
 		    $data['message'] = __("Invalid request!", "download-manager");
 		    $file = array();
 		    $error = true;

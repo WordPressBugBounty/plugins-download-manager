@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.72
+Stable tag: 3.3.73
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,12 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.73 - 2026.10.07 =
+* New: AI Abilities let Claude, Cursor and other MCP clients manage packages, files, download links, categories and stats (WordPress 6.9+, off until enabled in Settings → AI Abilities)
+* Security: Fixed unauthenticated download of protected files via audio and video preview links ( Reported by Ananda Dhakal via Patchstack )
+* Security: Password lock no longer issues a download link for packages the user's role can't access
+* Fixed: Duplicating a package with no category or tag caused a fatal error on PHP 8
 
 = 3.3.72 - 2026.10.02 =
 * Improved: Refreshed the Asset Manager rename dialog and Share tab

@@ -596,6 +596,28 @@ class PackageController extends PackageTemplate {
 	}
 
 	/**
+	 * Check if solving the given lock of a package can issue a download key.
+	 * A download key bypasses all locks and access roles of the package, so it is only
+	 * issued for a published package that has that lock enabled and is accessible to the current user
+	 *
+	 * @param $ID
+	 * @param string $lock Lock option, e.g. 'captcha_lock'
+	 *
+	 * @return bool
+	 */
+	public function canIssueKey( $ID, $lock ) {
+		$ID = (int) $ID;
+		if ( ! $ID || get_post_type( $ID ) !== 'wpdmpro' || get_post_status( $ID ) !== 'publish' ) {
+			return false;
+		}
+		if ( (int) get_post_meta( $ID, "__wpdm_{$lock}", true ) !== 1 ) {
+			return false;
+		}
+
+		return $this->userCanAccess( $ID );
+	}
+
+	/**
 	 * @usage Check if current user has access to package or category
 	 *
 	 * @param $id
@@ -874,8 +896,8 @@ class PackageController extends PackageTemplate {
 			}
 		}
 
-		if ( $audio != null ) {
-			$song      = FileSystem::mediaURL( $package['ID'], $audx, basename( $audio ) );  //home_url("/?wpdmdl={$package['ID']}&ind=".$audx."&play=".basename($audio));
+		$song = $audio != null ? FileSystem::mediaURL( $package['ID'], $audx, basename( $audio ) ) : '';
+		if ( $song !== '' ) {
 			$audiohtml = "<button data-player='wpdm-audio-player' data-song='{$song}' class='btn btn-{$style} wpdm-btn-play'><i class='fa fa-play'></i></button>";
 			$audiohtml = apply_filters( "wpdm_audio_play_button", $audiohtml, $song, $package, 0 );
 		}
@@ -942,7 +964,9 @@ class PackageController extends PackageTemplate {
 			//$video = $url . "&ind={$ind}&play=" . basename($videos[0]);
 			$video = FileSystem::mediaURL( $ID, $ind, wpdm_basename( $videos[0] ) );
 
-			$player_html = "<video id='__wpdm_videoplayer' class='thumbnail' width=\"{$width}\" controls controlsList='nodownload'><source src=\"{$video}\" type=\"video/mp4\">Your browser does not support HTML5 video.</video><div class='videothumbs'>{$videothumbs}</div>";
+			if ( $video !== '' ) {
+				$player_html = "<video id='__wpdm_videoplayer' class='thumbnail' width=\"{$width}\" controls controlsList='nodownload'><source src=\"{$video}\" type=\"video/mp4\">Your browser does not support HTML5 video.</video><div class='videothumbs'>{$videothumbs}</div>";
+			}
 			//if(!WPDM()->package->userCanAccess($ID)) $player_html = \WPDM\__\Messages::Error(stripslashes(get_option('wpdm_permission_msg')), -1);
 		}
 
@@ -980,6 +1004,10 @@ class PackageController extends PackageTemplate {
 			case 'jpeg':
 				return "<img src='" . FileSystem::imageThumbnail( $realpath, $width, $height ) . "' alt='" . esc_attr(get_the_title( $ID )) . "'/>";
 			case 'pdf':
+				//The preview key bypasses all locks and access roles of the package
+				if ( ! $this->userCanAccess( $ID ) || $this->isLocked( $ID ) ) {
+					return '';
+				}
 				$url = self::expirableDownloadLink( $ID, 1, 300 );
 				//$ind = \WPDM_Crypt::Encrypt($file);
 				$url .= "&ind={$ind}";
@@ -2451,14 +2479,19 @@ class PackageController extends PackageTemplate {
 			}
 		}
 
+		// get_the_terms() returns false for a package with no terms.
 		$terms = get_the_terms( $ID, 'wpdmcategory' );
-		foreach ( $terms as $term ) {
-			wp_set_post_terms( $new_ID, (int)$term->term_id, 'wpdmcategory', true );
+		if ( is_array( $terms ) ) {
+			foreach ( $terms as $term ) {
+				wp_set_post_terms( $new_ID, (int) $term->term_id, 'wpdmcategory', true );
+			}
 		}
 
 		$terms = get_the_terms( $ID, WPDM_TAG );
-		foreach ( $terms as $term ) {
-			wp_set_post_terms( $new_ID, $term->name, WPDM_TAG, true );
+		if ( is_array( $terms ) ) {
+			foreach ( $terms as $term ) {
+				wp_set_post_terms( $new_ID, $term->name, WPDM_TAG, true );
+			}
 		}
 
 		return $new_ID;
