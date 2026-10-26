@@ -38,7 +38,11 @@ class Abilities {
 	public static function boot() {
 		add_action( 'wp_abilities_api_categories_init', [ __CLASS__, 'registerCategories' ] );
 		add_action( 'wp_abilities_api_init', [ __CLASS__, 'registerAbilities' ] );
-		add_action( 'wp_ability_invoked', [ __CLASS__, 'logRejected' ], 10, 3 );
+		// Calls that core rejects before the ability runs. These filters exist on WordPress 7.1+.
+		add_filter( 'wp_ability_normalize_input', [ __CLASS__, 'logNormalizeError' ], 10, 2 );
+		add_filter( 'wp_ability_validate_input', [ __CLASS__, 'logInvalidInput' ], 10, 3 );
+		add_filter( 'wp_ability_permission_result', [ __CLASS__, 'logDenied' ], 10, 3 );
+		McpServer::boot();
 
 		if ( is_admin() ) {
 			SettingsTab::boot();
@@ -63,28 +67,33 @@ class Abilities {
 		$groups = [
 			'wpdm-packages'   => [
 				'label'       => __( 'Packages', 'download-manager' ),
-				'description' => __( 'Find, read, create, edit, copy and trash packages.', 'download-manager' ),
+				'description' => __( 'Find, read, create, edit, copy, trash and restore packages, and list tags.', 'download-manager' ),
 				'class'       => Groups\Packages::class,
 			],
 			'wpdm-files'      => [
 				'label'       => __( 'Files', 'download-manager' ),
-				'description' => __( 'Attach files to packages and detach them. Detached files stay on the server.', 'download-manager' ),
+				'description' => __( 'Attach files to packages, edit their details and detach them. Detached files stay on the server.', 'download-manager' ),
 				'class'       => Groups\Files::class,
 			],
 			'wpdm-links'      => [
 				'label'       => __( 'Download links', 'download-manager' ),
-				'description' => __( 'Create expiring download links and email them. Links bypass a package\'s locks and access roles.', 'download-manager' ),
+				'description' => __( 'Create expiring download links, email them and regenerate master keys. Links bypass a package\'s locks and access roles.', 'download-manager' ),
 				'class'       => Groups\Links::class,
 			],
 			'wpdm-categories' => [
 				'label'       => __( 'Categories', 'download-manager' ),
-				'description' => __( 'Read the package category tree and create categories.', 'download-manager' ),
+				'description' => __( 'Read the package category tree; create, edit and delete categories.', 'download-manager' ),
 				'class'       => Groups\Categories::class,
 			],
 			'wpdm-stats'      => [
 				'label'       => __( 'Stats', 'download-manager' ),
-				'description' => __( 'Read download counts and weekly or monthly activity reports.', 'download-manager' ),
+				'description' => __( 'Read download counts, download history and weekly or monthly activity reports.', 'download-manager' ),
 				'class'       => Groups\Stats::class,
+			],
+			'wpdm-site'       => [
+				'label'       => __( 'Site settings', 'download-manager' ),
+				'description' => __( 'Read the download settings an agent needs to get packages right: allowed file types, size limits, roles and statuses.', 'download-manager' ),
+				'class'       => Groups\Site::class,
 			],
 		];
 
@@ -146,33 +155,53 @@ class Abilities {
 	}
 
 	/**
-	 * Log calls that core rejects before the ability runs (bad input or no permission).
-	 * Fires only on WordPress 7.1+, which added the `wp_ability_invoked` action.
+	 * Log input that failed normalization. Filter callback; returns the input unchanged.
 	 *
-	 * @param string      $name    Ability name.
-	 * @param mixed       $input   Raw input.
-	 * @param \WP_Ability $ability Ability instance.
+	 * @param mixed  $input Normalized input, or a WP_Error.
+	 * @param string $name  Ability name.
+	 *
+	 * @return mixed
 	 */
-	public static function logRejected( $name, $input, $ability ) {
-		if ( ! self::owns( $name ) || ! $ability instanceof \WP_Ability ) {
-			return;
+	public static function logNormalizeError( $input, $name ) {
+		if ( is_wp_error( $input ) && self::owns( $name ) ) {
+			AuditLog::add( $name, 'error', null, $input->get_error_code() );
 		}
 
-		$normalized = $ability->normalize_input( $input );
-		if ( is_wp_error( $normalized ) ) {
-			AuditLog::add( $name, 'error', $input, $normalized->get_error_code() );
-			return;
+		return $input;
+	}
+
+	/**
+	 * Log input that failed validation. Filter callback; returns the result unchanged.
+	 *
+	 * @param true|\WP_Error $valid Validation result.
+	 * @param mixed          $input The input.
+	 * @param string         $name  Ability name.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public static function logInvalidInput( $valid, $input, $name ) {
+		if ( true !== $valid && self::owns( $name ) ) {
+			AuditLog::add( $name, 'error', $input, is_wp_error( $valid ) ? $valid->get_error_code() : 'ability_invalid_input' );
 		}
 
-		$valid = $ability->validate_input( $normalized );
-		if ( is_wp_error( $valid ) ) {
-			AuditLog::add( $name, 'error', $normalized, $valid->get_error_code() );
-			return;
+		return $valid;
+	}
+
+	/**
+	 * Log a refused permission check. Filter callback; returns the result unchanged.
+	 *
+	 * @param bool|\WP_Error $permission Permission result.
+	 * @param string         $name       Ability name.
+	 * @param mixed          $input      The input.
+	 *
+	 * @return bool|\WP_Error
+	 */
+	public static function logDenied( $permission, $name, $input ) {
+		if ( true !== $permission && self::owns( $name ) ) {
+			AuditLog::add( $name, 'denied', $input, 'ability_invalid_permissions' );
 		}
 
-		if ( true !== $ability->check_permissions( $normalized ) ) {
-			AuditLog::add( $name, 'denied', $normalized, 'ability_invalid_permissions' );
-		}
+		return $permission;
 	}
 
 	/**

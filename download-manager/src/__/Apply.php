@@ -294,7 +294,8 @@ class Apply
             $package['access'] = array('guest');
         }
 
-        if(!is_user_logged_in() && get_post_status($id) !== 'publish') {
+        //Only published packages are downloadable by everyone; other statuses need read_post on the package
+        if(!WPDM()->package->userCanReadPackage($id)) {
 	        Messages::error( __( '403 - Access Forbidden!', 'download-manager' ), 1 );
         }
 
@@ -453,7 +454,11 @@ class Apply
     function showLockOptions()
     {
         if (!isset($_REQUEST['id'])) die('ID Missing!');
-        echo WPDM()->package->downloadLink(wpdm_query_var('id', 'int'), 1);
+        $id = wpdm_query_var('id', 'int');
+        if (!WPDM()->package->userCanReadPackage($id) || !WPDM()->package->userCanAccess($id)) {
+            wp_die(esc_html__('403 - Access Forbidden!', 'download-manager'), '', ['response' => 403]);
+        }
+        echo WPDM()->package->downloadLink($id, 1);
         die();
     }
 

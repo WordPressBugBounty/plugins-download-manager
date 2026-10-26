@@ -126,6 +126,9 @@ class PackageService {
 		self::writeTerms( $id, $terms );
 		self::saveMeta( $id, wp_slash( $meta ) );
 		self::ensureMasterKey( $id );
+		// Start the counters at zero so sorting and filtering by them sees the new package.
+		add_post_meta( $id, '__wpdm_download_count', 0, true );
+		add_post_meta( $id, '__wpdm_view_count', 0, true );
 		do_action( 'wpdm_admin_update_package', $id, $meta );
 
 		return $id;
@@ -301,6 +304,71 @@ class PackageService {
 		do_action( 'wpdm_admin_update_package', $id, [ 'files' => self::metaArray( $id, '__wpdm_files' ) ] );
 
 		return true;
+	}
+
+	/**
+	 * Bring a package back from the trash with the status it had before.
+	 *
+	 * @since 3.3.74
+	 *
+	 * @param int $id Package ID.
+	 *
+	 * @return true|\WP_Error
+	 */
+	public static function restore( $id ) {
+		if ( 'trash' !== get_post_status( $id ) ) {
+			return true;
+		}
+		add_filter( 'wp_untrash_post_status', 'wp_untrash_post_set_previous_status', 10, 3 );
+		$restored = wp_untrash_post( $id );
+		remove_filter( 'wp_untrash_post_status', 'wp_untrash_post_set_previous_status', 10 );
+
+		return $restored ? true : new \WP_Error( 'wpdm_restore_failed', __( 'The package could not be restored from the trash.', 'download-manager' ), [ 'status' => 500 ] );
+	}
+
+	/**
+	 * Change the title, version or password of one attached file. The file itself is untouched.
+	 *
+	 * @since 3.3.74
+	 *
+	 * @param int    $id      Package ID.
+	 * @param string $file_id File ID from the package's file list.
+	 * @param array  $info    title, version, password; only the keys given change.
+	 *
+	 * @return array|\WP_Error The file: id, name, title, version.
+	 */
+	public static function updateFileInfo( $id, $file_id, array $info ) {
+		$files = self::metaArray( $id, '__wpdm_files' );
+		if ( ! isset( $files[ $file_id ] ) ) {
+			return new \WP_Error( 'wpdm_file_not_found', __( 'No file with that ID is attached to the package.', 'download-manager' ), [ 'status' => 404 ] );
+		}
+		$path     = (string) $files[ $file_id ];
+		$name     = wp_basename( __::is_url( $path ) ? (string) wp_parse_url( $path, PHP_URL_PATH ) : $path );
+		$fileinfo = self::metaArray( $id, '__wpdm_fileinfo' );
+		$current  = isset( $fileinfo[ $file_id ] ) && is_array( $fileinfo[ $file_id ] ) ? $fileinfo[ $file_id ] : [];
+		foreach ( [ 'title', 'version', 'password' ] as $key ) {
+			if ( isset( $info[ $key ] ) ) {
+				$current[ $key ] = sanitize_text_field( $info[ $key ] );
+			}
+		}
+		$current += [
+			'version'  => '',
+			'password' => '',
+		];
+		if ( ! isset( $current['title'] ) || '' === $current['title'] ) {
+			$current['title'] = $name;
+		}
+		$fileinfo[ $file_id ] = $current;
+
+		self::saveMeta( $id, wp_slash( [ 'fileinfo' => $fileinfo ] ) );
+		do_action( 'wpdm_admin_update_package', $id, [ 'fileinfo' => $fileinfo ] );
+
+		return [
+			'id'      => (string) $file_id,
+			'name'    => $name,
+			'title'   => $current['title'],
+			'version' => $current['version'],
+		];
 	}
 
 	/**

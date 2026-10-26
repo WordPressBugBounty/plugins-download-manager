@@ -9,7 +9,7 @@ use WPDM\Package\PackageController;
 use WPDM\Package\PackageService;
 
 /**
- * Link abilities: expiring download links, shared directly or by email.
+ * Link abilities: expiring download links, shared directly or by email, and master download keys.
  *
  * @since 3.3.73
  */
@@ -143,6 +143,39 @@ class Links extends AbilityGroup {
 				],
 			]
 		);
+
+		$this->registerAbility(
+			'wpdm/regenerate-master-key',
+			[
+				'label'               => __( 'Regenerate master key', 'download-manager' ),
+				'description'         => __( 'Gives a package a new master download key and returns the new master download URL. The master URL downloads the package directly, skips its locks and access roles, and never expires, so links using the old key stop working at once. Use it when the old URL has leaked.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'additionalProperties' => false,
+					'required'             => [ 'package_id' ],
+					'properties'           => [ 'package_id' => $common['package_id'] ],
+				],
+				'output_schema'       => [
+					'type'       => 'object',
+					'properties' => [
+						'package_id' => [ 'type' => 'integer' ],
+						'url'        => [ 'type' => 'string' ],
+						'enabled'    => [
+							'type'        => 'boolean',
+							'description' => 'False when the site has turned master download URLs off; the URL then does nothing.',
+						],
+					],
+					'required'   => [ 'package_id', 'url', 'enabled' ],
+				],
+				'permission_callback' => [ $this, 'canEdit' ],
+				'execute_callback'    => [ $this, 'regenerateMasterKey' ],
+				'annotations'         => [
+					'readonly'    => false,
+					'destructive' => false,
+					'idempotent'  => false,
+				],
+			]
+		);
 	}
 
 	public function canEdit( $input ) {
@@ -211,6 +244,20 @@ class Links extends AbilityGroup {
 			'sent'       => count( $emails ),
 			'recipients' => $emails,
 			'expires_at' => $this->isoDate( time() + $seconds ),
+		];
+	}
+
+	public function regenerateMasterKey( array $input ) {
+		$id = (int) $input['package_id'];
+		if ( 'wpdmpro' !== get_post_type( $id ) ) {
+			return $this->notFound();
+		}
+		PackageService::ensureMasterKey( $id, true );
+
+		return [
+			'package_id' => $id,
+			'url'        => (string) WPDM()->package->getMasterDownloadURL( $id ),
+			'enabled'    => (int) get_option( '__wpdm_mdl_off' ) !== 1,
 		];
 	}
 

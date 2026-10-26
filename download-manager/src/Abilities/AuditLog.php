@@ -150,6 +150,28 @@ class AuditLog {
 		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE " . implode( ' AND ', $where ) . ' ORDER BY id DESC LIMIT %d OFFSET %d', $params ), ARRAY_A );
 	}
 
+	/**
+	 * Signed-in users with rows in the log, for the filter.
+	 *
+	 * @return array[] ID and display_name.
+	 */
+	public static function users() {
+		global $wpdb;
+		self::maybeInstall();
+
+		$users = [];
+		foreach ( $wpdb->get_col( 'SELECT DISTINCT user_id FROM ' . self::table() . ' WHERE user_id > 0 ORDER BY user_id LIMIT 200' ) as $id ) {
+			$user    = get_userdata( (int) $id );
+			$users[] = [
+				'ID'           => (int) $id,
+				/* translators: %d: user ID */
+				'display_name' => $user ? $user->display_name : sprintf( __( 'Deleted user #%d', 'download-manager' ), (int) $id ),
+			];
+		}
+
+		return $users;
+	}
+
 	public static function clear() {
 		global $wpdb;
 		self::maybeInstall();

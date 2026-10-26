@@ -101,13 +101,21 @@ class SettingsTab {
 	}
 
 	/**
-	 * Badge for an ability's annotations: read-only, write or destructive.
+	 * Badge for an ability: resource, prompt, read-only, write or destructive.
 	 *
 	 * @param \WP_Ability $ability Ability.
 	 *
 	 * @return array [ css modifier, label ]
 	 */
 	public static function badge( $ability ) {
+		$mcp = (array) $ability->get_meta_item( 'mcp' );
+		if ( isset( $mcp['type'] ) && 'resource' === $mcp['type'] ) {
+			return [ 'resource', __( 'Resource', 'download-manager' ) ];
+		}
+		if ( isset( $mcp['type'] ) && 'prompt' === $mcp['type'] ) {
+			return [ 'prompt', __( 'Prompt', 'download-manager' ) ];
+		}
+
 		$annotations = (array) $ability->get_meta_item( 'annotations' );
 		if ( ! empty( $annotations['readonly'] ) ) {
 			return [ 'read', __( 'Read-only', 'download-manager' ) ];
@@ -133,16 +141,41 @@ class SettingsTab {
 	}
 
 	/**
-	 * Audit log rows as table HTML.
+	 * Rows per page of the audit log.
+	 */
+	const PAGE = 50;
+
+	/**
+	 * The first page of audit log rows as table HTML.
 	 *
-	 * @param array $filters status, ability.
+	 * @param array $filters status, ability, user_id.
 	 *
 	 * @return string
 	 */
 	public static function logRows( array $filters = [] ) {
-		$rows = AuditLog::recent( $filters + [ 'limit' => 50 ] );
+		return self::logPage( $filters )[0];
+	}
+
+	/**
+	 * One page of audit log rows as table HTML, and whether another page follows.
+	 *
+	 * @param array $filters status, ability, user_id.
+	 * @param int   $offset  Rows to skip.
+	 *
+	 * @return array [ html, more ]
+	 */
+	public static function logPage( array $filters = [], $offset = 0 ) {
+		$offset = max( 0, (int) $offset );
+		$rows   = AuditLog::recent(
+			$filters + [
+				'limit'  => self::PAGE + 1,
+				'offset' => $offset,
+			]
+		);
+		$more   = count( $rows ) > self::PAGE;
+		$rows   = array_slice( $rows, 0, self::PAGE );
 		if ( ! $rows ) {
-			return '<tr><td colspan="6" class="text-muted">' . esc_html__( 'No ability calls yet.', 'download-manager' ) . '</td></tr>';
+			return [ $offset ? '' : '<tr><td colspan="6" class="text-muted">' . esc_html__( 'No ability calls yet.', 'download-manager' ) . '</td></tr>', false ];
 		}
 
 		$html = '';
@@ -159,7 +192,7 @@ class SettingsTab {
 				. '</tr>';
 		}
 
-		return $html;
+		return [ $html, $more ];
 	}
 
 	public static function ajaxLog() {
@@ -167,14 +200,18 @@ class SettingsTab {
 		if ( ! current_user_can( WPDM_ADMIN_CAP ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'download-manager' ) ], 403 );
 		}
+		list( $html, $more ) = self::logPage(
+			[
+				'status'  => sanitize_key( wpdm_query_var( 'status' ) ),
+				'ability' => sanitize_text_field( wpdm_query_var( 'ability' ) ),
+				'user_id' => (int) wpdm_query_var( 'user_id' ),
+			],
+			(int) wpdm_query_var( 'offset' )
+		);
 		wp_send_json_success(
 			[
-				'html' => self::logRows(
-					[
-						'status'  => sanitize_key( wpdm_query_var( 'status' ) ),
-						'ability' => sanitize_text_field( wpdm_query_var( 'ability' ) ),
-					]
-				),
+				'html' => $html,
+				'more' => $more,
 			]
 		);
 	}

@@ -56,16 +56,17 @@ class Package extends PackageController
                 $this->author = $pack->post_author;
                 $this->files = $this->getFiles($ID, true);
 
+                // metaData() returns keys without the __wpdm_ prefix, and formats the dates.
                 $meta = $this->metaData($ID);
-                $this->avail_date = wp_date(get_option('date_format'), wpdm_valueof($meta, '__wpdm_publish_date'));
-                $this->expire_date = wp_date(get_option('date_format'), wpdm_valueof($meta, '__wpdm_expire_date'));
-                $this->download_count = wpdm_valueof($meta, '__wpdm_download_count');
-                $this->view_count = wpdm_valueof($meta, '__wpdm_view_count');
-                $this->package_size = wpdm_valueof($meta, '__wpdm_package_size');
-                $this->quota = wpdm_valueof($meta, '__wpdm_quote');
-                $this->link_label = wpdm_valueof($meta, '__wpdm_link_label');
-                $this->version = wpdm_valueof($meta, '__wpdm_version');
-                $this->icon = wpdm_valueof($meta, '__wpdm_icon');
+                $this->avail_date = wpdm_valueof($meta, 'avail_date');
+                $this->expire_date = wpdm_valueof($meta, 'expire_date');
+                $this->download_count = (int) wpdm_valueof($meta, 'download_count');
+                $this->view_count = (int) wpdm_valueof($meta, 'view_count');
+                $this->package_size = wpdm_valueof($meta, 'package_size');
+                $this->quota = wpdm_valueof($meta, 'quota');
+                $this->link_label = wpdm_valueof($meta, 'link_label');
+                $this->version = wpdm_valueof($meta, 'version');
+                $this->icon = wpdm_valueof($meta, 'icon');
             }
         }
         return $this;

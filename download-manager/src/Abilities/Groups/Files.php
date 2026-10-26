@@ -7,7 +7,7 @@ use WPDM\Abilities\AbilityGroup;
 use WPDM\Package\PackageService;
 
 /**
- * File abilities: attach files to packages and detach them.
+ * File abilities: attach files to packages, edit their details and detach them.
  *
  * @since 3.3.73
  */
@@ -111,6 +111,67 @@ class Files extends AbilityGroup {
 		);
 
 		$this->registerAbility(
+			'wpdm/update-file',
+			[
+				'label'               => __( 'Update file details', 'download-manager' ),
+				'description'         => __( 'Changes the title, version or password of one attached file. Only the fields given change; set password to an empty string to remove it. The file itself is not touched: to replace it, detach it and attach the new one. File IDs come from wpdm/get-package.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'additionalProperties' => false,
+					'required'             => [ 'package_id', 'file_id' ],
+					'properties'           => [
+						'package_id' => $package_id,
+						'file_id'    => [
+							'type'      => 'string',
+							'minLength' => 1,
+							'maxLength' => 50,
+						],
+						'title'      => [
+							'type'        => 'string',
+							'maxLength'   => 200,
+							'description' => 'File title shown to downloaders. An empty string resets it to the file name.',
+						],
+						'version'    => [
+							'type'      => 'string',
+							'maxLength' => 50,
+						],
+						'password'   => [
+							'type'        => 'string',
+							'maxLength'   => 100,
+							'description' => 'Password for this file only. Empty string removes it. Never returned.',
+						],
+					],
+				],
+				'output_schema'       => [
+					'type'       => 'object',
+					'properties' => [
+						'package_id' => [ 'type' => 'integer' ],
+						'file'       => [
+							'type'       => 'object',
+							'properties' => [
+								'id'      => [ 'type' => 'string' ],
+								'name'    => [ 'type' => 'string' ],
+								'title'   => [ 'type' => 'string' ],
+								'version' => [ 'type' => 'string' ],
+							],
+							'required'   => [ 'id', 'name', 'title', 'version' ],
+						],
+					],
+					'required'   => [ 'package_id', 'file' ],
+				],
+				'permission_callback' => function ( $input ) {
+					return PackageService::userCanEdit( isset( $input['package_id'] ) ? (int) $input['package_id'] : 0 );
+				},
+				'execute_callback'    => [ $this, 'updateFile' ],
+				'annotations'         => [
+					'readonly'    => false,
+					'destructive' => false,
+					'idempotent'  => true,
+				],
+			]
+		);
+
+		$this->registerAbility(
 			'wpdm/detach-file',
 			[
 				'label'               => __( 'Detach file', 'download-manager' ),
@@ -202,6 +263,19 @@ class Files extends AbilityGroup {
 		if ( 'move' === $mode && file_exists( $path ) ) {
 			wp_delete_file( $path );
 		}
+
+		return is_wp_error( $file ) ? $file : [
+			'package_id' => $id,
+			'file'       => $file,
+		];
+	}
+
+	public function updateFile( array $input ) {
+		$id = (int) $input['package_id'];
+		if ( 'wpdmpro' !== get_post_type( $id ) ) {
+			return $this->error( 'wpdm_package_not_found', __( 'No package has that ID.', 'download-manager' ), 404 );
+		}
+		$file = PackageService::updateFileInfo( $id, (string) $input['file_id'], array_intersect_key( $input, array_flip( [ 'title', 'version', 'password' ] ) ) );
 
 		return is_wp_error( $file ) ? $file : [
 			'package_id' => $id,

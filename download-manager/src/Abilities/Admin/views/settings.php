@@ -5,6 +5,8 @@
 
 use WPDM\Abilities\Abilities;
 use WPDM\Abilities\Admin\SettingsTab;
+use WPDM\Abilities\AuditLog;
+use WPDM\Abilities\McpServer;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die( '!' );
@@ -13,7 +15,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 $wpdm_abl_supported = Abilities::supported();
 $wpdm_abl_adapter   = SettingsTab::mcpAdapterVersion();
 $wpdm_abl_enabled   = Abilities::enabledGroups();
-$wpdm_abl_endpoint  = rest_url( 'mcp/mcp-adapter-default-server' );
+$wpdm_abl_endpoint  = McpServer::url();
+$wpdm_abl_parts     = McpServer::components();
+$wpdm_abl_tools     = count( $wpdm_abl_parts['tool'] );
+$wpdm_abl_counts    = array_filter(
+	[
+		/* translators: %d: number of MCP tools */
+		sprintf( _n( '%d tool', '%d tools', $wpdm_abl_tools, 'download-manager' ), $wpdm_abl_tools ),
+		/* translators: %d: number of MCP resources */
+		count( $wpdm_abl_parts['resource'] ) ? sprintf( _n( '%d resource', '%d resources', count( $wpdm_abl_parts['resource'] ), 'download-manager' ), count( $wpdm_abl_parts['resource'] ) ) : '',
+		/* translators: %d: number of MCP prompts */
+		count( $wpdm_abl_parts['prompt'] ) ? sprintf( _n( '%d prompt', '%d prompts', count( $wpdm_abl_parts['prompt'] ), 'download-manager' ), count( $wpdm_abl_parts['prompt'] ) ) : '',
+	]
+);
 $wpdm_abl_config    = wp_json_encode(
 	[
 		'mcpServers' => [
@@ -31,7 +45,7 @@ $wpdm_abl_config    = wp_json_encode(
 	JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
 );
 $wpdm_abl_claude = sprintf(
-	'claude mcp add wpdm -e WP_API_URL=%s -e WP_API_USERNAME=agent-user -e WP_API_PASSWORD="xxxx xxxx xxxx xxxx xxxx xxxx" -- npx -y @automattic/mcp-wordpress-remote@latest',
+	'claude mcp add --transport http wpdm %s --header "Authorization: Basic BASE64_OF_USERNAME_COLON_PASSWORD"',
 	$wpdm_abl_endpoint
 );
 ?>
@@ -47,6 +61,8 @@ $wpdm_abl_claude = sprintf(
 	}
 	.wpdm-abl-badge--read, .wpdm-abl-status--ok { background: #ecfdf5; color: #047857; }
 	.wpdm-abl-badge--write { background: #eef2ff; color: #4338ca; }
+	.wpdm-abl-badge--resource { background: #f0f9ff; color: #0369a1; }
+	.wpdm-abl-badge--prompt { background: #fdf4ff; color: #a21caf; }
 	.wpdm-abl-badge--destructive, .wpdm-abl-status--denied { background: #fef2f2; color: #b91c1c; }
 	.wpdm-abl-status--error { background: #fffbeb; color: #b45309; }
 	.wpdm-abl-group { padding: 16px 0; border-top: 1px solid #e2e8f0; }
@@ -112,6 +128,21 @@ $wpdm_abl_claude = sprintf(
 					<?php endif; ?>
 				</td>
 			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Download Manager server', 'download-manager' ); ?></td>
+				<td>
+					<?php if ( ! $wpdm_abl_adapter ) : ?>
+						<span class="wpdm-abl-status wpdm-abl-status--error"><?php esc_html_e( 'Not running', 'download-manager' ); ?></span>
+						<?php esc_html_e( 'Starts when the MCP Adapter is active.', 'download-manager' ); ?>
+					<?php elseif ( ! array_sum( array_map( 'count', $wpdm_abl_parts ) ) ) : ?>
+						<span class="wpdm-abl-status wpdm-abl-status--error"><?php esc_html_e( 'No tools', 'download-manager' ); ?></span>
+						<?php esc_html_e( 'Enable an ability group below.', 'download-manager' ); ?>
+					<?php else : ?>
+						<span class="wpdm-abl-status wpdm-abl-status--ok"><?php echo esc_html( implode( ', ', $wpdm_abl_counts ) ); ?></span>
+						<code><?php echo esc_html( $wpdm_abl_endpoint ); ?></code>
+					<?php endif; ?>
+				</td>
+			</tr>
 		</table>
 	</div>
 </div>
@@ -165,6 +196,11 @@ $wpdm_abl_claude = sprintf(
 <div class="panel panel-default">
 	<div class="panel-heading"><?php esc_html_e( 'Connect an agent', 'download-manager' ); ?></div>
 	<div class="panel-body">
+		<?php if ( ! wp_is_application_passwords_available() ) : ?>
+			<div class="alert alert-warning">
+				<?php esc_html_e( 'Application passwords are turned off on this site, so agents cannot sign in. WordPress turns them off on sites without HTTPS. Serve the site over HTTPS, or allow them with the wp_is_application_passwords_available filter if you accept the risk.', 'download-manager' ); ?>
+			</div>
+		<?php endif; ?>
 		<ol style="padding-left: 18px; margin-top: 0">
 			<li><?php esc_html_e( 'Create a separate WordPress user for the agent, with only the role it needs. Don\'t connect agents as an administrator.', 'download-manager' ); ?></li>
 			<li>
@@ -173,6 +209,9 @@ $wpdm_abl_claude = sprintf(
 			</li>
 			<li><?php esc_html_e( 'Add the server to your AI client, replacing the username and password placeholders.', 'download-manager' ); ?></li>
 		</ol>
+		<p class="text-muted">
+			<?php esc_html_e( 'Each enabled ability appears in the client as its own tool, resource or prompt, with its input schema and read-only or destructive hints. Clients that speak Streamable HTTP connect directly with an application password; others go through the mcp-wordpress-remote proxy.', 'download-manager' ); ?>
+		</p>
 
 		<div class="form-group">
 			<label><?php esc_html_e( 'MCP endpoint', 'download-manager' ); ?></label>
@@ -180,7 +219,7 @@ $wpdm_abl_claude = sprintf(
 		</div>
 
 		<div class="form-group">
-			<label><?php esc_html_e( 'Claude Desktop, Cursor or VS Code config', 'download-manager' ); ?></label>
+			<label><?php esc_html_e( 'Claude Desktop, Cursor or VS Code config (through the proxy)', 'download-manager' ); ?></label>
 			<div class="wpdm-abl-pre">
 				<pre id="wpdm-abl-config"><?php echo esc_html( $wpdm_abl_config ); ?></pre>
 				<button type="button" class="btn btn-secondary btn-xs wpdm-abl-copy" data-target="wpdm-abl-config"><?php esc_html_e( 'Copy', 'download-manager' ); ?></button>
@@ -188,11 +227,15 @@ $wpdm_abl_claude = sprintf(
 		</div>
 
 		<div class="form-group" style="margin-bottom: 0">
-			<label><?php esc_html_e( 'Claude Code command', 'download-manager' ); ?></label>
+			<label><?php esc_html_e( 'Claude Code command (direct)', 'download-manager' ); ?></label>
 			<div class="wpdm-abl-pre">
 				<pre id="wpdm-abl-claude"><?php echo esc_html( $wpdm_abl_claude ); ?></pre>
 				<button type="button" class="btn btn-secondary btn-xs wpdm-abl-copy" data-target="wpdm-abl-claude"><?php esc_html_e( 'Copy', 'download-manager' ); ?></button>
 			</div>
+			<p class="text-muted" style="margin: 6px 0 0">
+				<?php esc_html_e( 'Replace the placeholder with the Base64 of username:application-password, for example from:', 'download-manager' ); ?>
+				<code>echo -n 'agent-user:xxxx xxxx xxxx xxxx xxxx xxxx' | base64</code>
+			</p>
 		</div>
 	</div>
 </div>
@@ -217,6 +260,12 @@ $wpdm_abl_claude = sprintf(
 					<?php endforeach; ?>
 				<?php endforeach; ?>
 			</select>
+			<select class="form-control input-sm" id="wpdm-abl-filter-user">
+				<option value=""><?php esc_html_e( 'All users', 'download-manager' ); ?></option>
+				<?php foreach ( AuditLog::users() as $wpdm_abl_user ) : ?>
+					<option value="<?php echo (int) $wpdm_abl_user['ID']; ?>"><?php echo esc_html( $wpdm_abl_user['display_name'] ); ?></option>
+				<?php endforeach; ?>
+			</select>
 			<button type="button" class="btn btn-danger btn-sm" id="wpdm-abl-clear" style="margin-left: auto"><?php esc_html_e( 'Clear log', 'download-manager' ); ?></button>
 		</div>
 		<div class="table-responsive">
@@ -231,10 +280,14 @@ $wpdm_abl_claude = sprintf(
 						<th><?php esc_html_e( 'Source', 'download-manager' ); ?></th>
 					</tr>
 				</thead>
-				<tbody id="wpdm-abl-log"><?php echo SettingsTab::logRows(); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in logRows(). ?></tbody>
+				<?php list( $wpdm_abl_log_html, $wpdm_abl_log_more ) = SettingsTab::logPage(); ?>
+				<tbody id="wpdm-abl-log"><?php echo $wpdm_abl_log_html; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in logPage(). ?></tbody>
 			</table>
 		</div>
-		<p class="text-muted" style="margin: 10px 0 0"><?php esc_html_e( 'Shows the latest 50 calls. Entries older than 90 days are deleted automatically.', 'download-manager' ); ?></p>
+		<p style="margin: 10px 0 0; display: flex; gap: 12px; align-items: center">
+			<button type="button" class="btn btn-secondary btn-sm" id="wpdm-abl-more" <?php echo $wpdm_abl_log_more ? '' : 'style="display: none"'; ?>><?php esc_html_e( 'Load more', 'download-manager' ); ?></button>
+			<span class="text-muted"><?php esc_html_e( 'Entries older than 90 days are deleted automatically.', 'download-manager' ); ?></span>
+		</p>
 	</div>
 </div>
 
@@ -242,26 +295,39 @@ $wpdm_abl_claude = sprintf(
 	(function ($) {
 		var nonce = '<?php echo esc_js( wp_create_nonce( 'wpdm_ability_log' ) ); ?>';
 
-		function reload() {
+		var offset = 0;
+
+		function load(append) {
+			offset = append ? offset + <?php echo (int) SettingsTab::PAGE; ?> : 0;
 			$.get(ajaxurl, {
 				action: 'wpdm_ability_log',
 				_nonce: nonce,
 				status: $('#wpdm-abl-filter-status').val(),
-				ability: $('#wpdm-abl-filter-ability').val()
+				ability: $('#wpdm-abl-filter-ability').val(),
+				user_id: $('#wpdm-abl-filter-user').val(),
+				offset: offset
 			}, function (res) {
 				if (res && res.success) {
-					$('#wpdm-abl-log').html(res.data.html);
+					$('#wpdm-abl-log')[append ? 'append' : 'html'](res.data.html);
+					$('#wpdm-abl-more').toggle(!!res.data.more);
 				}
 			});
 		}
 
-		$('#wpdm-abl-filter-status, #wpdm-abl-filter-ability').off('change.wpdmabl').on('change.wpdmabl', reload);
+		$('#wpdm-abl-filter-status, #wpdm-abl-filter-ability, #wpdm-abl-filter-user').off('change.wpdmabl').on('change.wpdmabl', function () {
+			load(false);
+		});
+		$('#wpdm-abl-more').off('click.wpdmabl').on('click.wpdmabl', function () {
+			load(true);
+		});
 
 		$('#wpdm-abl-clear').off('click.wpdmabl').on('click.wpdmabl', function () {
 			var $btn = $(this).prop('disabled', true);
 			$.post(ajaxurl, { action: 'wpdm_ability_log_clear', _nonce: nonce }, function (res) {
 				if (res && res.success) {
 					$('#wpdm-abl-log').html(res.data.html);
+					$('#wpdm-abl-more').hide();
+					offset = 0;
 				}
 				$btn.prop('disabled', false);
 			});

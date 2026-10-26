@@ -24,19 +24,149 @@ abstract class AbilityGroup {
 	 *
 	 * @param string $name Ability name, e.g. `wpdm/list-packages`.
 	 * @param array  $args wp_register_ability() args, plus `annotations`
-	 *                     (readonly, destructive, idempotent) in place of `meta`.
+	 *                     (readonly, destructive, idempotent) in place of `meta`, and
+	 *                     optionally `mcp` (type, uri, mimeType) for resources and prompts.
 	 *
 	 * @return \WP_Ability|null
 	 */
 	protected function registerAbility( $name, array $args ) {
 		$annotations = isset( $args['annotations'] ) ? $args['annotations'] : [];
-		unset( $args['annotations'] );
+		$mcp         = isset( $args['mcp'] ) ? $args['mcp'] : [];
+		unset( $args['annotations'], $args['mcp'] );
 
 		$args['category']         = static::CATEGORY;
 		$args['execute_callback'] = $this->wrap( $name, $args['execute_callback'], ! empty( $annotations['readonly'] ) );
-		$args['meta']             = $this->meta( $annotations );
+		$args['meta']             = $this->meta( $annotations, $mcp );
 
 		return wp_register_ability( $name, $args );
+	}
+
+	/**
+	 * Register a read-only ability that MCP clients see as a resource: a document at a
+	 * fixed URI, read without arguments.
+	 *
+	 * The execute callback returns MCP resource contents: a list of items with `uri`,
+	 * `mimeType` and `text`. Use {@see AbilityGroup::jsonContents()} to build one.
+	 *
+	 * @param string $name Ability name, e.g. `wpdm/category-tree`.
+	 * @param array  $args label, description, permission_callback, execute_callback,
+	 *                     `uri` (e.g. `wpdm://categories`) and optionally `mime_type`.
+	 *
+	 * @return \WP_Ability|null
+	 */
+	protected function registerResource( $name, array $args ) {
+		$uri       = $args['uri'];
+		$mime_type = isset( $args['mime_type'] ) ? $args['mime_type'] : 'application/json';
+		unset( $args['uri'], $args['mime_type'] );
+
+		return $this->registerAbility(
+			$name,
+			$args + [
+				'output_schema' => [
+					'type'  => 'array',
+					'items' => [
+						'type'       => 'object',
+						'properties' => [
+							'uri'      => [ 'type' => 'string' ],
+							'mimeType' => [ 'type' => 'string' ],
+							'text'     => [ 'type' => 'string' ],
+						],
+						'required'   => [ 'uri', 'text' ],
+					],
+				],
+				'annotations'   => [
+					'readonly'   => true,
+					'idempotent' => true,
+				],
+				'mcp'           => [
+					'type'     => 'resource',
+					'uri'      => $uri,
+					'mimeType' => $mime_type,
+				],
+			]
+		);
+	}
+
+	/**
+	 * Register an ability that MCP clients see as a prompt: a reusable instruction
+	 * template with named string arguments.
+	 *
+	 * The input schema's properties become the prompt's arguments, so keep them strings.
+	 * The execute callback returns `[ 'messages' => [ [ 'role' => 'user', 'content' => ... ] ] ]`;
+	 * use {@see AbilityGroup::promptMessages()} to build it.
+	 *
+	 * @param string $name Ability name, e.g. `wpdm/publish-release`.
+	 * @param array  $args label, description, input_schema, permission_callback, execute_callback.
+	 *
+	 * @return \WP_Ability|null
+	 */
+	protected function registerPrompt( $name, array $args ) {
+		return $this->registerAbility(
+			$name,
+			$args + [
+				'output_schema' => [
+					'type'       => 'object',
+					'properties' => [
+						'messages' => [
+							'type'  => 'array',
+							'items' => [
+								'type'       => 'object',
+								'properties' => [
+									'role'    => [ 'type' => 'string' ],
+									'content' => [ 'type' => 'object' ],
+								],
+								'required'   => [ 'role', 'content' ],
+							],
+						],
+					],
+					'required'   => [ 'messages' ],
+				],
+				'annotations'   => [
+					'readonly'   => true,
+					'idempotent' => true,
+				],
+				'mcp'           => [ 'type' => 'prompt' ],
+			]
+		);
+	}
+
+	/**
+	 * Resource contents holding one JSON document.
+	 *
+	 * @param string $uri  The resource URI.
+	 * @param mixed  $data Anything wp_json_encode() accepts.
+	 *
+	 * @return array
+	 */
+	protected function jsonContents( $uri, $data ) {
+		return [
+			[
+				'uri'      => $uri,
+				'mimeType' => 'application/json',
+				'text'     => wp_json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ),
+			],
+		];
+	}
+
+	/**
+	 * A prompt result with one user message.
+	 *
+	 * @param string $text The instructions.
+	 *
+	 * @return array
+	 */
+	protected function promptMessages( $text ) {
+		return [
+			'messages' => [
+				[
+					'role'    => 'user',
+					'content' => [
+						'type' => 'text',
+						'text' => $text,
+					],
+				],
+			],
+		];
 	}
 
 	/**
@@ -46,10 +176,11 @@ abstract class AbilityGroup {
 	 * shortcut doesn't exist on 6.9 or 7.0.
 	 *
 	 * @param array $annotations readonly, destructive, idempotent.
+	 * @param array $mcp         MCP extras: type (tool, resource, prompt), uri, mimeType.
 	 *
 	 * @return array
 	 */
-	protected function meta( array $annotations ) {
+	protected function meta( array $annotations, array $mcp = [] ) {
 		$public = Abilities::groupEnabled( static::CATEGORY );
 
 		return [
@@ -59,7 +190,7 @@ abstract class AbilityGroup {
 				'idempotent'  => false,
 			],
 			'show_in_rest' => $public,
-			'mcp'          => [
+			'mcp'          => $mcp + [
 				'public' => $public,
 				'type'   => 'tool',
 			],

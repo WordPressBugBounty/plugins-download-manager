@@ -618,6 +618,25 @@ class PackageController extends PackageTemplate {
 	}
 
 	/**
+	 * @usage Check if the current user may read a package in its current post status.
+	 * Published packages are readable by everyone (access roles are checked separately);
+	 * private, draft, pending and scheduled packages require the read_post capability,
+	 * so only the author, editors and administrators can download them.
+	 *
+	 * @param int $ID
+	 *
+	 * @return bool
+	 */
+	public function userCanReadPackage( $ID ) {
+		$ID = (int) $ID;
+		if ( ! $ID || get_post_type( $ID ) !== 'wpdmpro' ) {
+			return false;
+		}
+
+		return get_post_status( $ID ) === 'publish' || current_user_can( 'read_post', $ID );
+	}
+
+	/**
 	 * @usage Check if current user has access to package or category
 	 *
 	 * @param $id

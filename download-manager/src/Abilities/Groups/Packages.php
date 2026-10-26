@@ -7,7 +7,7 @@ use WPDM\Abilities\AbilityGroup;
 use WPDM\Package\PackageService;
 
 /**
- * Package abilities: find and read packages.
+ * Package abilities: find, read, write, trash and restore packages, and list their tags.
  *
  * @since 3.3.73
  */
@@ -185,6 +185,47 @@ class Packages extends AbilityGroup {
 			]
 		);
 
+		$this->registerPrompt(
+			'wpdm/publish-release',
+			[
+				'label'               => __( 'Publish a release', 'download-manager' ),
+				'description'         => __( 'Step-by-step instructions to publish a new download: create the package, attach the file, file it under a category, publish it and report the download page.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'additionalProperties' => false,
+					'required'             => [ 'title' ],
+					'properties'           => [
+						'title'    => [
+							'type'        => 'string',
+							'description' => 'Package title.',
+						],
+						'version'  => [
+							'type'        => 'string',
+							'description' => 'Version label, e.g. 2.1.0.',
+						],
+						'file_url' => [
+							'type'        => 'string',
+							'description' => 'Public URL of the file to attach. Leave empty to attach it another way.',
+						],
+						'category' => [
+							'type'        => 'string',
+							'description' => 'Category name or slug. Created if it does not exist.',
+						],
+						'access'   => [
+							'type'        => 'string',
+							'description' => 'Who may download: "everyone" or a comma-separated list of role slugs.',
+						],
+						'notes'    => [
+							'type'        => 'string',
+							'description' => 'Release notes or a short description.',
+						],
+					],
+				],
+				'permission_callback' => [ PackageService::class, 'userCanAuthor' ],
+				'execute_callback'    => [ $this, 'publishReleasePrompt' ],
+			]
+		);
+
 		$this->registerAbility(
 			'wpdm/trash-package',
 			[
@@ -215,6 +256,106 @@ class Packages extends AbilityGroup {
 				],
 			]
 		);
+
+		$this->registerAbility(
+			'wpdm/restore-package',
+			[
+				'label'               => __( 'Restore package', 'download-manager' ),
+				'description'         => __( 'Brings a trashed package back with the status it had before it was trashed. Find trashed packages with wpdm/list-packages, status "trash". A package that is not in the trash is returned unchanged.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'additionalProperties' => false,
+					'required'             => [ 'package_id' ],
+					'properties'           => [ 'package_id' => $this->packageIdProperty() ],
+				],
+				'output_schema'       => [
+					'type'       => 'object',
+					'properties' => [
+						'id'     => [ 'type' => 'integer' ],
+						'status' => [ 'type' => 'string' ],
+					],
+					'required'   => [ 'id', 'status' ],
+				],
+				'permission_callback' => function ( $input ) {
+					return PackageService::userCanDelete( isset( $input['package_id'] ) ? (int) $input['package_id'] : 0 );
+				},
+				'execute_callback'    => [ $this, 'restorePackage' ],
+				'annotations'         => [
+					'readonly'    => false,
+					'destructive' => false,
+					'idempotent'  => true,
+				],
+			]
+		);
+
+		$this->registerAbility(
+			'wpdm/list-tags',
+			[
+				'label'               => __( 'List tags', 'download-manager' ),
+				'description'         => __( 'Lists package tags with how many packages use each, most used first. Check it before tagging a package so existing tags are reused instead of near-duplicates being created.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'default'              => [],
+					'additionalProperties' => false,
+					'properties'           => [
+						'search' => [
+							'type'        => 'string',
+							'maxLength'   => 200,
+							'description' => 'Only tags whose name contains this text.',
+						],
+					] + $this->pagingProperties(),
+				],
+				'output_schema'       => $this->pageSchema(
+					[
+						'type'       => 'object',
+						'properties' => [
+							'id'    => [ 'type' => 'integer' ],
+							'name'  => [ 'type' => 'string' ],
+							'slug'  => [ 'type' => 'string' ],
+							'count' => [
+								'type'        => 'integer',
+								'description' => 'Published packages with this tag.',
+							],
+						],
+						'required'   => [ 'id', 'name', 'slug', 'count' ],
+					]
+				),
+				'permission_callback' => [ PackageService::class, 'userCanAuthor' ],
+				'execute_callback'    => [ $this, 'listTags' ],
+				'annotations'         => [
+					'readonly'   => true,
+					'idempotent' => true,
+				],
+			]
+		);
+	}
+
+	public function publishReleasePrompt( array $input ) {
+		$field = function ( $key ) use ( $input ) {
+			return isset( $input[ $key ] ) ? trim( (string) $input[ $key ] ) : '';
+		};
+		$lines = [
+			sprintf( 'Publish a new download titled "%s" on this WordPress site using the Download Manager tools. Work through the steps in order and stop and ask if a step fails.', $field( 'title' ) ),
+			'',
+			'1. Call wpdm/list-packages with the title as the search term. If a package with the same title already exists, ask whether to update it instead of creating a duplicate.',
+			'2. Call wpdm/create-package with status "draft"' . ( $field( 'version' ) ? ', version "' . $field( 'version' ) . '"' : '' ) . ( $field( 'notes' ) ? ' and this description: ' . $field( 'notes' ) : '' ) . '.',
+		];
+		if ( $field( 'category' ) ) {
+			$lines[] = sprintf( '3. Read the category tree (wpdm://categories or wpdm/list-categories). Find "%s" by name or slug; create it with wpdm/create-category if it is missing. Then set it on the package with wpdm/update-package.', $field( 'category' ) );
+		} else {
+			$lines[] = '3. If the site has categories, pick the one that fits best from the category tree and set it with wpdm/update-package; otherwise leave the package uncategorized.';
+		}
+		$lines[] = $field( 'file_url' )
+			? sprintf( '4. Attach the file with wpdm/attach-file using the URL %s.', $field( 'file_url' ) )
+			: '4. Attach the release file with wpdm/attach-file. Ask for the file if none was given.';
+		$lines[] = $field( 'access' )
+			? sprintf( '5. Set access with wpdm/update-package: %s. Use ["guest"] for everyone.', $field( 'access' ) )
+			: '5. Leave access as it is unless told otherwise.';
+		$lines[] = '6. Call wpdm/get-package and check the title, version, file list and access are right.';
+		$lines[] = '7. Publish it with wpdm/update-package, status "publish".';
+		$lines[] = '8. Reply with the package ID, the download page URL and the file names attached.';
+
+		return $this->promptMessages( implode( "\n", $lines ) );
 	}
 
 	public function createPackage( array $input ) {
@@ -255,6 +396,59 @@ class Packages extends AbilityGroup {
 			'id'     => $id,
 			'status' => get_post_status( $id ),
 		];
+	}
+
+	public function restorePackage( array $input ) {
+		$id = (int) $input['package_id'];
+		if ( 'wpdmpro' !== get_post_type( $id ) ) {
+			return $this->notFound();
+		}
+		$result = PackageService::restore( $id );
+
+		return is_wp_error( $result ) ? $result : [
+			'id'     => $id,
+			'status' => get_post_status( $id ),
+		];
+	}
+
+	public function listTags( array $input ) {
+		$page     = isset( $input['page'] ) ? (int) $input['page'] : 1;
+		$per_page = isset( $input['per_page'] ) ? (int) $input['per_page'] : 20;
+		$args     = [
+			'taxonomy'   => WPDM_TAG,
+			'hide_empty' => false,
+		];
+		if ( ! empty( $input['search'] ) ) {
+			$args['search'] = $input['search'];
+		}
+
+		$total = wp_count_terms( $args );
+		if ( is_wp_error( $total ) ) {
+			return $total;
+		}
+		$terms = get_terms(
+			$args + [
+				'orderby' => 'count',
+				'order'   => 'DESC',
+				'number'  => $per_page,
+				'offset'  => ( $page - 1 ) * $per_page,
+			]
+		);
+		if ( is_wp_error( $terms ) ) {
+			return $terms;
+		}
+
+		$items = [];
+		foreach ( $terms as $term ) {
+			$items[] = [
+				'id'    => (int) $term->term_id,
+				'name'  => html_entity_decode( $term->name, ENT_QUOTES, 'UTF-8' ),
+				'slug'  => $term->slug,
+				'count' => (int) $term->count,
+			];
+		}
+
+		return $this->page( $items, (int) $total, $page, $per_page );
 	}
 
 	private function notFound() {
@@ -353,7 +547,19 @@ class Packages extends AbilityGroup {
 			'ignore_sticky_posts' => true,
 		];
 		if ( 'downloads' === $orderby ) {
-			$args['meta_key'] = '__wpdm_download_count';
+			// An OR of EXISTS and NOT EXISTS keeps packages that never recorded a download; they sort last.
+			$args['meta_query'] = [
+				'relation' => 'OR',
+				[
+					'key'     => '__wpdm_download_count',
+					'compare' => 'EXISTS',
+					'type'    => 'NUMERIC',
+				],
+				[
+					'key'     => '__wpdm_download_count',
+					'compare' => 'NOT EXISTS',
+				],
+			];
 		}
 		if ( ! empty( $input['search'] ) ) {
 			$args['s'] = $input['search'];

@@ -7,7 +7,7 @@ use WPDM\Abilities\AbilityGroup;
 use WPDM\Package\PackageService;
 
 /**
- * Stats abilities: download counts and activity reports.
+ * Stats abilities: download counts, download history and activity reports.
  *
  * @since 3.3.73
  */
@@ -82,6 +82,104 @@ class Stats extends AbilityGroup {
 			]
 		);
 
+		$history_schema = $this->pageSchema(
+			[
+				'type'       => 'object',
+				'properties' => [
+					'id'            => [ 'type' => 'integer' ],
+					'package_id'    => [ 'type' => 'integer' ],
+					'title'         => [ 'type' => 'string' ],
+					'user'          => [
+						'type'       => 'object',
+						'properties' => [
+							'id'   => [
+								'type'        => 'integer',
+								'description' => '0 for guests.',
+							],
+							'name' => [ 'type' => 'string' ],
+						],
+					],
+					'downloaded_at' => [ 'type' => 'string' ],
+					'file'          => [ 'type' => 'string' ],
+					'version'       => [ 'type' => 'string' ],
+					'ip'            => [
+						'type'        => 'string',
+						'description' => 'Administrators only.',
+					],
+				],
+				'required'   => [ 'id', 'package_id', 'title', 'user', 'downloaded_at' ],
+			]
+		);
+		$history_schema['properties'] += [
+			'date_from' => [ 'type' => 'string' ],
+			'date_to'   => [ 'type' => 'string' ],
+		];
+
+		$this->registerAbility(
+			'wpdm/get-download-history',
+			[
+				'label'               => __( 'Get download history', 'download-manager' ),
+				'description'         => __( 'Lists individual downloads, newest first, one page at a time: which package, which user, when, and which file and version. Covers a date range of up to 366 days, the last 30 by default. Filter by package or user ID. Without a package ID, authors get their own packages and administrators the whole site; only administrators see IP addresses.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'default'              => [],
+					'additionalProperties' => false,
+					'properties'           => [
+						'package_id' => [
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'description' => 'Only this package.',
+						],
+						'user_id'    => [
+							'type'        => 'integer',
+							'minimum'     => 1,
+							'description' => 'Only downloads by this user.',
+						],
+						'date_from'  => $date + [ 'description' => 'First day, YYYY-MM-DD.' ],
+						'date_to'    => $date + [ 'description' => 'Last day, YYYY-MM-DD. Defaults to today.' ],
+					] + $this->pagingProperties(),
+				],
+				'output_schema'       => $history_schema,
+				'permission_callback' => function ( $input ) {
+					return empty( $input['package_id'] ) ? PackageService::userCanAuthor() : PackageService::userCanEdit( (int) $input['package_id'] );
+				},
+				'execute_callback'    => [ $this, 'getDownloadHistory' ],
+				'annotations'         => [
+					'readonly'   => true,
+					'idempotent' => true,
+				],
+			]
+		);
+
+		$this->registerPrompt(
+			'wpdm/activity-report',
+			[
+				'label'               => __( 'Activity report', 'download-manager' ),
+				'description'         => __( 'Instructions to write a weekly or monthly download report from wpdm/get-activity-summary and wpdm/get-download-stats.', 'download-manager' ),
+				'input_schema'        => [
+					'type'                 => 'object',
+					'default'              => [],
+					'additionalProperties' => false,
+					'properties'           => [
+						'period'   => [
+							'type'        => 'string',
+							'enum'        => [ 'last-week', 'last-month' ],
+							'default'     => 'last-week',
+							'description' => '"last-week" or "last-month".',
+						],
+						'audience' => [
+							'type'        => 'string',
+							'description' => 'Who the report is for, e.g. "the marketing team".',
+						],
+					],
+				],
+				'permission_callback' => function () {
+					return current_user_can( WPDM_ADMIN_CAP );
+				},
+				'execute_callback'    => [ $this, 'activityReportPrompt' ],
+			]
+		);
+
 		$this->registerAbility(
 			'wpdm/get-activity-summary',
 			[
@@ -125,7 +223,144 @@ class Stats extends AbilityGroup {
 		);
 	}
 
+	public function activityReportPrompt( array $input ) {
+		$period   = isset( $input['period'] ) && 'last-month' === $input['period'] ? 'last-month' : 'last-week';
+		$audience = isset( $input['audience'] ) ? trim( (string) $input['audience'] ) : '';
+		$lines    = [
+			sprintf( 'Write a download activity report for the %s on this site, using the Download Manager tools.', 'last-month' === $period ? 'last calendar month' : 'last complete week (Monday to Sunday)' ),
+			'',
+			sprintf( '1. Call wpdm/get-activity-summary with period "%s". It returns the totals compared with the period before, the top and trending packages, user activity and downloads per category.', $period ),
+			'2. Call wpdm/get-download-stats grouped by "day" for the same start and end dates, to see which days were busiest.',
+			'3. Write the report with these sections: Summary (total downloads and the change from the previous period), Top packages, Trending packages, Busiest days, Categories, and Notes (anything unusual, such as a package with zero downloads or a sudden spike).',
+			'4. Give numbers as a short table where it helps. Keep each section brief.',
+		];
+		if ( $audience ) {
+			$lines[] = sprintf( '5. Write it for this audience: %s.', $audience );
+		}
+
+		return $this->promptMessages( implode( "\n", $lines ) );
+	}
+
 	public function getDownloadStats( array $input ) {
+		global $wpdb;
+
+		$query = $this->query( $input );
+		if ( is_wp_error( $query ) ) {
+			return $query;
+		}
+		list( $from, $to, $join, $where, $args ) = $query;
+		$where = implode( ' AND ', $where );
+		$tz    = wp_timezone();
+		$stats = "{$wpdb->prefix}ahm_download_stats";
+
+		$group_by = isset( $input['group_by'] ) ? $input['group_by'] : 'day';
+		$rows     = [];
+		if ( 'package' === $group_by ) {
+			$results = $wpdb->get_results( $wpdb->prepare( "SELECT s.pid, COUNT(*) AS downloads FROM {$stats} s {$join} WHERE {$where} GROUP BY s.pid ORDER BY downloads DESC LIMIT 100", $args ) );
+			foreach ( $results as $row ) {
+				$rows[] = [
+					'package_id' => (int) $row->pid,
+					'title'      => html_entity_decode( (string) get_the_title( (int) $row->pid ), ENT_QUOTES, 'UTF-8' ),
+					'downloads'  => (int) $row->downloads,
+				];
+			}
+		} else {
+			// Shift by the site's UTC offset so days follow the site's calendar. The offset can
+			// change inside the range (daylight saving), so count each constant-offset stretch
+			// on its own and merge the days.
+			$counts = [];
+			foreach ( $this->offsetStretches( $tz, $args[0], $args[1] ) as list( $start, $end, $offset ) ) {
+				$results = $wpdb->get_results( $wpdb->prepare( "SELECT FLOOR((s.timestamp + %d) / 86400) AS site_day, COUNT(*) AS downloads FROM {$stats} s {$join} WHERE {$where} AND s.timestamp >= %d AND s.timestamp < %d GROUP BY site_day", array_merge( [ $offset ], $args, [ $start, $end ] ) ) );
+				foreach ( $results as $row ) {
+					$date            = gmdate( 'Y-m-d', (int) $row->site_day * DAY_IN_SECONDS );
+					$counts[ $date ] = ( isset( $counts[ $date ] ) ? $counts[ $date ] : 0 ) + (int) $row->downloads;
+				}
+			}
+			ksort( $counts );
+			foreach ( $counts as $date => $downloads ) {
+				$rows[] = [
+					'date'      => $date,
+					'downloads' => $downloads,
+				];
+			}
+		}
+
+		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$stats} s {$join} WHERE {$where}", $args ) );
+
+		return [
+			'date_from' => $from->format( 'Y-m-d' ),
+			'date_to'   => $to->format( 'Y-m-d' ),
+			'group_by'  => $group_by,
+			'total'     => $total,
+			'rows'      => $rows,
+		];
+	}
+
+	public function getDownloadHistory( array $input ) {
+		global $wpdb;
+
+		$query = $this->query( $input );
+		if ( is_wp_error( $query ) ) {
+			return $query;
+		}
+		list( $from, $to, $join, $where, $args ) = $query;
+		if ( ! empty( $input['user_id'] ) ) {
+			$where[] = 's.uid = %d';
+			$args[]  = (int) $input['user_id'];
+		}
+		$where    = implode( ' AND ', $where );
+		$page     = isset( $input['page'] ) ? (int) $input['page'] : 1;
+		$per_page = isset( $input['per_page'] ) ? (int) $input['per_page'] : 20;
+		$stats    = "{$wpdb->prefix}ahm_download_stats";
+		$admin    = current_user_can( WPDM_ADMIN_CAP );
+
+		$total   = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$stats} s {$join} WHERE {$where}", $args ) );
+		$results = $wpdb->get_results( $wpdb->prepare( "SELECT s.id, s.pid, s.uid, s.timestamp, s.ip, s.filename, s.version FROM {$stats} s {$join} WHERE {$where} ORDER BY s.timestamp DESC, s.id DESC LIMIT %d OFFSET %d", array_merge( $args, [ $per_page, ( $page - 1 ) * $per_page ] ) ) );
+
+		$names = [];
+		$rows  = [];
+		foreach ( $results as $row ) {
+			$uid = (int) $row->uid;
+			if ( ! isset( $names[ $uid ] ) ) {
+				$user          = $uid ? get_userdata( $uid ) : null;
+				/* translators: %d: user ID */
+				$names[ $uid ] = $uid ? ( $user ? $user->display_name : sprintf( __( 'Deleted user #%d', 'download-manager' ), $uid ) ) : __( 'Guest', 'download-manager' );
+			}
+			$file = (string) $row->filename;
+			$path = wp_parse_url( $file, PHP_URL_PATH );
+			$item = [
+				'id'            => (int) $row->id,
+				'package_id'    => (int) $row->pid,
+				'title'         => html_entity_decode( (string) get_the_title( (int) $row->pid ), ENT_QUOTES, 'UTF-8' ),
+				'user'          => [
+					'id'   => $uid,
+					'name' => $names[ $uid ],
+				],
+				'downloaded_at' => $this->isoDate( (int) $row->timestamp ),
+				'file'          => wp_basename( is_string( $path ) ? $path : $file ),
+				'version'       => (string) $row->version,
+			];
+			if ( $admin ) {
+				$item['ip'] = (string) $row->ip;
+			}
+			$rows[] = $item;
+		}
+
+		return $this->page( $rows, $total, $page, $per_page ) + [
+			'date_from' => $from->format( 'Y-m-d' ),
+			'date_to'   => $to->format( 'Y-m-d' ),
+		];
+	}
+
+	/**
+	 * The date range and the rows the caller may see: one package, their own packages,
+	 * or, for administrators, every package.
+	 *
+	 * @param array $input date_from, date_to, package_id.
+	 *
+	 * @return array|\WP_Error [ from, to, join SQL, where clauses, prepare args ]
+	 */
+	private function query( array $input ) {
 		global $wpdb;
 
 		$tz    = wp_timezone();
@@ -147,7 +382,6 @@ class Stats extends AbilityGroup {
 			return $this->error( 'wpdm_package_not_found', __( 'No package has that ID.', 'download-manager' ), 404 );
 		}
 
-		$stats = "{$wpdb->prefix}ahm_download_stats";
 		$join  = '';
 		$where = [ 's.timestamp >= %d', 's.timestamp < %d' ];
 		$args  = [ $from->getTimestamp(), $to->modify( '+1 day' )->getTimestamp() ];
@@ -159,40 +393,33 @@ class Stats extends AbilityGroup {
 			$where[] = 'p.post_author = %d';
 			$args[]  = get_current_user_id();
 		}
-		$where = implode( ' AND ', $where );
 
-		$group_by = isset( $input['group_by'] ) ? $input['group_by'] : 'day';
-		$rows     = [];
-		if ( 'package' === $group_by ) {
-			$results = $wpdb->get_results( $wpdb->prepare( "SELECT s.pid, COUNT(*) AS downloads FROM {$stats} s {$join} WHERE {$where} GROUP BY s.pid ORDER BY downloads DESC LIMIT 100", $args ) );
-			foreach ( $results as $row ) {
-				$rows[] = [
-					'package_id' => (int) $row->pid,
-					'title'      => html_entity_decode( (string) get_the_title( (int) $row->pid ), ENT_QUOTES, 'UTF-8' ),
-					'downloads'  => (int) $row->downloads,
-				];
+		return [ $from, $to, $join, $where, $args ];
+	}
+
+	/**
+	 * Split a timestamp range where the timezone's UTC offset changes.
+	 *
+	 * @param \DateTimeZone $tz    Site timezone.
+	 * @param int           $start First timestamp, inclusive.
+	 * @param int           $end   Last timestamp, exclusive.
+	 *
+	 * @return array[] [ start, end, offset in seconds ] per stretch.
+	 */
+	private function offsetStretches( \DateTimeZone $tz, $start, $end ) {
+		$stretches = [];
+		$cursor    = (int) $start;
+		// The first entry describes the state at $start; the rest are changes inside the range.
+		foreach ( array_slice( (array) $tz->getTransitions( $cursor, (int) $end ), 1 ) as $transition ) {
+			if ( $transition['ts'] <= $cursor || $transition['ts'] >= $end ) {
+				continue;
 			}
-		} else {
-			// Shift by the site's UTC offset so days follow the site's calendar.
-			$offset  = $tz->getOffset( $from );
-			$results = $wpdb->get_results( $wpdb->prepare( "SELECT FLOOR((s.timestamp + %d) / 86400) AS site_day, COUNT(*) AS downloads FROM {$stats} s {$join} WHERE {$where} GROUP BY site_day ORDER BY site_day", array_merge( [ $offset ], $args ) ) );
-			foreach ( $results as $row ) {
-				$rows[] = [
-					'date'      => gmdate( 'Y-m-d', (int) $row->site_day * DAY_IN_SECONDS ),
-					'downloads' => (int) $row->downloads,
-				];
-			}
+			$stretches[] = [ $cursor, (int) $transition['ts'], $tz->getOffset( new \DateTimeImmutable( '@' . $cursor ) ) ];
+			$cursor      = (int) $transition['ts'];
 		}
+		$stretches[] = [ $cursor, (int) $end, $tz->getOffset( new \DateTimeImmutable( '@' . $cursor ) ) ];
 
-		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$stats} s {$join} WHERE {$where}", $args ) );
-
-		return [
-			'date_from' => $from->format( 'Y-m-d' ),
-			'date_to'   => $to->format( 'Y-m-d' ),
-			'group_by'  => $group_by,
-			'total'     => $total,
-			'rows'      => $rows,
-		];
+		return $stretches;
 	}
 
 	public function getActivitySummary( array $input ) {
