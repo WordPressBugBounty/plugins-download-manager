@@ -455,7 +455,8 @@ class AssetManager
 
         $asset_id = wpdm_query_var('assetid', 'int');
         $asset = new Asset();
-        $asset->get($asset_id)->newComment(wpdm_query_var('comment', 'txts'), get_current_user_id())->save();
+        if (!$asset->get($asset_id) || !$asset->hasAccess()) wp_send_json(array('success' => false, 'message' => __("Error! You are not authorized to execute this action.", "download-manager")));
+        $asset->newComment(wpdm_query_var('comment', 'txts'), get_current_user_id())->save();
         wp_send_json($asset->comments);
     }
 
@@ -654,7 +655,18 @@ class AssetManager
         if (!isset($params['id'])) return \WPDM\__\Messages::error(__("Asset not found!", "download-manager"), -1);
         $path_or_id = (int)$params['id'];
         $asset = new Asset();
-        $asset->get($path_or_id);
+        if (!$asset->get($path_or_id)) return \WPDM\__\Messages::error(__("Asset not found!", "download-manager"), -1);
+
+        // Only hand out a download link if the post's author may share this file, or the viewer may have it anyway.
+        // Otherwise anyone who can preview a post could put any asset's ID in it and download the file.
+        $post = get_post();
+        $author = $post ? (int)$post->post_author : 0;
+        if (!$asset->hasAccess() && !($author && $asset->hasAccess($author))) {
+            return $post && current_user_can('edit_post', $post->ID)
+                ? \WPDM\__\Messages::error(__("This Asset Manager file is not shared with the author of this post, so it cannot be embedded here.", "download-manager"), -1)
+                : '';
+        }
+
         ob_start();
         include Template::locate("embed-asset.php", __DIR__.'/views');
         $content = ob_get_clean();

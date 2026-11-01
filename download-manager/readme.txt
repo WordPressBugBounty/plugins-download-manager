@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.74
+Stable tag: 3.3.75
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,14 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.75 - 2026.11.01 =
+* Security: A refused registration could rewrite the first administrator's name; author names are now escaped in the Spotlight template ( Reported via Wordfence )
+* Security: REST package search returned packages the visitor can't access; the /wp/v2/wpdmpro route now follows "Hide all package info" ( Reported by Venkateswara Reddy )
+* Security: A Contributor could embed and download any Asset Manager file with [wpdm_asset]; links now need the post's author or the viewer to have access ( Reported by 0xRrudy )
+* Fixed: Pages listing many packages were slow on large sites; per-user download counts are now indexed and duplicate asset link indexes removed
+* Fixed: The cache cleanup cron URL stopped working; one cron URL in Cron Jobs settings now runs every scheduled task
+* Improved: Recent Jobs list with icon actions, job names, last errors and site-timezone times
 
 = 3.3.74 - 2026.10.26 =
 * Security: Private packages were downloadable by any logged-in user; unpublished packages now require permission to read the package ( Reported by wellknown.info )

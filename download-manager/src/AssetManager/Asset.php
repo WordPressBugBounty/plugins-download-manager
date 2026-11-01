@@ -216,14 +216,24 @@ class Asset
 
     }
 
-    function hasAccess(){
-        global $current_user;
+    /**
+     * Whether a user may have this asset: administrators, the user whose own Asset
+     * Manager folder holds it, and the roles or users it is shared with ('guest' is everyone).
+     *
+     * @param \WP_User|int|null $user Defaults to the current user.
+     * @return bool
+     */
+    function hasAccess($user = null){
+        $user = $user === null ? wp_get_current_user() : ($user instanceof \WP_User ? $user : get_userdata((int)$user));
         $roles = isset($this->access->roles) && is_array($this->access->roles) ? $this->access->roles : array();
         $users = isset($this->access->users) && is_array($this->access->users) ? $this->access->users : array();
-        if(current_user_can('manage_options')) return true;
-        if(count(array_intersect($current_user->roles, $roles)) > 0) return true;
         if(in_array('guest', $roles)) return true;
-        if(in_array($current_user->user_login, $users)) return true;
+        if(!$user || !$user->exists()) return false;
+        if(user_can($user, 'manage_options')) return true;
+        // Users without admin rights keep their Asset Manager files in a folder of their own
+        if($this->path && strpos(wp_normalize_path($this->path), wp_normalize_path(trailingslashit(UPLOAD_DIR . $user->user_login))) === 0) return true;
+        if(count(array_intersect((array)$user->roles, $roles)) > 0) return true;
+        if(in_array($user->user_login, $users)) return true;
         return false;
     }
 

@@ -141,7 +141,8 @@ class PackageController extends PackageTemplate {
 		$post_vars['excerpt'] = wpautop( wp_kses_post( $post_vars['post_excerpt'] ) );
 		$author               = get_user_by( 'id', $post_vars['post_author'] );
 		if ( is_object( $author ) ) {
-			$post_vars['author_name'] = $author->display_name;
+			// Display names keep double quotes, and templates print this inside attributes too (Spotlight's alt)
+			$post_vars['author_name'] = esc_html( $author->display_name );
 		}
 		$post_vars['author_profile_url'] = get_author_posts_url( $post_vars['post_author'] );
 		if ( is_object( $author ) ) {
@@ -730,11 +731,10 @@ class PackageController extends PackageTemplate {
 		$stock          = (int) get_post_meta( $ID, '__wpdm_quota', true );
 		$download_count = (int) get_post_meta( $ID, '__wpdm_download_count', true );
 
-		$user_download_count = WPDM()->downloadHistory->userDownloadCount( $ID );
-
 		$download_limit_per_user = (int) get_post_meta( $ID, '__wpdm_download_limit_per_user', true );
 
-		if ( $download_limit_per_user > 0 && $user_download_count >= $download_limit_per_user ) {
+		// Only packages with a per-user limit need this visitor's download count
+		if ( $download_limit_per_user > 0 && WPDM()->downloadHistory->userDownloadCount( $ID ) >= $download_limit_per_user ) {
 			return apply_filters( "wpdm_user_download_limit_exceeded", true, $ID );
 		}
 
@@ -2691,32 +2691,72 @@ class PackageController extends PackageTemplate {
 		return $html;
 	}
 
-	function search( $keyword = '' ) {
-		$keyword = wpdm_query_var( 'search' ) ?: $keyword;
-		if ( $keyword ) {
-			$query = new Query();
-			$query->search( $keyword );
-			if ( wpdm_query_var( 'premium', 'int' ) > 0 ) {
-				$query->meta( '__wpdm_base_price', 0, '>' );
-				$query->meta_relation( 'AND' );
-			}
-			$query->process();
-			$packages = $query->packages();
-			foreach ( $packages as &$package ) {
-				$package = (object) [
-					'ID'           => $package->ID,
-					'post_title'   => $package->post_title,
-					'post_content' => $package->post_content
-				];
-			}
-			if ( wpdm_query_var( 'premium', 'int' ) > 0 && function_exists( 'wpdmpp_product_license_options' ) ) {
-				foreach ( $packages as &$package ) {
-					$licenses          = wpdmpp_product_license_options( $package->ID );
-					$package->licenses = count( $licenses ) > 0 ? $licenses : null;
-				}
-			}
-			wp_send_json( [ 'total' => $query->count, 'packages' => $packages, 'q' => $query->params ] );
+	/**
+	 * REST: GET /wpdm/search?search=keyword[&premium=1]
+	 *
+	 * Visitors only find packages they can download; users who can edit posts see
+	 * every match, as in the admin. Each result carries only its ID, title and
+	 * description (plus licenses with premium=1).
+	 *
+	 * @param \WP_REST_Request|string|null $request
+	 * @return \WP_REST_Response
+	 */
+	function search( $request = null ) {
+		// Pull params from the WP_REST_Request when called via REST,
+		// otherwise fall back to $_REQUEST. Never let the request object leak in as $keyword.
+		if ( $request instanceof \WP_REST_Request ) {
+			$keyword = (string) $request->get_param( 'search' );
+			$premium = (int) $request->get_param( 'premium' );
+		} else {
+			$keyword = is_string( $request ) ? $request : '';
+			$keyword = (string) ( wpdm_query_var( 'search' ) ?: $keyword );
+			$premium = (int) wpdm_query_var( 'premium', 'int' );
 		}
+
+		$keyword = trim( $keyword );
+
+		if ( $keyword === '' ) {
+			return new \WP_REST_Response( [ 'total' => 0, 'packages' => [] ], 200 );
+		}
+
+		$query = new Query();
+		$query->search( $keyword );
+		$query->items_per_page( -1 );
+		if ( $premium > 0 ) {
+			$query->meta( '__wpdm_base_price', 0, '>' );
+			$query->params['meta_query'][0]['type'] = 'NUMERIC';
+			$query->meta_relation( 'AND' );
+		}
+		$query->process();
+
+		$can_edit = current_user_can( 'edit_posts' );
+		$packages = [];
+		foreach ( $query->packages() as $post ) {
+			if ( ! $can_edit && ! $this->userCanAccess( $post->ID ) ) {
+				continue;
+			}
+			$packages[] = $post;
+		}
+		$total = count( $packages );
+
+		$results = [];
+		foreach ( array_slice( $packages, 0, max( 1, (int) get_option( 'posts_per_page', 10 ) ) ) as $post ) {
+			$package = (object) [
+				'ID'           => $post->ID,
+				'post_title'   => $post->post_title,
+				'post_content' => post_password_required( $post ) ? '' : $post->post_content,
+			];
+			if ( $premium > 0 && function_exists( 'wpdmpp_product_license_options' ) ) {
+				$licenses          = wpdmpp_product_license_options( $post->ID );
+				$package->licenses = ! empty( $licenses ) ? $licenses : null;
+			}
+			$results[] = $package;
+		}
+
+		return new \WP_REST_Response( [
+			'total'    => $total,
+			'packages' => $results,
+		], 200 );
 	}
 
 	/**

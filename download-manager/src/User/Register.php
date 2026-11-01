@@ -234,7 +234,8 @@ class Register
         $full_name = $first_name . " " . $last_name;
         $display_name = $full_name;
 
-		if(!validate_username($user_login)) {
+		// WordPress refuses logins longer than 60 characters, so refuse them here too
+		if(!validate_username($user_login) || mb_strlen($user_login) > 60) {
 			$reg_error = apply_filters("wpdm_signup_error", __("Invalid Username!", "download-manager"), $error_type = 'invalid_username');
 
 			if (wpdm_is_ajax()) {
@@ -276,7 +277,7 @@ class Register
 
             Session::set('wpdm_signup_error', $reg_error, 300);
             wp_safe_redirect(wpdm_query_var('permalink', 'url'));
-
+            die();
         }
 
         //If username is available - no other user with the username
@@ -289,7 +290,7 @@ class Register
 
                 $user_pass = $_verify_email || !isset($user_pass) || $user_pass == '' ? wp_generate_password(12, false) : $user_pass;
 
-                if(!$_verify_email && isset($user_pass) && wpdm_query_var('comfirm_user_pass')){
+                if(!$_verify_email && isset($user_pass) && isset($_REQUEST['confirm_user_pass'])){
                     if($user_pass !== wpdm_query_var('confirm_user_pass', 'html')){
                         $reg_error = apply_filters("wpdm_signup_error", __("Passwords not matched!", "download-manager"), $error_type = 'password_match');
 
@@ -300,6 +301,7 @@ class Register
 
                         Session::set('wpdm_signup_error', $reg_error, 300);
                         wp_safe_redirect(wpdm_query_var('permalink', 'url'));
+                        die();
                     }
                 }
 
@@ -321,6 +323,21 @@ class Register
                 }
 
                 $user_id = wp_create_user($user_login, $user_pass, $user_email);
+
+                // WordPress can still refuse the account. Its error must never stand in for a user ID:
+                // wp_update_user() would read it as user 1 and rewrite that account's names.
+                if (is_wp_error($user_id)) {
+                    $reg_error = apply_filters("wpdm_signup_error", 'Error: ' . $user_id->get_error_message(), $error_type = 'create_user');
+
+                    if (wpdm_is_ajax()) {
+                        wp_send_json(array('success' => false, 'message' => $reg_error));
+                        die();
+                    }
+
+                    Session::set('wpdm_signup_error', $reg_error, 300);
+                    wp_safe_redirect(wpdm_query_var('permalink', 'url'));
+                    die();
+                }
 
                 $user_meta = array('ID' => $user_id, 'display_name' => $display_name, 'first_name' => $first_name, 'last_name' => $last_name);
                 wp_update_user($user_meta);

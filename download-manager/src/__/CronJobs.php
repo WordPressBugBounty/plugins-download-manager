@@ -141,6 +141,23 @@ class CronJobs
 
         // Allow add-ons to hook into scheduled tasks
         do_action('wpdm_scheduled_tasks');
+
+        update_option('__wpdm_scheduled_tasks_ran', time(), false);
+    }
+
+    /**
+     * Run scheduled maintenance tasks if 6 hours have passed since they last ran
+     *
+     * @return bool Whether they ran
+     */
+    private function runScheduledTasksIfDue(): bool
+    {
+        if (time() - (int) get_option('__wpdm_scheduled_tasks_ran', 0) < 21600) {
+            return false;
+        }
+
+        $this->runScheduledTasks();
+        return true;
     }
 
     /**
@@ -152,6 +169,9 @@ class CronJobs
     {
         $cronJob = CronJob::getInstance();
         $results = $cronJob->executeAll(10);
+
+        // Trash expired packages, if enabled in settings
+        $this->deleteExpiredPackages();
 
         if ($results['processed'] > 0) {
             error_log(sprintf(
@@ -169,15 +189,37 @@ class CronJobs
     /**
      * Handle external cron trigger via URL
      *
-     * Supports two endpoints:
-     * - ?wpdm_cron=1&cronkey=XXX - Process job queue
+     * Supports these endpoints:
+     * - ?wpdm_cron=1&cronkey=XXX - Run everything WP cron runs (the URL in Cron Jobs settings)
      * - ?wpdm_task=cleanup&cronkey=XXX - Run specific task
+     * - ?cde=wpdmde&cronkey=XXX - Trash expired packages (formerly in Basic settings)
+     * - ?cpc=wpdmcc&cronkey=XXX - Clear cache and expired sessions (formerly in Privacy settings)
      *
      * @return void
      */
     public function handleExternalTrigger(): void
     {
         $cronKey = wpdm_query_var('cronkey', 'txt');
+
+        // Cron URLs the Basic and Privacy settings used to show, still set up as cron jobs in hosting control panels
+        if (wpdm_query_var('cde', 'txt') === 'wpdmde') {
+            if (!$this->verifyCronKey($cronKey)) {
+                wp_send_json_error(['message' => 'Invalid cron key'], 403);
+            }
+
+            wp_send_json(['success' => true, 'delete_expired' => $this->deleteExpiredPackages()]);
+        }
+
+        if (wpdm_query_var('cpc', 'txt') === 'wpdmcc') {
+            if (!$this->verifyCronKey($cronKey)) {
+                wp_send_json_error(['message' => 'Invalid cron key'], 403);
+            }
+
+            // As it always has, this URL cleans whether or not the auto clean option is on
+            $deleted = $this->cleanupSessions();
+            $this->cleanupCache(true);
+            wp_send_json(['success' => true, 'message' => "Cache cleared, deleted {$deleted} expired sessions"]);
+        }
 
         // Process job queue
         if (wpdm_query_var('wpdm_cron', 'int') === 1) {
@@ -188,6 +230,10 @@ class CronJobs
             $cronJob = CronJob::getInstance();
             $results = $cronJob->executeAll(20);
 
+            // Also run what WP cron runs, for sites where WP cron is disabled or rarely triggered
+            $expired = $this->deleteExpiredPackages();
+            $maintenance = $this->runScheduledTasksIfDue();
+
             do_action('wpdm_cron_job');
 
             wp_send_json_success([
@@ -195,6 +241,8 @@ class CronJobs
                 'processed' => $results['processed'],
                 'succeeded' => $results['succeeded'],
                 'failed' => $results['failed'],
+                'expired_packages' => $expired,
+                'maintenance' => $maintenance,
             ]);
         }
 
@@ -287,11 +335,12 @@ class CronJobs
     /**
      * Clean up cache files
      *
+     * @param bool $always Clean even if the auto clean option is off
      * @return void
      */
-    private function cleanupCache(): void
+    private function cleanupCache(bool $always = false): void
     {
-        if (!(int) get_option('__wpdm_auto_clean_cache', 0)) {
+        if (!$always && !(int) get_option('__wpdm_auto_clean_cache', 0)) {
             return;
         }
 
@@ -318,17 +367,20 @@ class CronJobs
 
         global $wpdb;
 
+        // Published packages only: this runs every few minutes, and trashed packages keep their expiry date
         $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT post_id, meta_value as expire_date
-             FROM {$wpdb->prefix}postmeta
-             WHERE meta_key = %s AND meta_value <> ''",
-            '__wpdm_expire_date'
+            "SELECT p.ID AS post_id, m.meta_value AS expire_date
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = %s
+             WHERE p.post_type = %s AND p.post_status = 'publish' AND m.meta_value <> ''",
+            '__wpdm_expire_date',
+            'wpdmpro'
         ));
 
         $deleted = 0;
         foreach ($results as $item) {
             $expireTime = strtotime($item->expire_date);
-            if ($expireTime && $expireTime < time() && get_post_status($item->post_id) === 'publish') {
+            if ($expireTime && $expireTime < time()) {
                 wp_trash_post($item->post_id);
                 $deleted++;
             }
@@ -537,12 +589,12 @@ class CronJobs
             '__wpdm_cron' => [
                 'next_run' => wp_next_scheduled('__wpdm_cron'),
                 'interval' => 'wpdm_six_hourly',
-                'description' => 'Scheduled maintenance tasks',
+                'description' => 'Maintenance: expired sessions, cache, old jobs',
             ],
             '__wpdm_process_jobs' => [
                 'next_run' => wp_next_scheduled('__wpdm_process_jobs'),
                 'interval' => 'wpdm_every_5_minutes',
-                'description' => 'Job queue processor',
+                'description' => 'Job queue, expired packages',
             ],
         ];
     }

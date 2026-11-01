@@ -47,21 +47,8 @@ do_action("wpdm_privacy_settings_panel");
             <button type="button" id="clearStats" style="width: 200px" class="btn btn-danger"><?php _e( "Delete All Stats Data" , "download-manager" ); ?></button>
     </div>
     <div class="panel-footer bg-white">
-        <label><input type="checkbox" name="__wpdm_auto_clean_cache" <?php checked(1, get_option('__wpdm_auto_clean_cache', 0)); ?> value="1" /> <?php echo __( "Auto clean cache dir & temporary storage everyday", "download-manager" ) ?></label>
-    </div>
-    <div class="panel-footer bg-white">
-        <label><?= __('Cron Key', WPDM_TEXT_DOMAIN) ?></label>
-        <input type="text" class="form-control" name="__wpdm_cron_key" id="wpdmckey" value="<?php echo WPDM()->cronJob->cronKey(); ?>" />
-    </div>
-    <div class="panel-footer bg-white">
-        <label><?php echo esc_attr__('Cron URL', "download-manager") ?></label>
-        <div class="input-group">
-            <input type="text" class="form-control" id="cccronurl" readonly value="<?php echo home_url('/?cpc=wpdmcc&cronkey='.WPDM()->cronJob->cronKey()); ?>" />
-            <div class="input-group-btn">
-                <button class="btn btn-secondary ttip" type="button" title="<?php echo esc_attr__('Copy', "download-manager") ?>" onclick="WPDM.copy('cccronurl')"><i class="fa fa-copy"></i></button>
-            </div>
-        </div>
-        <em class="note"><?php echo esc_attr__('Your can configure a cron job from your hosting control panel using the url above for reliable cron execution.', "download-manager") ?></em>
+        <label><input type="checkbox" name="__wpdm_auto_clean_cache" <?php checked(1, get_option('__wpdm_auto_clean_cache', 0)); ?> value="1" /> <?php echo __( "Auto clean cache dir & temporary storage everyday", "download-manager" ) ?></label><br/>
+        <em class="note"><?php printf(__('Runs every 6 hours with WP cron. If WP cron is disabled on your site, set up the cron URL from %s.', 'download-manager'), '<a href="' . esc_url(admin_url('edit.php?post_type=wpdmpro&page=settings&tab=wpdm-crons')) . '">' . __('Cron Jobs settings', 'download-manager') . '</a>'); ?></em>
     </div>
 </div>
 <script>
@@ -81,12 +68,6 @@ do_action("wpdm_privacy_settings_panel");
             });
             return false;
         });
-
-        WPDM.addAction("wpdm_save_settings", function (page, data) {
-            if(page === 'privacy') {
-                $('#cccronurl').val("<?= home_url('/?cpc=wpdmcc&cronkey='); ?>" + $('#wpdmckey').val());
-            }
-        })
 
     });
 </script>

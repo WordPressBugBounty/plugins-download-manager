@@ -299,7 +299,6 @@ class Settings
             update_option('__wpdm_checkout_privacy_label', wpdm_query_var('__wpdm_checkout_privacy_label', 'txt'));
 	        update_option('__wpdm_tmp_storage', wpdm_query_var('__wpdm_tmp_storage', 'txt', 'db'));
 	        update_option('__wpdm_auto_clean_cache', wpdm_query_var('__wpdm_auto_clean_cache', 'int', 0));
-	        update_option('__wpdm_cron_key', wpdm_query_var('__wpdm_cron_key', 'alphanum', ''));
 	        _e("Privacy Settings Saved Successfully", "download-manager");
             die();
         }
@@ -308,8 +307,9 @@ class Settings
 
 	function cronJobs() {
 		if (wpdm_query_var('task') == 'wdm_save_settings' && wpdm_query_var('section') == 'wpdm-crons') {
-			_e("Nothing to update!", "download-manager");
-			die();
+			// An empty key makes cronKey() generate a new one
+			update_option('__wpdm_cron_key', wpdm_query_var('__wpdm_cron_key', 'alphanum', ''));
+			wp_send_json(['success' => true, 'msg' => __('Cron Settings Saved Successfully', 'download-manager'), 'reload' => true]);
 		}
 		include wpdm_admin_tpl_path("settings/cron-jobs.php");
 	}
