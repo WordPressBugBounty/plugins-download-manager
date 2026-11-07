@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.75
+Stable tag: 3.3.76
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,12 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.76 - 2026.11.07 =
+* Fixed: [wpdm_all_packages] raised a notice for packages without a stored size
+* Security: An Author could replace or hijack another user's chunked package upload by sending the same file name; chunks are now assembled per user and a taken name gets a prefix, as with plain uploads ( Reported by Respect )
+* Security: The [wpdm_all_packages] cols attribute could print other users' package passwords; the post password is no longer available as a column ( Reported by Karthik Ramakrishnan via WPScan )
+* Security: An Author could store a quote in an additional preview image or video link and run script on the package page; previews are now limited to attachment IDs and URLs, and the links are escaped ( Reported by Wordfence )
 
 = 3.3.75 - 2026.11.01 =
 * Security: A refused registration could rewrite the first administrator's name; author names are now escaped in the Spotlight template ( Reported via Wordfence )

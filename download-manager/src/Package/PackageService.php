@@ -59,6 +59,8 @@ class PackageService {
 				}
 				unset( $value );
 				$meta_value = array_unique( $meta_value );
+			} else if ( $meta_key == 'additional_previews' ) {
+				$meta_value = self::sanitizePreviews( $meta_value );
 			} else if ( $meta_key == 'terms_conditions' ) {
 				$meta_value = __::sanitize_var( $meta_value, 'kses' );
 			} else if ( $meta_key == 'changelog' ) {
@@ -79,6 +81,38 @@ class PackageService {
 			}
 			update_post_meta( $id, $key_name, $meta_value );
 		}
+	}
+
+
+	/**
+	 * Additional previews are attachment IDs or image URLs; anything else is dropped so a
+	 * stored value can never break out of the attribute it is printed into.
+	 *
+	 * @param mixed $previews
+	 *
+	 * @return array
+	 */
+	public static function sanitizePreviews( $previews ) {
+		$clean = [];
+		foreach ( (array) $previews as $preview ) {
+			$preview = is_scalar( $preview ) ? trim( (string) $preview ) : '';
+			if ( $preview === '' ) {
+				continue;
+			}
+			if ( ctype_digit( $preview ) ) {
+				$clean[] = (int) $preview;
+				continue;
+			}
+			if ( ! preg_match( '#^https?://[^\s\x27"<>]+$#i', $preview ) ) {
+				continue;
+			}
+			$url = esc_url_raw( $preview, [ 'http', 'https' ] );
+			if ( $url !== '' && wp_parse_url( $url, PHP_URL_HOST ) ) {
+				$clean[] = $url;
+			}
+		}
+
+		return array_values( $clean );
 	}
 
 	/**

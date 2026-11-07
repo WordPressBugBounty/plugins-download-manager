@@ -102,7 +102,7 @@ class Packages {
 	function uploadFile() {
 		check_ajax_referer( NONCE_KEY );
 		if ( ! current_user_can( 'upload_files' ) ) {
-			die( '-2' );
+			wp_die( '-2' );
 		}
 
 		$name = isset( $_FILES['package_file']['name'] ) && ! isset( $_REQUEST["chunks"] ) ? sanitize_file_name( $_FILES['package_file']['name'] ) : wpdm_query_var( 'name', 'txt' );
@@ -110,7 +110,7 @@ class Packages {
 		$ext = FileSystem::fileExt( $name );
 
 		if ( WPDM()->fileSystem->isBlocked( $name, $_FILES['package_file']['tmp_name'] ) ) {
-			die( '-3' );
+			wp_die( '-3' );
 		}
 
 		do_action( "wpdm_before_upload_file", $_FILES['package_file'] );
@@ -135,36 +135,44 @@ class Packages {
 
 
 		if ( isset( $_REQUEST["chunks"] ) ) {
-			$this->chunkUploadFile( UPLOAD_DIR . $filename );
+			$filename = $this->chunkUploadFile( UPLOAD_DIR . $filename );
 		} else {
 
 			$isValidMimeType = FileSystem::validateUploadMimeType($_FILES['package_file']['tmp_name'], $name);
 
 			if(!$isValidMimeType) {
-				die("|||<div class='alert alert-danger'>".sprintf(__('Upload blocked. The file type is invalid—the file extension does not match the actual content type.', 'download-manager'), '<strong>".UPLOAD_DIR."</strong>')."</div>|||");
+				wp_die("|||<div class='alert alert-danger'>".sprintf(__('Upload blocked. The file type is invalid—the file extension does not match the actual content type.', 'download-manager'), '<strong>".UPLOAD_DIR."</strong>')."</div>|||");
 			}
 
 			$moved = move_uploaded_file( $_FILES['package_file']['tmp_name'], UPLOAD_DIR . $filename );
-            if(!$moved) wpdmdd($_FILES);
-                //die("|||<div class='alert alert-danger'>Failed to move file in upload dir <strong>".UPLOAD_DIR."</strong>. Please check dir permission or contact server support.|||</div>");
+			if(!$moved) wp_die("|||<div class='alert alert-danger'>".sprintf(__('Failed to move file in upload dir %s. Please check dir permission or contact server support.', 'download-manager'), '<strong>'.UPLOAD_DIR.'</strong>')."</div>|||");
 			do_action( "wpdm_after_upload_file", UPLOAD_DIR . $filename );
 		}
 
 		//$filename = apply_filters("wpdm_after_upload_file", $filename, UPLOAD_DIR);
 
 		echo "|||" . $filename . "|||";
-		exit;
+		wp_die();
 	}
 
 
+	/**
+	 * Store one chunk; on the last chunk move the assembled file into place.
+	 *
+	 * @param string $destFilePath Where the finished file should go
+	 *
+	 * @return string The file name it was stored under (renamed when that name was taken)
+	 */
 	function chunkUploadFile( $destFilePath ) {
 
 		if ( $destFilePath === '' ) {
-			return;
+			return '';
 		}
 		$chunk  = isset( $_REQUEST["chunk"] ) ? intval( $_REQUEST["chunk"] ) : 0;
 		$chunks = isset( $_REQUEST["chunks"] ) ? intval( $_REQUEST["chunks"] ) : 0;
-		$out    = @fopen( "{$destFilePath}.part", $chunk == 0 ? "wb" : "ab" );
+		// Assembled in a file of this user's own, so nobody else's chunks can land in it
+		$partFilePath = FileSystem::chunkPartPath( $destFilePath );
+		$out          = @fopen( $partFilePath, $chunk == 0 ? "wb" : "ab" );
 
 		if ( $out ) {
 			// Read binary input stream and append it to temp file
@@ -175,7 +183,7 @@ class Packages {
 					fwrite( $out, $buff );
 				}
 			} else {
-				die( '-3' );
+				wp_die( '-3' );
 			}
 
 			@fclose( $in );
@@ -183,21 +191,28 @@ class Packages {
 
 			@unlink( $_FILES['package_file']['tmp_name'] );
 		} else {
-			die( '-3' . $destFilePath );
+			wp_die( '-3' );
 		}
 
 		if ( ! $chunks || $chunk == $chunks - 1 ) {
 
-			$isValidMimeType = FileSystem::validateUploadMimeType("{$destFilePath}.part", basename($destFilePath));
+			$isValidMimeType = FileSystem::validateUploadMimeType( $partFilePath, basename( $destFilePath ) );
 			if(!$isValidMimeType) {
-				@unlink( $destFilePath . ".part" );
-				die("|||<div class='alert alert-danger'>".sprintf(__('Upload blocked. The file type is invalid—the file extension does not match the actual content type.', 'download-manager'), '<strong>".UPLOAD_DIR."</strong>')."</div>|||");
+				@unlink( $partFilePath );
+				wp_die("|||<div class='alert alert-danger'>".sprintf(__('Upload blocked. The file type is invalid—the file extension does not match the actual content type.', 'download-manager'), '<strong>".UPLOAD_DIR."</strong>')."</div>|||");
 			}
 
-			// Strip the temp .part suffix off
-			rename( "{$destFilePath}.part", $destFilePath );
+			// A name already in use gets the same time() prefix a plain upload gets; the
+			// chunked path used to rename straight over whatever file was there
+			if ( file_exists( $destFilePath ) ) {
+				$destFilePath = dirname( $destFilePath ) . '/' . time() . 'wpdm_' . basename( $destFilePath );
+			}
+
+			rename( $partFilePath, $destFilePath );
 			do_action( "wpdm_after_upload_file", $destFilePath );
 		}
+
+		return basename( $destFilePath );
 	}
 
 

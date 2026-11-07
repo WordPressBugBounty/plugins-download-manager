@@ -1773,6 +1773,8 @@ if(is_admin()){
         });
 
         uploader.init();
+        // Each upload names itself, so the server assembles its chunks apart from any other upload of the same file name
+        uploader.bind('BeforeUpload', function(up, file){ up.settings.multipart_params.upload_id = file.id; });
 
         /* Upload queue */
         var uploadText = <?php echo wp_json_encode( array(

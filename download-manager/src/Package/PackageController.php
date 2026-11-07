@@ -967,10 +967,7 @@ class PackageController extends PackageTemplate {
 					//$video = $url . "&ind={$ind}&play=" . basename($videos[$mmv]);
 					$video = FileSystem::mediaURL( $ID, $ind, wpdm_basename( $videos[ $mmv ] ) );
 
-					$videothumbs .= "<a href='#' data-video='{$video}' class='__wpdm_playvideo'><img class='thumbnail' src='" . wpdm_dynamic_thumb( $mpv, array(
-							64,
-							64
-						) ) . "'/></a>";
+					$videothumbs .= "<a href='#' data-video='{$video}' class='__wpdm_playvideo'><img class='thumbnail' src='" . esc_url( wpdm_dynamic_thumb( $mpv, array( 64, 64 ) ) ) . "'/></a>";
 				}
 				$mmv ++;
 			}
@@ -2146,15 +2143,9 @@ class PackageController extends PackageTemplate {
 			foreach ( $file['additional_previews'] as $p ) {
 				++ $k;
 				if ( is_numeric( $p ) ) {
-					$img .= "<a href='" . wp_get_attachment_url( $p ) . "' id='more_previews_a_{$k}' class='more_previews_a imgpreview wpdm-lightbox' data-lightbox-gallery='gallery_{$id}' rel='previews'><img id='more_previews_{$k}' class='more_previews img-rounded' src='" . wpdm_dynamic_thumb( get_attached_file( $p ), array(
-							$w,
-							$h
-						) ) . "'/></a>";
+					$img .= "<a href='" . esc_url( wp_get_attachment_url( $p ) ) . "' id='more_previews_a_{$k}' class='more_previews_a imgpreview wpdm-lightbox' data-lightbox-gallery='gallery_{$id}' rel='previews'><img id='more_previews_{$k}' class='more_previews img-rounded' src='" . esc_url( wpdm_dynamic_thumb( get_attached_file( $p ), array( $w, $h ) ) ) . "'/></a>";
 				} else {
-					$img .= "<a href='{$p}' id='more_previews_a_{$k}' class='more_previews_a imgpreview wpdm-lightbox' data-lightbox-gallery='gallery_{$id}' rel='previews' ><img id='more_previews_{$k}' class='more_previews img-rounded' src='" . wpdm_dynamic_thumb( $p, array(
-							$w,
-							$h
-						) ) . "'/></a>";
+					$img .= "<a href='" . esc_url( $p ) . "' id='more_previews_a_{$k}' class='more_previews_a imgpreview wpdm-lightbox' data-lightbox-gallery='gallery_{$id}' rel='previews' ><img id='more_previews_{$k}' class='more_previews img-rounded' src='" . esc_url( wpdm_dynamic_thumb( $p, array( $w, $h ) ) ) . "'/></a>";
 				}
 			}
 		}
@@ -2186,7 +2177,7 @@ class PackageController extends PackageTemplate {
 				$video = $file;
 			}
 		}
-		$link = "<a class='wpdm-lightbox {$style}' href='{$video}'>{$link_label}</a>";
+		$link = "<a class='wpdm-lightbox {$style}' href='" . esc_url( $video ) . "'>{$link_label}</a>";
 
 		return $link;
 

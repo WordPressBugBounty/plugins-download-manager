@@ -183,6 +183,8 @@ $afile = wpdm_valueof($afiles, 0);
                 });
 
                 uploader.init();
+                // Each upload names itself, so the server assembles its chunks apart from any other upload of the same file name
+                uploader.bind('BeforeUpload', function(up, file){ up.settings.multipart_params.upload_id = file.id; });
 
                 // a file was added in the queue
                 uploader.bind('FilesAdded', function(up, files){

@@ -254,6 +254,10 @@ if(isset($params['jstable']) && $params['jstable']==1):
                 //wpdmdd($data);
                 global $post;
                 $data += (array)$post;
+                // The raw post row brings the post password along, and the default column
+                // branch below prints any key it is asked for: cols="post_password" showed
+                // other users' package passwords to any Contributor
+                unset($data['post_password']);
                 $data['id'] = $data['ID'];
                 $data['files'] = WPDM()->package->getFiles(get_the_ID());
                 //$author = get_user_by('id', $post->post_author);
@@ -305,7 +309,7 @@ if(isset($params['jstable']) && $params['jstable']==1):
                         $tcols = $cols;
                         array_shift($tcols);
                         foreach ($cols as $colx => $cold){
-                            $dor = array('publish_date' => strtotime(get_the_date('Y-m-d')), 'create_date' => strtotime(get_the_date('Y-m-d')), 'update_date' => strtotime(get_the_modified_date('Y-m-d', get_the_ID())), 'package_size' => __::convertToBytes($data['package_size']));
+                            $dor = array('publish_date' => strtotime(get_the_date('Y-m-d')), 'create_date' => strtotime(get_the_date('Y-m-d')), 'update_date' => strtotime(get_the_modified_date('Y-m-d', get_the_ID())), 'package_size' => __::convertToBytes($data['package_size'] ?? ''));
                             ?>
                         <td <?php if(in_array($cold[0], array('publish_date', 'update_date','create_date', 'package_size'))) { ?> data-order="<?php echo esc_attr($dor[$cold[0]]); ?>" <?php } ?> class="__dt_col_<?php echo esc_attr($colx); ?> __dt_col __dt_col_<?php echo esc_attr($cold[0]); ?>" <?php if($colx == 0) { ?>style="background-image: url('<?php echo esc_attr($ext) ; ?>');background-size: 36px;background-position: 5px 8px;background-repeat:  no-repeat;padding-left: 52px;line-height: normal;"<?php } ?>>
                             <?php

@@ -930,7 +930,7 @@ class FileSystem {
 	 * @return string
 	 */
 	public static function fileExt( $file ) {
-		$ext = pathinfo( $file, PATHINFO_EXTENSION );
+		$ext = pathinfo( (string) $file, PATHINFO_EXTENSION );
 		$ext = strtolower( $ext );
 		if ( $ext === '' ) {
 			$ext = "|=|";
@@ -1126,6 +1126,24 @@ class FileSystem {
         $extMimeType = self::mimeTypes( $ext );
 	    return in_array($actualMimeType, $extMimeType);
     }
+
+	/**
+	 * Where a chunked upload is assembled before it becomes $destFilePath.
+	 *
+	 * Named after the uploader and the upload, not only the destination: a .part
+	 * shared by file name let any user with upload_files truncate or finish
+	 * another user's upload and replace the file they had stored.
+	 *
+	 * @param string $destFilePath
+	 *
+	 * @return string
+	 */
+	public static function chunkPartPath( $destFilePath ) {
+		$upload_id = preg_replace( '/[^a-zA-Z0-9_-]/', '', (string) ( $_REQUEST['upload_id'] ?? '' ) );
+		$key       = substr( md5( get_current_user_id() . '|' . $upload_id . '|' . wp_basename( $destFilePath ) ), 0, 12 );
+
+		return dirname( $destFilePath ) . '/' . wp_basename( $destFilePath ) . '.' . $key . '.part';
+	}
 
 	public static function validateUploadMimeType($tmp_file, $file_name) {
 		if (function_exists('extension_loaded') && !extension_loaded('fileinfo')) {
