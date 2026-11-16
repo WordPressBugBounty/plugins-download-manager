@@ -751,7 +751,14 @@ function wpdm_logout_url($redirect = '')
 
 function wpdm_rest_url($request)
 {
-    return get_rest_url(null, "wpdm/{$request}");
+    $url = get_rest_url(null, "wpdm/{$request}");
+    // REST cookie authentication needs the wp_rest nonce; without it the request runs as a guest,
+    // so a package whose access roles don't include "All Visitors" refuses the lock forms of a logged-in user
+    if (is_user_logged_in()) {
+        $url = add_query_arg('_wpnonce', wp_create_nonce('wp_rest'), $url);
+    }
+
+    return $url;
 }
 
 /**

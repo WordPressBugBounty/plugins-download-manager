@@ -168,11 +168,15 @@ class AssetManager
     {
         if (isset($_REQUEST['asset']) && isset($_REQUEST['key'])) {
             $asset = new Asset();
-            $asset->get(wpdm_query_var('asset', 'int'));
-            if (wp_verify_nonce($_REQUEST['key'], $asset->path))
-                $asset->download();
-            else
+            $found = $asset->get(wpdm_query_var('asset', 'int'));
+            // The key only shows the link came from this site. The file is served to people on the asset's
+            // access list, or with a grant from a page that was allowed to share it (embed, share link)
+            if (!$found || !wp_verify_nonce($_REQUEST['key'], $asset->path))
                 \WPDM\__\Messages::error(apply_filters('wpdm_asset_download_link_expired_message', __("Download link is expired! Go back and Refresh the page to regenerate download link", "download-manager")), 1);
+            elseif (!$asset->hasAccess() && !$asset->isGranted(wpdm_query_var('grant')))
+                \WPDM\__\Messages::error(__("You do not have access to this asset", "download-manager"), 1);
+            else
+                $asset->download();
             die();
         }
         if (isset($_REQUEST['wpdmfmdl']) && is_user_logged_in()) {
@@ -666,6 +670,9 @@ class AssetManager
                 ? \WPDM\__\Messages::error(__("This Asset Manager file is not shared with the author of this post, so it cannot be embedded here.", "download-manager"), -1)
                 : '';
         }
+
+        // Passed the check above: the link in the embed may serve the file to this viewer
+        $asset->grantDownload();
 
         ob_start();
         include Template::locate("embed-asset.php", __DIR__.'/views');

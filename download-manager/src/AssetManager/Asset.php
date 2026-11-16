@@ -40,7 +40,7 @@ class Asset
             $this->name = basename($this->path);
             $this->type = is_dir($this->path)?'dir':'file';
             $this->size = wpdm_file_size($this->path);
-            $this->temp_download_url = home_url("/?asset={$this->ID}&key=".wp_create_nonce($this->path));
+            $this->temp_download_url = $this->downloadUrl();
         }
         return $this;
     }
@@ -53,7 +53,7 @@ class Asset
         if ($assetmeta){
             $this->ID = $assetmeta->ID;
             $this->activities = json_decode($assetmeta->activities);
-            $this->comments = json_decode($assetmeta->comments);
+            $this->comments = self::withoutEmails(json_decode($assetmeta->comments));
             $this->access = json_decode($assetmeta->access);
             $this->links = $this->getLinks();
             $this->metadata = json_decode($assetmeta->metadata);
@@ -62,7 +62,7 @@ class Asset
             $this->name = basename($this->path);
             $this->type = is_dir($this->path)?'dir':'file';
             $this->size = wpdm_file_size($this->path);
-            $this->temp_download_url = home_url("/?asset={$this->ID}&key=".wp_create_nonce($this->path));
+            $this->temp_download_url = $this->downloadUrl();
             return $this;
         }
         return null;
@@ -77,7 +77,7 @@ class Asset
         if ($assetmeta){
             $this->ID = $assetmeta->ID;
             $this->activities = json_decode($assetmeta->activities);
-            $this->comments = json_decode($assetmeta->comments);
+            $this->comments = self::withoutEmails(json_decode($assetmeta->comments));
             $this->access = json_decode($asset_link->access);
             $this->links = $this->getLinks();
             $this->metadata = json_decode($assetmeta->metadata);
@@ -86,17 +86,58 @@ class Asset
             $this->name = basename($this->path);
             $this->type = is_dir($this->path)?'dir':'file';
             $this->size = wpdm_file_size($this->path);
-            $this->temp_download_url = home_url("/?asset={$this->ID}&key=".wp_create_nonce($this->path));
+            $this->temp_download_url = $this->downloadUrl();
             return $this;
         }
         return null;
+    }
+
+    /**
+     * Paths this request may hand out a working download link for, to someone who is not on the
+     * asset's own access list: a file embedded by an author who may share it, a share link, a
+     * directory listing. Only code that has already checked that right should add to it.
+     */
+    private static $granted = array();
+
+    public static function grantPath($path){
+        self::$granted[(string)$path] = true;
+    }
+
+    function grantDownload(){
+        self::grantPath($this->path);
+        $this->temp_download_url = $this->downloadUrl();
+        return $this;
+    }
+
+    function downloadUrl(){
+        $url = home_url("/?asset={$this->ID}&key=".wp_create_nonce($this->path));
+        if(isset(self::$granted[(string)$this->path]))
+            $url .= "&grant=".wp_create_nonce('wpdm_asset_grant|'.$this->path);
+        return $url;
+    }
+
+    function isGranted($grant){
+        return is_string($grant) && $grant !== '' && $this->path && (bool)wp_verify_nonce($grant, 'wpdm_asset_grant|'.$this->path);
+    }
+
+    /**
+     * Comments used to store the author's email address, which nothing displays. Drop it from
+     * the ones saved earlier so it is neither sent to other users nor saved again.
+     */
+    private static function withoutEmails($comments){
+        if(!is_array($comments)) return $comments;
+        foreach ($comments as &$comment){
+            if(is_object($comment)) unset($comment->email);
+            elseif(is_array($comment)) unset($comment['email']);
+        }
+        return $comments;
     }
 
     function newComment($comment, $user){
         if(!is_array($this->comments)) $this->comments = array();
         $userdata = get_userdata($user);
         $avatar = get_avatar($user);
-        $comment = array( 'comment' => $comment, 'user' => $user, 'username' => $userdata->user_login, 'name' => $userdata->display_name, 'email' => $userdata->user_email, 'avatar' => $avatar, 'time' => time() );
+        $comment = array( 'comment' => $comment, 'user' => $user, 'username' => $userdata->user_login, 'name' => $userdata->display_name, 'avatar' => $avatar, 'time' => time() );
         array_unshift($this->comments, $comment);
         return $this;
     }

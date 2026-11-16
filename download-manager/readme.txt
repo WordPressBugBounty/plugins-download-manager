@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.76
+Stable tag: 3.3.77
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -202,6 +202,11 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 
 == Changelog ==
 
+= 3.3.77 - 2026.11.16 =
+* Fixed: Password lock replied "Invalid request!" to logged-in users when the package's access roles didn't include "All Visitors"
+* Security: Asset Manager download links now check the visitor's access to the file, not only the link key
+* Security: Asset Manager comments no longer store or return the commenter's email address
+
 = 3.3.76 - 2026.11.07 =
 * Fixed: [wpdm_all_packages] raised a notice for packages without a stored size
 * Security: An Author could replace or hijack another user's chunked package upload by sending the same file name; chunks are now assembled per user and a taken name gets a prefix, as with plain uploads ( Reported by Respect )
@@ -211,7 +216,8 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 = 3.3.75 - 2026.11.01 =
 * Security: A refused registration could rewrite the first administrator's name; author names are now escaped in the Spotlight template ( Reported via Wordfence )
 * Security: REST package search returned packages the visitor can't access; the /wp/v2/wpdmpro route now follows "Hide all package info" ( Reported by Venkateswara Reddy )
-* Security: A Contributor could embed and download any Asset Manager file with [wpdm_asset]; links now need the post's author or the viewer to have access ( Reported by 0xRrudy )
+* Security: A Contributor could embed and download any Asset Manager file with [wpdm_asset]; links now need the post's author or the viewer to have access ( Reported by 0xRrudy, and by Het Kalariya via WPScan )
+* Security: A Subscriber could read and add comments on Asset Manager files not shared with them; comments now need access to the file ( Reported by Jacek Sowinski via WPScan )
 * Fixed: Pages listing many packages were slow on large sites; per-user download counts are now indexed and duplicate asset link indexes removed
 * Fixed: The cache cleanup cron URL stopped working; one cron URL in Cron Jobs settings now runs every scheduled task
 * Improved: Recent Jobs list with icon actions, job names, last errors and site-timezone times
