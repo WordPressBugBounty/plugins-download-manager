@@ -34,6 +34,10 @@ class PackageLocks
         return ob_get_clean();
     }
 
+    public static function captchaAction($packageID){
+        return 'wpdm_download_' . (int)$packageID;
+    }
+
     function validateCaptcha()
     {
         $limit = get_option('__wpdm_private_link_usage_limit', 3);
@@ -46,8 +50,11 @@ class PackageLocks
             wp_send_json(['error' => __("Invalid request!", "download-manager")]);
         }
 
-        $ret = wpdm_recaptcha_enterprise_verify(wpdm_query_var('reCaptchaVerify'), 'DOWNLOAD');
-        if ($ret['success']) {
+        // The widget on a package's page is rendered with that package's own action name, so a
+        // captcha solved for one package cannot be spent on another
+        $action = self::captchaAction($packageID);
+        $ret = wpdm_recaptcha_enterprise_verify(wpdm_query_var('reCaptchaVerify'), $action);
+        if ($ret['success'] && hash_equals($action, (string)wpdm_valueof($ret, 'action'))) {
             $download_url = WPDM()->package->expirableDownloadLink($packageID, $limit, $xpire_period);
             $data['downloadurl'] = $download_url;
         } else {

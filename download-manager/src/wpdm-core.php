@@ -219,6 +219,7 @@ function wpdm_recaptcha_enterprise_verify($token, $expected_action = '')
     // Score threshold can be configured if needed
     return [
         'success' => $valid,
+        'action' => isset($result['tokenProperties']['action']) ? (string)$result['tokenProperties']['action'] : '',
         'score' => $score,
         'error' => $valid ? '' : wpdm_recaptcha_get_error_message($invalid_reason),
         'error_code' => $invalid_reason,

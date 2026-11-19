@@ -116,6 +116,17 @@ class Asset
         return $url;
     }
 
+    /**
+     * Users without admin rights keep their Asset Manager files in a folder named after their
+     * login. Anyone can register a login, so the name alone proves nothing: the folder is only
+     * theirs if they are allowed to use the Asset Manager, which is what creates and fills it.
+     */
+    function inOwnFolder($user){
+        if(!$this->path || !$user || !$user->exists()) return false;
+        if(!user_can($user, 'access_server_browser') || !user_can($user, 'upload_files')) return false;
+        return strpos(wp_normalize_path($this->path), wp_normalize_path(trailingslashit(UPLOAD_DIR . $user->user_login))) === 0;
+    }
+
     function isGranted($grant){
         return is_string($grant) && $grant !== '' && $this->path && (bool)wp_verify_nonce($grant, 'wpdm_asset_grant|'.$this->path);
     }
@@ -271,8 +282,7 @@ class Asset
         if(in_array('guest', $roles)) return true;
         if(!$user || !$user->exists()) return false;
         if(user_can($user, 'manage_options')) return true;
-        // Users without admin rights keep their Asset Manager files in a folder of their own
-        if($this->path && strpos(wp_normalize_path($this->path), wp_normalize_path(trailingslashit(UPLOAD_DIR . $user->user_login))) === 0) return true;
+        if($this->inOwnFolder($user)) return true;
         if(count(array_intersect((array)$user->roles, $roles)) > 0) return true;
         if(in_array($user->user_login, $users)) return true;
         return false;

@@ -40,6 +40,7 @@ if (!defined('ABSPATH')) die();
     var onloadCallback = function() {
         grecaptcha.enterprise.render('reCaptchaLock_<?php echo esc_js($package['ID']); ?>', {
             'sitekey' : '<?php echo esc_js(get_option('_wpdm_recaptcha_site_key')); ?>',
+            'action' : '<?php echo esc_js(\WPDM\Package\PackageLocks::captchaAction($package['ID'])); ?>',
             'callback' : verifyCallback_<?php echo esc_js($package['ID']); ?>,
             'theme' : 'light'
         });

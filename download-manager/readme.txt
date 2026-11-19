@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.77
+Stable tag: 3.3.78
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,12 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.78 - 2026.11.20 =
+* Security: A captcha solved on one package could unlock another; each captcha is now tied to its own package ( Reported by Raj Ukani via WPScan )
+* Security: A user whose login matched an Asset Manager folder name was treated as its owner; own-folder access now needs Asset Manager access ( Reported by Jacek Sowiński via WPScan )
+* Security: [wpdm_all_packages] could print the body and other stored fields of password-protected packages; it now accepts a fixed set of display columns ( Reported by Karthik Ramakrishnan via WPScan )
+* Note: If you override the recaptcha-lock.php template, add the new "action" line from the bundled copy
 
 = 3.3.77 - 2026.11.16 =
 * Fixed: Password lock replied "Invalid request!" to logged-in users when the package's access roles didn't include "All Visitors"

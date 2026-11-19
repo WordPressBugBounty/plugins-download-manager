@@ -258,12 +258,27 @@ if(isset($params['jstable']) && $params['jstable']==1):
                 // branch below prints any key it is asked for: cols="post_password" showed
                 // other users' package passwords to any Contributor
                 unset($data['post_password']);
+                // A package behind a post password keeps its body and excerpt to itself until
+                // the visitor has entered that password, the same as on its own page
+                if(post_password_required($post)) {
+                    foreach (array('post_content', 'post_excerpt', 'post_content_filtered', 'description', 'excerpt') as $__hidden)
+                        $data[$__hidden] = '';
+                }
+                $__own_keys = array_keys($data);
                 $data['id'] = $data['ID'];
                 $data['files'] = WPDM()->package->getFiles(get_the_ID());
                 //$author = get_user_by('id', $post->post_author);
                 $data['author'] = $data['author_name'];
 
 	            $data = apply_filters('wpdm_all_packages_tags', $data);
+                // Columns the listing may print: a fixed set of display fields, the taxonomies,
+                // and whatever an add-on put in through the filter above. Not any stored field.
+                $__allowed_cols = array_merge(
+                    array('id', 'ID', 'title', 'page_link', 'page_url', 'description', 'post_content', 'post_excerpt', 'version', 'link_label', 'package_size', 'file_size', 'file_count', 'view_count', 'download_count', 'icon', 'thumb', 'preview', 'author', 'author_name', 'avatar', 'create_date', 'update_date', 'tags', 'download_link_extended', 'download_link_popup', 'effective_price', 'currency', 'price_range', 'base_price', 'sales_price', 'addtocart_link', 'addtocart_form', 'customer_download_link', 'free_download_btn', 'store_name'),
+                    $taxonomies,
+                    array_diff(array_keys($data), $__own_keys)
+                );
+                $__allowed_cols = apply_filters('wpdm_all_packages_allowed_cols', $__allowed_cols, $data);
 
                 if(isset($data['files'])&&count($data['files'])){
                     if(count($data['files']) == 1) {
@@ -374,7 +389,7 @@ if(isset($params['jstable']) && $params['jstable']==1):
 		                                echo "<span class='__dt_acf {$c}'>" . $value . "</span>";
 		                                break;
                                     default:
-                                        if(isset($data[$c])) {
+                                        if(isset($data[$c]) && is_scalar($data[$c]) && in_array($c, $__allowed_cols, true)) {
                                             if ($cx > 0)
                                                 echo "<span class='__dt_{$c} {$cxc}'>" . $data[$c] . "</span>";
                                             else
