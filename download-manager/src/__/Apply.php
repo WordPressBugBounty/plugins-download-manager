@@ -304,6 +304,19 @@ class Apply
 
         if ((($id != '' && is_user_logged_in() && count($matched) < 1 && !@in_array('guest', $package['access'])) || (!is_user_logged_in() && !@in_array('guest', $package['access']) && $id != ''))) {
             do_action("wpdm_download_permission_denied", $id);
+            // Send the visitor somewhere useful instead of a "permission-denied.txt" download:
+            // the login page when logged out (returning to the package after login), otherwise the package page
+            $package_url  = get_permalink( $id );
+            $redirect_url = '';
+            if ( $package_url ) {
+                $redirect_url = is_user_logged_in() ? $package_url : wpdm_login_url( $package_url );
+            }
+            $redirect_url = apply_filters( 'wpdm_download_permission_denied_redirect', $redirect_url, $id );
+            if ( $redirect_url ) {
+                nocache_headers();
+                wp_safe_redirect( $redirect_url );
+                die();
+            }
             wpdm_download_data("permission-denied.txt", __("You don't have permission to download this file", "download-manager"));
             die();
         } else {
@@ -524,6 +537,17 @@ class Apply
 
     }
 
+    /**
+     * Whether pages may load fonts from Google's servers.
+     * Follows Settings > User Interface > Google Fonts (off by default).
+     *
+     * @return bool
+     */
+    static function googleFontsEnabled()
+    {
+        return (bool) apply_filters('wpdm_google_fonts_enabled', (int) get_option('__wpdm_enable_gf', 0) === 1);
+    }
+
     static function googleFont()
     {
         $wpdmss = maybe_unserialize(get_option('__wpdm_disable_scripts', array()));
@@ -539,7 +563,7 @@ class Apply
         $css = WPDM()->packageTemplate->getStyles('link');
 
         ?>
-        <?php if ((int)get_option('__wpdm_enable_gf', 0) === 1 && get_option('__wpdm_google_font') !== '') { ?>
+        <?php if (self::googleFontsEnabled() && get_option('__wpdm_google_font') !== '') { ?>
         <link href="https://fonts.googleapis.com/css2?family=<?php echo get_option('__wpdm_google_font', 'Sen'); ?>"
               rel="stylesheet">
         <style>

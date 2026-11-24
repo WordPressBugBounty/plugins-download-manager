@@ -34,8 +34,10 @@ class PackageTemplate
             if(!strpos(strip_tags($template), "]")){
 
                 //PHP templates ( php file )
+                // File name only: a template is always loaded from a {type}-templates directory, never from a path
                 $template = wpdm_basename($template);
                 $template = str_replace(".php", "", $template).".php";
+                if(in_array($template, ['.php', '..php'], true) || !Template::isSafeName($template)) $template = $default[$type];
 
                 $template_file = Template::locate("{$type}-templates/{$template}", __DIR__.'/views');
                 if(!$template_file)

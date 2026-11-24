@@ -10,7 +10,20 @@ class Template
         return $this;
     }
 
+    /**
+     * A template name must stay inside the template directories: no parent-directory segments, no null bytes.
+     *
+     * @param mixed $file
+     *
+     * @return bool
+     */
+    public static function isSafeName($file){
+        return is_string($file) && strpos($file, "\0") === false && !preg_match('#(^|[\\\\/])\.\.([\\\\/]|$)#', $file);
+    }
+
     public static function locate($file, $tpldir = '', $fallback = ''){
+
+        if(!self::isSafeName($file)) return '';
 
         $template_dirs = array(
             get_stylesheet_directory().'/download-manager/',

@@ -15,7 +15,9 @@ if(is_admin()){
 }
 ?>
     <style>
+        <?php if (\WPDM\__\Apply::googleFontsEnabled()) { ?>
         @import url("https://fonts.googleapis.com/css2?family=Overpass+Mono&subset=latin");
+        <?php } ?>
         #wpcontent{
             padding-left: 0 !important;
         }

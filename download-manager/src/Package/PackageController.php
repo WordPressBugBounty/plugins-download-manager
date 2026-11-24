@@ -278,6 +278,8 @@ class PackageController extends PackageTemplate {
 					$vid = $match[1];
 				}
 				if ( isset( $vid ) ) {
+					// A video ID is letters, digits, dashes and underscores; drop anything after it
+					$vid = preg_replace( '/[^A-Za-z0-9_\-].*$/s', '', $vid );
 					$post_vars['youtube_thumb_0'] = '<img src="https://img.youtube.com/vi/' . $vid . '/0.jpg" alt="Thumb 0" />';
 					$post_vars['youtube_thumb_1'] = '<img src="https://img.youtube.com/vi/' . $vid . '/1.jpg" alt="Thumb 1" />';
 					$post_vars['youtube_thumb_2'] = '<img src="https://img.youtube.com/vi/' . $vid . '/2.jpg" alt="Thumb 2" />';
@@ -917,7 +919,7 @@ class PackageController extends PackageTemplate {
 
 		$song = $audio != null ? FileSystem::mediaURL( $package['ID'], $audx, basename( $audio ) ) : '';
 		if ( $song !== '' ) {
-			$audiohtml = "<button data-player='wpdm-audio-player' data-song='{$song}' class='btn btn-{$style} wpdm-btn-play'><i class='fa fa-play'></i></button>";
+			$audiohtml = "<button data-player='wpdm-audio-player' data-song='" . esc_url( $song ) . "' class='btn btn-" . esc_attr( $style ) . " wpdm-btn-play'><i class='fa fa-play'></i></button>";
 			$audiohtml = apply_filters( "wpdm_audio_play_button", $audiohtml, $song, $package, 0 );
 		}
 
@@ -967,7 +969,7 @@ class PackageController extends PackageTemplate {
 					//$video = $url . "&ind={$ind}&play=" . basename($videos[$mmv]);
 					$video = FileSystem::mediaURL( $ID, $ind, wpdm_basename( $videos[ $mmv ] ) );
 
-					$videothumbs .= "<a href='#' data-video='{$video}' class='__wpdm_playvideo'><img class='thumbnail' src='" . esc_url( wpdm_dynamic_thumb( $mpv, array( 64, 64 ) ) ) . "'/></a>";
+					$videothumbs .= "<a href='#' data-video='" . esc_url( $video ) . "' class='__wpdm_playvideo'><img class='thumbnail' src='" . esc_url( wpdm_dynamic_thumb( $mpv, array( 64, 64 ) ) ) . "'/></a>";
 				}
 				$mmv ++;
 			}
@@ -981,7 +983,7 @@ class PackageController extends PackageTemplate {
 			$video = FileSystem::mediaURL( $ID, $ind, wpdm_basename( $videos[0] ) );
 
 			if ( $video !== '' ) {
-				$player_html = "<video id='__wpdm_videoplayer' class='thumbnail' width=\"{$width}\" controls controlsList='nodownload'><source src=\"{$video}\" type=\"video/mp4\">Your browser does not support HTML5 video.</video><div class='videothumbs'>{$videothumbs}</div>";
+				$player_html = "<video id='__wpdm_videoplayer' class='thumbnail' width=\"" . (int) $width . "\" controls controlsList='nodownload'><source src=\"" . esc_url( $video ) . "\" type=\"video/mp4\">Your browser does not support HTML5 video.</video><div class='videothumbs'>{$videothumbs}</div>";
 			}
 			//if(!WPDM()->package->userCanAccess($ID)) $player_html = \WPDM\__\Messages::Error(stripslashes(get_option('wpdm_permission_msg')), -1);
 		}
@@ -1018,7 +1020,7 @@ class PackageController extends PackageTemplate {
 			case 'png':
 			case 'jpg':
 			case 'jpeg':
-				return "<img src='" . FileSystem::imageThumbnail( $realpath, $width, $height ) . "' alt='" . esc_attr(get_the_title( $ID )) . "'/>";
+				return "<img src='" . esc_url( FileSystem::imageThumbnail( $realpath, $width, $height ) ) . "' alt='" . esc_attr(get_the_title( $ID )) . "'/>";
 			case 'pdf':
 				//The preview key bypasses all locks and access roles of the package
 				if ( ! $this->userCanAccess( $ID ) || $this->isLocked( $ID ) ) {

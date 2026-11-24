@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) die();
     $font = explode(":", $_font);
     $font = $font[0];
     $font = $font ? $font . ',' : '';
-    if($_font) {
+    if($_font && \WPDM\__\Apply::googleFontsEnabled()) {
     ?>
     <link href="https://fonts.googleapis.com/css2?family=<?php echo str_replace("regular", 400, $_font); ?>" rel="stylesheet">
     <?php } ?>

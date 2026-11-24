@@ -47,7 +47,9 @@ class PackageService {
 			} else if ( $meta_key == 'files' ) {
 				foreach ( $meta_value as &$value ) {
 					$value = wpdm_escs( $value );
-					if ( ! __::is_url( $value ) ) {
+					if ( __::is_url( $value ) ) {
+						$value = wp_slash( self::sanitizeFileUrl( $value ) );
+					} else {
 						if ( WPDM()->fileSystem->isBlocked( $value ) ) {
 							$value = '';
 						}
@@ -59,6 +61,8 @@ class PackageService {
 				}
 				unset( $value );
 				$meta_value = array_unique( $meta_value );
+			} else if ( $meta_key == 'page_template' || $meta_key == 'template' ) {
+				$meta_value = self::sanitizeTemplateId( $meta_value );
 			} else if ( $meta_key == 'additional_previews' ) {
 				$meta_value = self::sanitizePreviews( $meta_value );
 			} else if ( $meta_key == 'terms_conditions' ) {
@@ -83,6 +87,28 @@ class PackageService {
 		}
 	}
 
+
+	/**
+	 * Template fields hold a template file name or a custom template ID, never template markup.
+	 *
+	 * @param mixed $template
+	 *
+	 * @return string
+	 */
+	public static function sanitizeTemplateId( $template ) {
+		return is_scalar( $template ) ? trim( preg_replace( '/[^\p{L}\p{N}_.\- ]/u', '', (string) $template ) ) : '';
+	}
+
+	/**
+	 * Percent-encode the characters that could close an HTML attribute or open a tag in a remote file URL.
+	 *
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	public static function sanitizeFileUrl( $url ) {
+		return str_replace( [ '<', '>', '"', "'", '`' ], [ '%3C', '%3E', '%22', '%27', '%60' ], wp_unslash( (string) $url ) );
+	}
 
 	/**
 	 * Additional previews are attachment IDs or image URLs; anything else is dropped so a

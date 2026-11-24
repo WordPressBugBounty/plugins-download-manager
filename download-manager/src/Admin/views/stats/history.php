@@ -135,6 +135,14 @@ $pagination           = array(
 
 ?>
 
+<?php
+$cats = wpdm_query_var( 'cats' );
+$cats = is_array( $cats ) ? array_map( 'intval', $cats ) : [];
+
+// How many filters are narrowing the list right now
+$active_filter_count = ( ! empty( $user_ids ) ? 1 : 0 ) + ( ! empty( $package_ids ) ? 1 : 0 ) + ( ! empty( $cats ) ? 1 : 0 )
+                       + ( ( $from_date_string || $to_date_string ) ? 1 : 0 );
+?>
 <!-- Elegant Filters Section -->
 <div class="wpdm-history-filters">
     <form method="get" action="<?php echo admin_url( 'edit.php' ); ?>" class="elegant-filter-form">
@@ -143,45 +151,22 @@ $pagination           = array(
         <input type="hidden" name="type" value="history"/>
         <input type="hidden" name="filter" value="1"/>
 
-        <!-- Filter Header -->
+        <!-- Filter Header: title on the left, date presets on the right -->
         <div class="filter-header">
             <div class="filter-title">
-                <i class="fas fa-filter"></i>
+                <span class="filter-title-icon"><i class="fas fa-sliders-h"></i></span>
                 <h3><?php _e('Advanced Filters', 'download-manager'); ?></h3>
-            </div>
-            <div class="filter-summary">
-                <?php if (!empty($user_ids) || !empty($package_ids) || isset($cats) || $from_date_string || $to_date_string): ?>
+                <?php if ( $active_filter_count > 0 ): ?>
                     <span class="active-filters-badge">
-						<i class="fas fa-check-circle"></i>
-						<?php _e('Filters Applied', 'download-manager'); ?>
-					</span>
+                        <?php echo esc_html( sprintf( __( '%d active', 'download-manager' ), $active_filter_count ) ); ?>
+                    </span>
                 <?php endif; ?>
             </div>
-        </div>
-
-        <!-- Quick Date Presets -->
-        <div class="quick-filters-section">
-            <div class="quick-filters-title">
-                <i class="fas fa-clock"></i>
-                <?php _e('Quick Date Ranges', 'download-manager'); ?>
-            </div>
-            <div class="quick-filter-buttons">
-                <button type="button" class="quick-filter-btn" data-days="1">
-                    <i class="fas fa-calendar-day"></i>
-                    <?php _e('Today', 'download-manager'); ?>
-                </button>
-                <button type="button" class="quick-filter-btn" data-days="7">
-                    <i class="fas fa-calendar-week"></i>
-                    <?php _e('Last 7 Days', 'download-manager'); ?>
-                </button>
-                <button type="button" class="quick-filter-btn" data-days="30">
-                    <i class="fas fa-calendar-alt"></i>
-                    <?php _e('Last 30 Days', 'download-manager'); ?>
-                </button>
-                <button type="button" class="quick-filter-btn" data-days="90">
-                    <i class="fas fa-calendar"></i>
-                    <?php _e('Last 90 Days', 'download-manager'); ?>
-                </button>
+            <div class="quick-filter-buttons" role="group" aria-label="<?php esc_attr_e('Quick Date Ranges', 'download-manager'); ?>">
+                <button type="button" class="quick-filter-btn" data-days="1"><?php _e('Today', 'download-manager'); ?></button>
+                <button type="button" class="quick-filter-btn" data-days="7"><?php _e('Last 7 Days', 'download-manager'); ?></button>
+                <button type="button" class="quick-filter-btn" data-days="30"><?php _e('Last 30 Days', 'download-manager'); ?></button>
+                <button type="button" class="quick-filter-btn" data-days="90"><?php _e('Last 90 Days', 'download-manager'); ?></button>
             </div>
         </div>
 
@@ -193,17 +178,14 @@ $pagination           = array(
                     <i class="fas fa-calendar-alt"></i>
                     <h4><?php _e('Date Range', 'download-manager'); ?></h4>
                 </div>
-                <div class="date-inputs">
-                    <div class="date-input-group">
-                        <input type="text" name="from_date" value="<?php echo $selected_from_date->format( 'Y-m-d' ) ?>"
-                               class="datepicker form-control" readonly="readonly"
-                               aria-label="<?php esc_attr_e('From date', 'download-manager'); ?>"/>
-                    </div>
-                    <div class="date-input-group">
-                        <input type="text" name="to_date" value="<?php echo $selected_to_date->format( 'Y-m-d' ) ?>"
-                               class="datepicker form-control" readonly="readonly"
-                               aria-label="<?php esc_attr_e('To date', 'download-manager'); ?>"/>
-                    </div>
+                <div class="date-range">
+                    <input type="text" name="from_date" value="<?php echo $selected_from_date->format( 'Y-m-d' ) ?>"
+                           class="datepicker" readonly="readonly"
+                           aria-label="<?php esc_attr_e('From date', 'download-manager'); ?>"/>
+                    <span class="date-range-sep" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
+                    <input type="text" name="to_date" value="<?php echo $selected_to_date->format( 'Y-m-d' ) ?>"
+                           class="datepicker" readonly="readonly"
+                           aria-label="<?php esc_attr_e('To date', 'download-manager'); ?>"/>
                 </div>
             </div>
 
@@ -238,8 +220,6 @@ $pagination           = array(
 
             <!-- Categories Filter Section -->
             <?php
-            $cats = wpdm_query_var( 'cats' );
-            $cats = is_array($cats) ? array_map('intval', $cats) : [];
             function printOptions($options, $level = 0, $selected_cats = []) {
                 $pstr = $level > 0 ? str_pad(" ", $level*2+1, "—",  STR_PAD_LEFT) : '';
                 foreach ($options as $option) {
@@ -314,15 +294,15 @@ $pagination           = array(
                 <i class="fas fa-search"></i>
                 <?php _e('Apply Filters', 'download-manager'); ?>
             </button>
-            <a href="edit.php?post_type=wpdmpro&page=wpdm-stats&task=export&__xnonce=<?php echo wp_create_nonce( NONCE_KEY ); ?>&hash=<?php echo $hash; ?>"
-               class="btn btn-secondary">
-                <i class="fas fa-file-export"></i>
-                <?php _e('Export Results', 'download-manager'); ?>
-            </a>
             <a href="edit.php?post_type=wpdmpro&page=wpdm-stats&type=history"
-               class="btn btn-secondary">
+               class="btn btn-reset">
                 <i class="fas fa-undo"></i>
                 <?php _e('Reset All', 'download-manager'); ?>
+            </a>
+            <a href="edit.php?post_type=wpdmpro&page=wpdm-stats&task=export&__xnonce=<?php echo wp_create_nonce( NONCE_KEY ); ?>&hash=<?php echo $hash; ?>"
+               class="btn btn-secondary btn-export">
+                <i class="fas fa-file-export"></i>
+                <?php _e('Export Results', 'download-manager'); ?>
             </a>
         </div>
     </form>
@@ -985,32 +965,35 @@ $pagination           = array(
         // Re-initialize if content changes (for dynamic loading)
         setTimeout(initializeSelect2, 1000);
 
-        // Quick date filter functionality
-        $('.quick-filter-btn').click(function(e) {
-            e.preventDefault();
-            var days = $(this).data('days');
+        // Quick date presets
+        var formatDate = function(date) {
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        };
+
+        var presetRange = function(days) {
             var today = new Date();
             var fromDate = new Date();
+            fromDate.setDate(today.getDate() - days + 1);
+            return { from: formatDate(fromDate), to: formatDate(today) };
+        };
 
-            if (days === 1) {
-                // Today only
-                fromDate = new Date(today);
-            } else {
-                // Calculate past date
-                fromDate.setDate(today.getDate() - days + 1);
-            }
+        // Highlight the preset that matches the dates currently applied
+        $('.quick-filter-btn').each(function() {
+            var range = presetRange(parseInt($(this).data('days'), 10));
+            var match = $('input[name="from_date"]').val() === range.from && $('input[name="to_date"]').val() === range.to;
+            $(this).toggleClass('active', match).attr('aria-pressed', match ? 'true' : 'false');
+        });
 
-            // Format dates for input fields
-            var formatDate = function(date) {
-                var year = date.getFullYear();
-                var month = String(date.getMonth() + 1).padStart(2, '0');
-                var day = String(date.getDate()).padStart(2, '0');
-                return year + '-' + month + '-' + day;
-            };
+        $('.quick-filter-btn').click(function(e) {
+            e.preventDefault();
+            var range = presetRange(parseInt($(this).data('days'), 10));
 
             // Set the values directly to input fields
-            $('input[name="from_date"]').val(formatDate(fromDate));
-            $('input[name="to_date"]').val(formatDate(today));
+            $('input[name="from_date"]').val(range.from);
+            $('input[name="to_date"]').val(range.to);
 
             // Visual feedback
             $('.quick-filter-btn').removeClass('active');

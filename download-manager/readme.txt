@@ -5,7 +5,7 @@ Tags: download manager, document management, file manager, digital store, ecomme
 Requires at least: 5.3
 Tested up to: 7.1
 License: GPLv3
-Stable tag: 3.3.78
+Stable tag: 3.3.79
 
 This File Management & Digital Store plugin will help you to control file downloads & sell digital products from your WP site.
 
@@ -201,6 +201,14 @@ By using this plugin, you acknowledge and agree to the terms and policies of the
 19. More features
 
 == Changelog ==
+
+= 3.3.79 - 2026.11.24 =
+* New: wpdm_google_fonts_enabled and wpdm_download_permission_denied_redirect filters
+* Improved: A download without permission now redirects to the login page, or to the package page when logged in, instead of sending permission-denied.txt
+* Improved: Redesigned the filter panel on the Download History stats page
+* Fixed: Message, lock and media pages loaded Google Fonts even when Google Fonts was disabled in settings
+* Security: A crafted file URL could inject scripts through the audio and video players and YouTube template tags; file URLs are now cleaned on save and escaped on output ( Reported via Wordfence )
+* Security: The package template field could load a PHP file outside the template folders; template names can no longer contain a path ( Reported via Wordfence )
 
 = 3.3.78 - 2026.11.20 =
 * Security: A captcha solved on one package could unlock another; each captcha is now tied to its own package ( Reported by Raj Ukani via WPScan )

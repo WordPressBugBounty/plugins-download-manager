@@ -22,13 +22,15 @@ $picon = "<img width='48px' src='".WPDM_ASSET_URL."images/locked.png' />";
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.js"></script>
     <script src="<?php echo includes_url(); ?>/js/jquery/jquery.form.js"></script>
     <script src="<?php echo WPDM_BASE_URL; ?>assets/js/wpdm.js"></script>
+    <?php if (\WPDM\__\Apply::googleFontsEnabled()) { ?>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:300,400,700" rel="stylesheet">
+    <?php } ?>
     <?php
     WPDM()->apply::uiColors();
     ?>
     <style>
         body{
-            font-family: "Merriweather Sans", sans-serif;
+            font-family: "Merriweather Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-weight: 400;
             font-size: 10px;
             color: #425676;

@@ -1170,7 +1170,7 @@ class FileSystem {
 			$fileName = wpdm_basename( $files[ $fileID ] );
 		}
 
-		return WPDM()->package->expirableDownloadLink( $pid, 5, 1800 ) . "&ind={$fileID}&file={$fileName}";
+		return WPDM()->package->expirableDownloadLink( $pid, 5, 1800 ) . "&ind=" . rawurlencode( (string) $fileID ) . "&file=" . rawurlencode( (string) $fileName );
 	}
 
 	/**

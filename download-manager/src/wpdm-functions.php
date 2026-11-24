@@ -169,12 +169,9 @@ function wpdm_get_excerpt($post, $length = 100, $word_break = false, $continue =
  */
 function wpdm_basename($file)
 {
-    if (strpos("~" . $file, "\\"))
-        $basename = explode("\\", $file);
-    else
-        $basename = explode("/", $file);
-    $basename = end($basename);
-    return $basename;
+    // Split on both separators, so a path mixing "\\" and "/" cannot keep its directory part
+    $basename = preg_split('#[\\\\/]#', (string) $file);
+    return (string) end($basename);
 }
 
 /**
@@ -780,6 +777,7 @@ function wpdm_tpl_path($file, $tpldir = '', $fallback = '')
  */
 function wpdm_admin_tpl_path($file, $tpldir = '', $fallback = '')
 {
+    if (!Template::isSafeName($file)) return '';
     if (file_exists(get_stylesheet_directory() . '/download-manager/admin/' . $file))
         $path = get_stylesheet_directory() . '/download-manager/admin/' . $file;
     else if (file_exists(get_template_directory() . '/download-manager/admin/' . $file))
