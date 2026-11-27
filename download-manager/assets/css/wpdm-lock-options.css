@@ -38,7 +38,7 @@
 #lock-options .wpdm-locks__header-text p {
     margin: 0;
     font-size: 13px;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
 }
 
 #lock-options .wpdm-locks__section-header {
@@ -49,7 +49,7 @@
     margin-top: 8px;
     font-size: 12px;
     font-weight: 600;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -65,7 +65,7 @@
 /* Lock Card */
 #lock-options .wpdm-lock-card {
     background: #fff;
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--wpdm-border);
     border-radius: 12px;
     overflow: hidden;
     transition: all 0.2s ease;
@@ -75,7 +75,7 @@
 
 #lock-options .wpdm-lock-card--active {
     border-color: var(--color-primary, #6366f1);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
 }
 
 #lock-options .wpdm-lock-card__header {
@@ -120,7 +120,7 @@
 #lock-options .wpdm-lock-card__desc {
     display: block;
     font-size: 12px;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
 }
 
 /* Toggle Switch */
@@ -194,7 +194,7 @@
 
 #lock-options .wpdm-lock-field__hint {
     font-weight: 400;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
     margin-left: 8px;
 }
 
@@ -209,7 +209,7 @@
     line-height: 1.4;
     color: var(--color-dark, #1e293b);
     background: var(--color-light, #f8fafc);
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--wpdm-border);
     border-radius: 8px;
     box-shadow: none;
     transition: all 0.15s ease;
@@ -221,12 +221,12 @@
     outline: none;
     background: #fff;
     border-color: var(--color-primary, #6366f1);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
 }
 
 #lock-options .wpdm-lock-field__input::placeholder,
 #lock-options .wpdm-lock-field__textarea::placeholder {
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
 }
 
 #lock-options .wpdm-lock-field__textarea {
@@ -246,9 +246,9 @@
     padding: 0 12px;
     font-size: 14px;
     font-weight: 500;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
     background: #e2e8f0;
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--wpdm-border);
     border-right: none;
     border-radius: 8px 0 0 8px;
 }
@@ -258,9 +258,9 @@
     align-items: center;
     padding: 0 12px;
     font-size: 13px;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
     background: var(--color-light-hover, #f1f5f9);
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--wpdm-border);
     border-radius: 8px;
     white-space: nowrap;
 }
@@ -288,7 +288,7 @@
     display: block;
     margin-top: 6px;
     font-size: 12px;
-    color: var(--color-muted, #64748b);
+    color: var(--wpdm-text-muted);
 }
 
 #lock-options .wpdm-lock-field-row {
@@ -397,7 +397,7 @@
 /* wp_editor inside a lock body */
 #lock-options .wpdm-lock-field .wp-editor-wrap { margin-top: 2px; }
 #lock-options .wpdm-lock-field .wp-editor-wrap .wp-editor-area {
-    border: 1px solid var(--color-border, #e2e8f0);
+    border: 1px solid var(--wpdm-border);
     border-radius: 0 0 8px 8px;
 }
 

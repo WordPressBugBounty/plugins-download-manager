@@ -25,6 +25,134 @@
  */
 
 /* ==========================================================================
+   Design tokens: neutral colours, radius, type, spacing, shadow, motion and
+   layers. Kept identical in front.css and adminui/css/base.css; dark mode
+   (front-dark.css) swaps these values.
+   ========================================================================== */
+:root {
+    /* ----------------------------------------------------------------------
+       Neutral palette (slate)
+       ---------------------------------------------------------------------- */
+    --wpdm-slate-50: #f8fafc;
+    --wpdm-slate-100: #f1f5f9;
+    --wpdm-slate-200: #e2e8f0;
+    --wpdm-slate-300: #cbd5e1;
+    --wpdm-slate-400: #94a3b8;
+    --wpdm-slate-500: #64748b;
+    --wpdm-slate-600: #475569;
+    --wpdm-slate-700: #334155;
+    --wpdm-slate-800: #1e293b;
+    --wpdm-slate-900: #0f172a;
+
+    /* ----------------------------------------------------------------------
+       Semantic colours (light)
+       ---------------------------------------------------------------------- */
+    --wpdm-surface: #ffffff;                       /* cards, inputs, panels */
+    --wpdm-surface-muted: var(--wpdm-slate-50);    /* headers, alternate rows */
+    --wpdm-surface-sunken: var(--wpdm-slate-100);  /* wells, hover fills */
+    --wpdm-page-bg: #f8fbfd;                       /* admin page background */
+
+    --wpdm-border: var(--wpdm-slate-200);
+    --wpdm-border-light: var(--wpdm-slate-100);
+    --wpdm-border-strong: var(--wpdm-slate-300);
+
+    --wpdm-text: var(--wpdm-slate-800);            /* body and headings */
+    --wpdm-text-secondary: var(--wpdm-slate-600);  /* supporting text */
+    --wpdm-text-muted: var(--wpdm-slate-500);      /* labels, meta */
+    --wpdm-text-subtle: var(--wpdm-slate-400);     /* placeholders, icons */
+    --wpdm-text-faint: var(--wpdm-slate-300);      /* disabled, dividers in text */
+
+    /* ----------------------------------------------------------------------
+       Radius
+       ---------------------------------------------------------------------- */
+    --wpdm-radius-sm: 4px;       /* badges, small chips */
+    --wpdm-radius-control: 6px;  /* admin inputs and buttons */
+    --wpdm-radius: 8px;          /* default: buttons, inputs, list rows */
+    --wpdm-radius-lg: 12px;      /* cards, panels */
+    --wpdm-radius-xl: 16px;      /* large containers, modals */
+    --wpdm-radius-pill: 9999px;
+
+    /* ----------------------------------------------------------------------
+       Control sizes (inputs, selects, buttons and pagination share them)
+       ---------------------------------------------------------------------- */
+    --wpdm-control-h-sm: 32px;
+    --wpdm-control-h: 40px;
+    --wpdm-control-h-lg: 48px;
+
+    /* ----------------------------------------------------------------------
+       Typography
+       ---------------------------------------------------------------------- */
+    --wpdm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --wpdm-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --wpdm-font: var(--wpdm-font-sans);
+
+    --wpdm-fs-2xs: 0.6875rem;  /* 11px */
+    --wpdm-fs-xs: 0.75rem;     /* 12px */
+    --wpdm-fs-sm: 0.8125rem;   /* 13px */
+    --wpdm-fs-base: 0.875rem;  /* 14px */
+    --wpdm-fs-md: 1rem;        /* 16px */
+    --wpdm-fs-lg: 1.125rem;    /* 18px */
+    --wpdm-fs-xl: 1.25rem;     /* 20px */
+    --wpdm-fs-2xl: 1.5rem;     /* 24px */
+    --wpdm-fs-3xl: 1.875rem;   /* 30px */
+
+    --wpdm-fw-normal: 400;
+    --wpdm-fw-medium: 500;
+    --wpdm-fw-semibold: 600;
+    --wpdm-fw-bold: 700;
+
+    --wpdm-lh-tight: 1.25;
+    --wpdm-lh-snug: 1.4;
+    --wpdm-lh: 1.5;
+
+    /* ----------------------------------------------------------------------
+       Spacing (4px steps)
+       ---------------------------------------------------------------------- */
+    --wpdm-space-1: 4px;
+    --wpdm-space-2: 8px;
+    --wpdm-space-3: 12px;
+    --wpdm-space-4: 16px;
+    --wpdm-space-5: 20px;
+    --wpdm-space-6: 24px;
+    --wpdm-space-8: 32px;
+    --wpdm-space-10: 40px;
+    --wpdm-space-12: 48px;
+
+    /* ----------------------------------------------------------------------
+       Shadows
+       ---------------------------------------------------------------------- */
+    --wpdm-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --wpdm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --wpdm-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --wpdm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+
+    /* ----------------------------------------------------------------------
+       Motion
+       ---------------------------------------------------------------------- */
+    --wpdm-duration-fast: 150ms;
+    --wpdm-duration: 200ms;
+    --wpdm-duration-slow: 300ms;
+    --wpdm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Full transition shorthands, kept for the admin styles that use them */
+    --wpdm-transition-fast: all 0.15s ease;
+    --wpdm-transition: all 0.2s ease;
+    --wpdm-transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ----------------------------------------------------------------------
+       Layers (z-index). The WordPress admin bar sits at 99999.
+       ---------------------------------------------------------------------- */
+    --wpdm-z-raised: 1;
+    --wpdm-z-dropdown: 1000;
+    --wpdm-z-sticky: 1020;
+    --wpdm-z-overlay: 1040;
+    --wpdm-z-modal: 1050;
+    --wpdm-z-popover: 1070;
+    --wpdm-z-toast: 1090;
+    --wpdm-z-top: 100000;
+}
+
+/* ==========================================================================
    1. CSS Variables
    Color variables (--color-primary, --clr-sec, etc.) are declared by
    Apply::uiColors() in <head>. Only non-color variables defined here.
@@ -39,53 +167,55 @@
     --color-warning-light: rgba(var(--color-warning-rgb), 0.1);
     --color-danger-light: rgba(var(--color-danger-rgb), 0.1);
 
+    /* Neutrals, radius, shadow and motion map onto the design tokens above */
+
     /* Light Colors */
-    --color-light: #f8fafc;
-    --color-light-hover: #f1f5f9;
+    --color-light: var(--wpdm-slate-50);
+    --color-light-hover: var(--wpdm-slate-100);
 
     /* Dark Colors */
-    --color-dark: #1e293b;
-    --color-dark-hover: #0f172a;
+    --color-dark: var(--wpdm-slate-800);
+    --color-dark-hover: var(--wpdm-slate-900);
 
     /* Backgrounds */
-    --bg-body: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-tertiary: #f1f5f9;
+    --bg-body: var(--wpdm-surface);
+    --bg-secondary: var(--wpdm-surface-muted);
+    --bg-tertiary: var(--wpdm-surface-sunken);
 
     /* Text Colors */
-    --text-primary: #1e293b;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --text-light: #cbd5e1;
+    --text-primary: var(--wpdm-text);
+    --text-secondary: var(--wpdm-text-secondary);
+    --text-muted: var(--wpdm-text-subtle);
+    --text-light: var(--wpdm-text-faint);
 
     /* Borders */
-    --border-color: #e2e8f0;
-    --border-light: #f1f5f9;
+    --border-color: var(--wpdm-border);
+    --border-light: var(--wpdm-border-light);
 
     /* Sizing */
-    --radius-sm: 4px;
-    --radius: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --radius-full: 9999px;
+    --radius-sm: var(--wpdm-radius-sm);
+    --radius: var(--wpdm-radius);
+    --radius-lg: var(--wpdm-radius-lg);
+    --radius-xl: var(--wpdm-radius-xl);
+    --radius-full: var(--wpdm-radius-pill);
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-sm: var(--wpdm-shadow-xs);
+    --shadow: var(--wpdm-shadow-sm);
+    --shadow-md: var(--wpdm-shadow);
+    --shadow-lg: var(--wpdm-shadow-lg);
 
     /* Transitions */
-    --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: var(--wpdm-duration-fast) var(--wpdm-ease);
+    --transition-slow: var(--wpdm-duration-slow) var(--wpdm-ease);
 
     /* Dark Mode Variables */
-    --dm-bg: #0f172a;
-    --dm-bg-secondary: #1e293b;
-    --dm-bg-tertiary: #334155;
-    --dm-text: #f1f5f9;
-    --dm-text-secondary: #cbd5e1;
-    --dm-text-muted: #94a3b8;
+    --dm-bg: var(--wpdm-slate-900);
+    --dm-bg-secondary: var(--wpdm-slate-800);
+    --dm-bg-tertiary: var(--wpdm-slate-700);
+    --dm-text: var(--wpdm-slate-100);
+    --dm-text-secondary: var(--wpdm-slate-300);
+    --dm-text-muted: var(--wpdm-slate-400);
     --dm-border: rgba(255, 255, 255, 0.1);
     --dm-border-light: rgba(255, 255, 255, 0.05);
 }
@@ -97,6 +227,9 @@
 .w3eden {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Font Awesome 7 makes icons fixed-width by default; keep their natural
+       width (.fa-fw still gives a fixed width) */
+    --fa-width: auto;
 }
 
 .w3eden *,
@@ -346,7 +479,7 @@
 .w3eden .form-control {
     display: block;
     width: 100%;
-    height: 42px;
+    height: var(--wpdm-control-h);
     padding: 0.5rem 0.875rem;
     font-size: 0.9375rem;
     font-weight: 400;
@@ -381,6 +514,66 @@
     opacity: 1;
 }
 
+.w3eden .form-control:disabled,
+.w3eden .form-select:disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+/* Validation (Bootstrap classes, plus the .error class jQuery Validate adds) */
+.w3eden .form-control.is-invalid,
+.w3eden .form-select.is-invalid,
+.w3eden .form-control.error {
+    border-color: var(--color-danger);
+}
+
+.w3eden .form-control.is-invalid:focus,
+.w3eden .form-select.is-invalid:focus,
+.w3eden .form-control.error:focus {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.15);
+}
+
+.w3eden .form-control.is-valid,
+.w3eden .form-select.is-valid {
+    border-color: var(--color-success);
+}
+
+.w3eden .form-control.is-valid:focus,
+.w3eden .form-select.is-valid:focus {
+    border-color: var(--color-success);
+    box-shadow: 0 0 0 3px rgba(var(--color-success-rgb), 0.15);
+}
+
+.w3eden .invalid-feedback,
+.w3eden .valid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: var(--wpdm-space-1);
+    font-size: var(--wpdm-fs-sm);
+}
+
+.w3eden .invalid-feedback,
+.w3eden label.error {
+    color: var(--color-danger);
+}
+
+.w3eden .valid-feedback {
+    color: var(--color-success);
+}
+
+.w3eden .is-invalid ~ .invalid-feedback,
+.w3eden .is-valid ~ .valid-feedback {
+    display: block;
+}
+
+.w3eden label.error {
+    display: block;
+    margin-top: var(--wpdm-space-1);
+    font-size: var(--wpdm-fs-sm);
+    font-weight: var(--wpdm-fw-normal);
+}
+
 /* Textarea */
 .w3eden textarea.form-control {
     min-height: calc(1.5em + 0.75rem + 2px);
@@ -389,14 +582,14 @@
 
 /* Form control sizes */
 .w3eden .form-control-sm {
-    height: 34px;
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
-    border-radius: var(--radius-sm);
+    height: var(--wpdm-control-h-sm);
+    padding: 0.25rem 0.75rem;
+    font-size: var(--wpdm-fs-sm);
+    border-radius: var(--wpdm-radius-control);
 }
 
 .w3eden .form-control-lg {
-    height: 50px;
+    height: var(--wpdm-control-h-lg);
     padding: 0.625rem 1rem;
     font-size: 1.0625rem;
     border-radius: var(--radius);
@@ -407,7 +600,7 @@
 .w3eden select.form-control {
     display: block;
     width: 100%;
-    height: 42px;
+    height: var(--wpdm-control-h);
     padding: 0.5rem 2.5rem 0.5rem 0.875rem;
     font-size: 0.9375rem;
     font-weight: 400;
@@ -588,10 +781,10 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    min-height: 38px;
+    min-height: var(--wpdm-control-h);
     font-family: inherit;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--wpdm-fs-base);
+    font-weight: var(--wpdm-fw-medium);
     line-height: 1;
     text-align: center;
     text-decoration: none;
@@ -616,6 +809,11 @@
     opacity: 0.65;
 }
 
+/* Pressed */
+.w3eden .btn:active:not(:disabled):not(.disabled) {
+    transform: translateY(1px);
+}
+
 /* Button variants */
 .w3eden .btn-primary {
     color: #fff;
@@ -631,6 +829,13 @@
 
 .w3eden .btn-primary:focus {
     box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.35);
+}
+
+.w3eden .btn-primary:active,
+.w3eden .btn-primary.active {
+    color: #fff;
+    background-color: var(--color-primary-active);
+    border-color: var(--color-primary-active);
 }
 
 .w3eden .btn-secondary {
@@ -663,6 +868,13 @@
 
 .w3eden .btn-success:focus {
     box-shadow: 0 0 0 3px rgba(var(--color-success-rgb), 0.35);
+}
+
+.w3eden .btn-success:active,
+.w3eden .btn-success.active {
+    color: #fff;
+    background-color: var(--color-success-active);
+    border-color: var(--color-success-active);
 }
 
 .w3eden .btn-info {
@@ -711,6 +923,13 @@
 
 .w3eden .btn-danger:focus {
     box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.35);
+}
+
+.w3eden .btn-danger:active,
+.w3eden .btn-danger.active {
+    color: #fff;
+    background-color: var(--color-danger-active);
+    border-color: var(--color-danger-active);
 }
 
 .w3eden .btn-light {
@@ -786,6 +1005,61 @@
     border-color: var(--color-danger);
 }
 
+.w3eden .btn-outline-info {
+    color: var(--color-info);
+    border-color: var(--color-info);
+    background-color: transparent;
+}
+
+.w3eden .btn-outline-info:hover {
+    color: #fff;
+    background-color: var(--color-info);
+    border-color: var(--color-info);
+}
+
+.w3eden .btn-outline-warning {
+    color: var(--color-warning);
+    border-color: var(--color-warning);
+    background-color: transparent;
+}
+
+.w3eden .btn-outline-warning:hover {
+    color: #fff;
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+}
+
+.w3eden .btn-outline-light {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+    background-color: transparent;
+}
+
+.w3eden .btn-outline-light:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.w3eden .btn-outline-dark {
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+    background-color: transparent;
+}
+
+.w3eden .btn-outline-dark:hover {
+    color: var(--bg-body);
+    background-color: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+/* Light brand colours (yellow, sky blue) read poorly as text on white: darken the
+   text toward the body colour. In dark mode the same mix lightens it. */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .w3eden .btn-outline-info:not(:hover) { color: color-mix(in srgb, var(--color-info) 60%, var(--wpdm-text)); }
+    .w3eden .btn-outline-warning:not(:hover) { color: color-mix(in srgb, var(--color-warning) 45%, var(--wpdm-text)); }
+}
+
 /* Link button */
 .w3eden .btn-link {
     font-weight: 400;
@@ -804,22 +1078,24 @@
 .w3eden .btn-xs {
     padding: 0.125rem 0.5rem;
     min-height: 24px;
-    font-size: 0.75rem;
-    border-radius: var(--radius-sm);
+    font-size: var(--wpdm-fs-xs);
+    border-radius: var(--wpdm-radius-sm);
 }
 
 .w3eden .btn-sm {
     padding: 0.25rem 0.75rem;
-    min-height: 32px;
-    font-size: 0.8125rem;
-    border-radius: var(--radius-sm);
+    min-height: var(--wpdm-control-h-sm);
+    font-size: var(--wpdm-fs-sm);
+    border-radius: var(--wpdm-radius-control);
 }
 
+/* Large: the size most templates use for the download button */
 .w3eden .btn-lg {
     padding: 0.625rem 1.5rem;
-    min-height: 48px;
-    font-size: 1rem;
-    border-radius: var(--radius-lg);
+    min-height: var(--wpdm-control-h-lg);
+    font-size: var(--wpdm-fs-md);
+    font-weight: var(--wpdm-fw-semibold);
+    border-radius: var(--radius);
 }
 
 /* Block button */
@@ -869,6 +1145,14 @@
     border-radius: 50%;
     border-top-color: #fff;
     animation: wpdm-spinner 0.6s linear infinite;
+}
+
+/* Spinner on light and outline buttons: their text colour, not white */
+.w3eden .btn-light.btn-loading::after,
+.w3eden .btn-link.btn-loading::after,
+.w3eden [class*="btn-outline-"].btn-loading::after {
+    border-color: rgba(100, 116, 139, 0.3);
+    border-top-color: var(--wpdm-text-muted);
 }
 
 @keyframes wpdm-spinner {
@@ -1125,6 +1409,16 @@
 .w3eden .list-group-item-warning { color: #92400e; background-color: var(--color-warning-light); }
 .w3eden .list-group-item-danger { color: #991b1b; background-color: var(--color-danger-light); }
 
+/* Follow the brand colours from Settings: mix each with the body text colour so the
+   text stays readable on its tint (lighter in dark mode, darker in light mode) */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .w3eden .list-group-item-primary { color: color-mix(in srgb, var(--color-primary) 55%, var(--wpdm-text)); }
+    .w3eden .list-group-item-success { color: color-mix(in srgb, var(--color-success) 50%, var(--wpdm-text)); }
+    .w3eden .list-group-item-info { color: color-mix(in srgb, var(--color-info) 50%, var(--wpdm-text)); }
+    .w3eden .list-group-item-warning { color: color-mix(in srgb, var(--color-warning) 50%, var(--wpdm-text)); }
+    .w3eden .list-group-item-danger { color: color-mix(in srgb, var(--color-danger) 55%, var(--wpdm-text)); }
+}
+
 /* ==========================================================================
    9. Alerts & Badges
    ========================================================================== */
@@ -1165,6 +1459,16 @@
 .w3eden .alert-info { color: var(--color-info-active); background-color: var(--color-info-light); border-color: var(--color-info); }
 .w3eden .alert-warning { color: var(--color-warning-active); background-color: var(--color-warning-light); border-color: var(--color-warning); }
 .w3eden .alert-danger { color: var(--color-danger-active); background-color: var(--color-danger-light); border-color: var(--color-danger); }
+
+/* Readable alert text and a softer border, from the same brand colours */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .w3eden .alert-primary { color: color-mix(in srgb, var(--color-primary) 55%, var(--wpdm-text)); border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); }
+    .w3eden .alert-secondary { color: color-mix(in srgb, var(--clr-sec) 55%, var(--wpdm-text)); }
+    .w3eden .alert-success { color: color-mix(in srgb, var(--color-success) 50%, var(--wpdm-text)); border-color: color-mix(in srgb, var(--color-success) 35%, transparent); }
+    .w3eden .alert-info { color: color-mix(in srgb, var(--color-info) 50%, var(--wpdm-text)); border-color: color-mix(in srgb, var(--color-info) 35%, transparent); }
+    .w3eden .alert-warning { color: color-mix(in srgb, var(--color-warning) 50%, var(--wpdm-text)); border-color: color-mix(in srgb, var(--color-warning) 40%, transparent); }
+    .w3eden .alert-danger { color: color-mix(in srgb, var(--color-danger) 55%, var(--wpdm-text)); border-color: color-mix(in srgb, var(--color-danger) 35%, transparent); }
+}
 
 /* Badges */
 .w3eden .badge {
@@ -1269,7 +1573,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1055;
+    z-index: calc(var(--wpdm-z-modal) + 5);
     display: none;
     width: 100%;
     height: 100%;
@@ -1348,7 +1652,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1050;
+    z-index: var(--wpdm-z-modal, 1050);
     width: 100vw;
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
@@ -1371,8 +1675,8 @@
 .w3eden .modal-title {
     margin-bottom: 0;
     line-height: 1.5;
-    font-weight: 600;
-    font-size: 1.125rem;
+    font-weight: var(--wpdm-fw-semibold);
+    font-size: var(--wpdm-fs-lg);
 }
 
 .w3eden .modal-body {
@@ -1452,7 +1756,8 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     transition: color var(--transition), background-color var(--transition), border-color var(--transition);
-    min-width: 38px;
+    min-width: var(--wpdm-control-h);
+    min-height: var(--wpdm-control-h);
 }
 
 .w3eden .page-link:hover {
@@ -1486,15 +1791,23 @@
 
 /* Pagination sizes */
 .w3eden .pagination-sm .page-link {
-    padding: 0.375rem 0.625rem;
-    font-size: 0.8125rem;
-    min-width: 32px;
+    padding: 0.25rem 0.625rem;
+    font-size: var(--wpdm-fs-sm);
+    min-width: var(--wpdm-control-h-sm);
+    min-height: var(--wpdm-control-h-sm);
 }
 
 .w3eden .pagination-lg .page-link {
     padding: 0.625rem 1rem;
     font-size: 1.0625rem;
-    min-width: 44px;
+    min-width: var(--wpdm-control-h-lg);
+    min-height: var(--wpdm-control-h-lg);
+}
+
+.w3eden .page-item.active .page-link,
+.w3eden .pagination .page-numbers.current,
+.w3eden .pagination .page-numbers.current-page {
+    font-weight: var(--wpdm-fw-semibold);
 }
 
 /* WPDM Pagination (page-numbers style) */
@@ -1516,8 +1829,8 @@
     align-items: center;
     justify-content: center;
     padding: 0.5rem 0.875rem;
-    min-width: 38px;
-    min-height: 38px;
+    min-width: var(--wpdm-control-h);
+    min-height: var(--wpdm-control-h);
     color: var(--text-primary);
     text-decoration: none;
     background-color: var(--bg-body);
@@ -1577,7 +1890,9 @@
 .w3eden .table > thead { vertical-align: bottom; }
 
 .w3eden .table > thead > * > * {
-    font-weight: 600;
+    font-size: var(--wpdm-fs-sm);
+    font-weight: var(--wpdm-fw-semibold);
+    color: var(--text-secondary);
     background-color: var(--bg-secondary);
 }
 
@@ -1592,6 +1907,12 @@
 
 /* Striped table */
 .w3eden .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: rgba(0, 0, 0, 0.02); }
+
+/* Stripes and hover as a tint of the text colour, so they show in dark mode too */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .w3eden .table-striped > tbody > tr:nth-of-type(odd) > * { background-color: color-mix(in srgb, var(--wpdm-text) 3%, var(--bg-body)); }
+    .w3eden .table-hover > tbody > tr:hover > * { background-color: color-mix(in srgb, var(--wpdm-text) 6%, var(--bg-body)); }
+}
 
 /* Hover table */
 .w3eden .table-hover > tbody > tr:hover > * { background-color: var(--bg-secondary); }
@@ -2843,7 +3164,7 @@
 /* Block UI */
 svg#wpdm-loading path,
 svg#wpdm-loading rect {
-    fill: #ff6700 !important;
+    fill: var(--color-primary, #ff6700) !important;
 }
 
 .w3eden .blockui {
@@ -2861,6 +3182,11 @@ svg#wpdm-loading rect {
     background: rgba(255, 255, 255, 0.8) url("../images/loader.svg") center center no-repeat;
     background-size: 64px;
     transition: ease-in-out 400ms;
+}
+
+/* Veil in the surface colour, so it darkens instead of whitening in dark mode */
+@supports (color: color-mix(in srgb, red, blue)) {
+    .w3eden .blockui:before { background-color: color-mix(in srgb, var(--wpdm-surface) 80%, transparent); }
 }
 
 /* Block UI Ends */
@@ -2963,4 +3289,32 @@ svg#wpdm-loading rect {
     outline: 2px solid var(--color-primary, #6366f1);
     outline-offset: 2px;
     border-radius: var(--radius-sm, 4px);
+}
+
+/* Buttons show their focus ring for keyboard focus, not after a mouse click */
+.w3eden .btn:focus:not(:focus-visible) {
+    box-shadow: none;
+}
+
+/* Box-shadow focus rings disappear in Windows high-contrast mode */
+@media (forced-colors: active) {
+    .w3eden .btn:focus-visible,
+    .w3eden .form-control:focus,
+    .w3eden .form-select:focus,
+    .w3eden .form-check-input:focus,
+    .w3eden .page-link:focus,
+    .w3eden .nav-link:focus {
+        outline: 2px solid CanvasText;
+        outline-offset: 2px;
+    }
+}
+
+/* Respect the visitor's reduced-motion setting */
+@media (prefers-reduced-motion: reduce) {
+    .w3eden *,
+    .w3eden *::before,
+    .w3eden *::after {
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

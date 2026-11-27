@@ -987,7 +987,7 @@ body[class*=" wpdmpro_page_"] #wpcontent {
     z-index: -9999999 !important;
 }
 
-.modal-body {
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) .modal-body {
     transition: all ease-in-out 400ms;
     max-height: calc(100vh - 220px);
     overflow-y: auto;
@@ -997,8 +997,9 @@ body[class*=" wpdmpro_page_"] #wpcontent {
    10. FORMS & INPUTS
    ========================================================================== */
 
-.form-control,
-.btn {
+/* Scoped to WPDM screens and markup; :where() keeps the specificity of the old global rule */
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) .form-control,
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) .btn {
     border-radius: var(--wpdm-radius-control, 6px);
 }
 
@@ -1058,7 +1059,7 @@ body[class*=" wpdmpro_page_"] #wpcontent {
     font-family: monospace;
 }
 
-.select2-search__field {
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) .select2-search__field {
     min-height: 20px;
 }
 
@@ -2297,8 +2298,9 @@ body[class*=" wpdmpro_page_"] #wpcontent {
     width: 150px;
 }
 
-a:focus,
-a:active {
+/* Drop the focus ring on click only, so keyboard users keep it */
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) a:focus:not(:focus-visible),
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) a:active {
     box-shadow: none !important;
 }
 
@@ -2361,8 +2363,8 @@ a:active {
     border-radius: 0 !important;
 }
 
-/* Drag & Drop Area */
-#drag-drop-area {
+/* Drag & Drop Area (WPDM screens only; core Media > Add New uses the same id) */
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) #drag-drop-area {
     border: 2px dashed #59ac23 !important;
     min-height: 200px;
     margin-top: 10px;
@@ -2371,12 +2373,12 @@ a:active {
     background: rgba(97, 187, 38, 0.05);
 }
 
-.drag-drop-inside p.drag-drop-info {
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) .drag-drop-inside p.drag-drop-info {
     font-size: 11pt;
     font-weight: 700;
 }
 
-#drag-drop-area small {
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) #drag-drop-area small {
     margin-top: 10px;
 }
 
@@ -2430,7 +2432,7 @@ a:active {
     text-overflow: ellipsis;
 }
 
-.page-numbers.current {
+:where(body.post-type-wpdmpro, body[class*="wpdmpro_page_"], .w3eden) .page-numbers.current {
     font-weight: bold;
     color: #575555 !important;
     background: rgba(0, 0, 0, 0.01) !important;
@@ -2684,3 +2686,33 @@ body.rtl .w3eden .chosen-container.chosen-with-drop .chosen-drop {
 .w3eden .mb-3 { margin-bottom: 15px !important; }
 
 
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+/* Font Awesome 7 makes icons fixed-width by default; keep the natural width
+   WPDM's layouts were built with (.fa-fw still gives a fixed width) */
+.w3eden {
+    --fa-width: auto;
+}
+
+/* Buttons, tabs and toggles remove their outline on :focus above; give
+   keyboard users a visible ring in the admin colour scheme */
+.w3eden .btn:focus-visible,
+.w3eden ul.nav li a:focus-visible,
+.w3eden .nav-tabs a:focus-visible,
+.w3eden input[type="checkbox"]:focus-visible,
+.w3eden input[type="radio"]:focus-visible,
+.w3eden select:focus-visible {
+    outline: 2px solid var(--wp-admin-theme-color, #2271b1) !important;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .w3eden *,
+    .w3eden *::before,
+    .w3eden *::after {
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

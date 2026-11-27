@@ -1,3 +1,131 @@
+/* ==========================================================================
+   Design tokens: neutral colours, radius, type, spacing, shadow, motion and
+   layers. Kept identical in front.css and adminui/css/base.css; dark mode
+   (front-dark.css) swaps these values.
+   ========================================================================== */
+:root {
+    /* ----------------------------------------------------------------------
+       Neutral palette (slate)
+       ---------------------------------------------------------------------- */
+    --wpdm-slate-50: #f8fafc;
+    --wpdm-slate-100: #f1f5f9;
+    --wpdm-slate-200: #e2e8f0;
+    --wpdm-slate-300: #cbd5e1;
+    --wpdm-slate-400: #94a3b8;
+    --wpdm-slate-500: #64748b;
+    --wpdm-slate-600: #475569;
+    --wpdm-slate-700: #334155;
+    --wpdm-slate-800: #1e293b;
+    --wpdm-slate-900: #0f172a;
+
+    /* ----------------------------------------------------------------------
+       Semantic colours (light)
+       ---------------------------------------------------------------------- */
+    --wpdm-surface: #ffffff;                       /* cards, inputs, panels */
+    --wpdm-surface-muted: var(--wpdm-slate-50);    /* headers, alternate rows */
+    --wpdm-surface-sunken: var(--wpdm-slate-100);  /* wells, hover fills */
+    --wpdm-page-bg: #f8fbfd;                       /* admin page background */
+
+    --wpdm-border: var(--wpdm-slate-200);
+    --wpdm-border-light: var(--wpdm-slate-100);
+    --wpdm-border-strong: var(--wpdm-slate-300);
+
+    --wpdm-text: var(--wpdm-slate-800);            /* body and headings */
+    --wpdm-text-secondary: var(--wpdm-slate-600);  /* supporting text */
+    --wpdm-text-muted: var(--wpdm-slate-500);      /* labels, meta */
+    --wpdm-text-subtle: var(--wpdm-slate-400);     /* placeholders, icons */
+    --wpdm-text-faint: var(--wpdm-slate-300);      /* disabled, dividers in text */
+
+    /* ----------------------------------------------------------------------
+       Radius
+       ---------------------------------------------------------------------- */
+    --wpdm-radius-sm: 4px;       /* badges, small chips */
+    --wpdm-radius-control: 6px;  /* admin inputs and buttons */
+    --wpdm-radius: 8px;          /* default: buttons, inputs, list rows */
+    --wpdm-radius-lg: 12px;      /* cards, panels */
+    --wpdm-radius-xl: 16px;      /* large containers, modals */
+    --wpdm-radius-pill: 9999px;
+
+    /* ----------------------------------------------------------------------
+       Control sizes (inputs, selects, buttons and pagination share them)
+       ---------------------------------------------------------------------- */
+    --wpdm-control-h-sm: 32px;
+    --wpdm-control-h: 40px;
+    --wpdm-control-h-lg: 48px;
+
+    /* ----------------------------------------------------------------------
+       Typography
+       ---------------------------------------------------------------------- */
+    --wpdm-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --wpdm-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --wpdm-font: var(--wpdm-font-sans);
+
+    --wpdm-fs-2xs: 0.6875rem;  /* 11px */
+    --wpdm-fs-xs: 0.75rem;     /* 12px */
+    --wpdm-fs-sm: 0.8125rem;   /* 13px */
+    --wpdm-fs-base: 0.875rem;  /* 14px */
+    --wpdm-fs-md: 1rem;        /* 16px */
+    --wpdm-fs-lg: 1.125rem;    /* 18px */
+    --wpdm-fs-xl: 1.25rem;     /* 20px */
+    --wpdm-fs-2xl: 1.5rem;     /* 24px */
+    --wpdm-fs-3xl: 1.875rem;   /* 30px */
+
+    --wpdm-fw-normal: 400;
+    --wpdm-fw-medium: 500;
+    --wpdm-fw-semibold: 600;
+    --wpdm-fw-bold: 700;
+
+    --wpdm-lh-tight: 1.25;
+    --wpdm-lh-snug: 1.4;
+    --wpdm-lh: 1.5;
+
+    /* ----------------------------------------------------------------------
+       Spacing (4px steps)
+       ---------------------------------------------------------------------- */
+    --wpdm-space-1: 4px;
+    --wpdm-space-2: 8px;
+    --wpdm-space-3: 12px;
+    --wpdm-space-4: 16px;
+    --wpdm-space-5: 20px;
+    --wpdm-space-6: 24px;
+    --wpdm-space-8: 32px;
+    --wpdm-space-10: 40px;
+    --wpdm-space-12: 48px;
+
+    /* ----------------------------------------------------------------------
+       Shadows
+       ---------------------------------------------------------------------- */
+    --wpdm-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --wpdm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --wpdm-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --wpdm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+
+    /* ----------------------------------------------------------------------
+       Motion
+       ---------------------------------------------------------------------- */
+    --wpdm-duration-fast: 150ms;
+    --wpdm-duration: 200ms;
+    --wpdm-duration-slow: 300ms;
+    --wpdm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Full transition shorthands, kept for the admin styles that use them */
+    --wpdm-transition-fast: all 0.15s ease;
+    --wpdm-transition: all 0.2s ease;
+    --wpdm-transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ----------------------------------------------------------------------
+       Layers (z-index). The WordPress admin bar sits at 99999.
+       ---------------------------------------------------------------------- */
+    --wpdm-z-raised: 1;
+    --wpdm-z-dropdown: 1000;
+    --wpdm-z-sticky: 1020;
+    --wpdm-z-overlay: 1040;
+    --wpdm-z-modal: 1050;
+    --wpdm-z-popover: 1070;
+    --wpdm-z-toast: 1090;
+    --wpdm-z-top: 100000;
+}
+
 :root {
     /* Brand — follows the active WordPress admin color scheme */
     --admin-color: #3b74d5;
@@ -32,36 +160,11 @@
     --color-danger-rgb: 239, 68, 68;
 
     /* Surfaces (legacy aliases) */
-    --border-color: #dde6ee;
-    --bg-light: #f7fafd;
-    --bg-lighter: #fbfdff;
+    --border-color: var(--wpdm-border);
+    --bg-light: var(--wpdm-surface-muted);
+    --bg-lighter: var(--wpdm-surface-muted);
 
-    /* ===== WPDM structural design tokens ===== */
-    --wpdm-surface: #ffffff;
-    --wpdm-surface-muted: #f8fafc;
-    --wpdm-surface-sunken: #f1f5f9;
-    --wpdm-page-bg: #f8fbfd;
-
-    --wpdm-border: #e5e7eb;
-    --wpdm-border-strong: #cbd5e1;
-
-    --wpdm-text: #1e293b;
-    --wpdm-text-muted: #64748b;
-    --wpdm-text-subtle: #94a3b8;
-
-    --wpdm-radius-sm: 4px;
-    --wpdm-radius-control: 6px;
-    --wpdm-radius: 8px;
-    --wpdm-radius-lg: 12px;
-    --wpdm-radius-pill: 500px;
-
-    --wpdm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-    --wpdm-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-    --wpdm-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
-
-    --wpdm-transition-fast: all 0.15s ease;
-    --wpdm-transition: all 0.2s ease;
-    --wpdm-transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Structural tokens (--wpdm-surface, --wpdm-border, --wpdm-radius, ...) are defined at the top of this file */
 }
 .w3eden html {
     font-family: sans-serif;

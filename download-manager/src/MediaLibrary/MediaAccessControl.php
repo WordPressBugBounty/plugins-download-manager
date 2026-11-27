@@ -77,19 +77,53 @@ class MediaAccessControl {
 		if ( ! isset( $params['id'] ) || (int) $params['id'] < 1 ) {
 			return __( "Missing ID!", "download-manager" );
 		}
-		$media           = get_post( $params['id'] );
-		$media->path     = str_replace( home_url( '/' ), ABSPATH . '/', $media->guid );
-		$media->filesize = wpdm_file_size( $media->path );
+		$media = get_post( (int) $params['id'] );
+		// Only attachments: any other ID would print the title of a draft or private post
+		if ( ! $media || $media->post_type !== 'attachment' ) {
+			return '';
+		}
+
+		$private = (bool) get_post_meta( $media->ID, '__wpdm_private', true );
+		if ( $private && ! $this->userCanAccessMedia( $media->ID ) ) {
+			// Don't reveal the title, size or URL of media the visitor may not open
+			return apply_filters( 'wpdm_media_shortcode_denied', '', $media );
+		}
+
+		$media->path     = get_attached_file( $media->ID );
+		$media->filesize = $media->path && file_exists( $media->path ) ? wpdm_file_size( $media->path ) : '';
 		$picon           = ! substr_count( $media->post_mime_type, 'image' ) ? wp_get_attachment_image( $media->ID, 'thumbnail', true ) : UI::img( wpdm_dynamic_thumb( $media->path, [
 			128,
 			128
 		], true ), 'Thumb', [ 'width' => 48 ] );
 		$media->icon     = $picon;
+		// Private media goes through the access handler (password and role checks) on every web server,
+		// never the raw uploads URL, which only .htaccess rewrites protect
+		$media->download_url = $private
+			? add_query_arg( [ 'wpdmmediaid' => $media->ID, 'wpdmmedia' => get_post_meta( $media->ID, '_wp_attached_file', true ) ], home_url( '/index.php' ) )
+			: wp_get_attachment_url( $media->ID );
 		ob_start();
 		include Template::locate( "media-shortcode.php", __DIR__ . '/views' );
 		$content = ob_get_clean();
 
 		return $content;
+	}
+
+	/**
+	 * Whether the current visitor's role is allowed to open a private media file
+	 * (same rule as protectMediaLibrary(); site admins always are)
+	 */
+	function userCanAccessMedia( $mediaId ) {
+		if ( current_user_can( 'manage_options' ) ) {
+			return true;
+		}
+		$access = get_post_meta( $mediaId, '__wpdm_media_access', true );
+		if ( ! is_array( $access ) ) {
+			$access = [ 'public' ];
+		}
+		$user_roles   = is_user_logged_in() ? (array) wp_get_current_user()->roles : [];
+		$user_roles[] = 'public';
+
+		return count( array_intersect( $user_roles, $access ) ) > 0;
 	}
 
 	/*
